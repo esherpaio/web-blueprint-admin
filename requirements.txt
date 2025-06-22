@@ -1,1 +1,1 @@
-git+https://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@github.com/esherpaio/web-framework.git#f741628
+git+https://github.com/esherpaio/web-framework.git
