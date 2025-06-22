@@ -1,0 +1,110 @@
+{% extends "admin_main.html" %}
+{% block admin_body %}
+    <div class="row g-3">
+        <div class="col-12">
+            <div class="d-flex justify-content-between gap-2">
+                <h2 class="mb-0">Orders</h2>
+                <div class="btn-toolbar justify-content-end gap-2">
+                    <a class="btn btn-primary" href="{{ url_for('admin.orders_add') }}">
+                        Add
+                        <i class="bi bi-plus-square ms-1"></i>
+                    </a>
+                    <button class="btn btn-success"
+                            type="submit"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#more-orders">
+                        More
+                        <i class="bi bi-chevron-expand ms-1"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="more-orders" class="collapse {{ 'show' if search or status_id }}">
+                <form class="mt-3" action="{{ url_for('admin.orders') }}" method="get">
+                    <div class="row g-2">
+                        <div class="col-12">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">Search</span>
+                                <input class="form-control"
+                                       name="s"
+                                       placeholder="Search"
+                                       type="text"
+                                       value="{{ search if search }}">
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">Status</span>
+                                <select name="status" class="form-select">
+                                    <option value>All</option>
+                                    {% for x in cache.order_statuses %}
+                                        <option {{ 'selected' if x.id == status_id }} value="{{ x.id }}">
+                                            {{ x.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-auto ms-sm-auto">
+                            <button class="btn btn-primary btn-sm" type="submit">Search</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="table-responsive">
+                <table class="table rounded-2 overflow-hidden align-middle mb-0">
+                    <thead class="table-secondary">
+                        <tr>
+                            <th>ID</th>
+                            <th>Created</th>
+                            <th>Name</th>
+                            <th>Status</th>
+                            <th>Total price</th>
+                            <th>Refunded</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-light">
+                        {% for order in orders %}
+                            <tr>
+                                <td>{{ order.id }}</td>
+                                <td>{{ order.created_at|datetime }}</td>
+                                <td>{{ order.billing.first_name }} {{ order.billing.last_name }}</td>
+                                <td>
+                                    <span class="badge {{ order_status_color_map.get(order.status_id, '') }}">{{ order.status.name }}</span>
+                                </td>
+                                <td>{{ order.total_price|price }} {{ order.currency_code }}</td>
+                                <td>{{ order.refunds|length > 0 }}</td>
+                                <td class="text-end">
+                                    <div class="btn-group">
+                                        <a class="btn btn-sm btn-outline-primary"
+                                           href="{{ url_for('admin.orders_id', order_id=order.id) }}">
+                                            View
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% if pagination|length > 1 %}
+            <div class="col-12">
+                <nav>
+                    <ul class="pagination mb-0">
+                        {% for page in pagination %}
+                            <li class="page-item {{ page["classes"] }}">
+                                <a class="page-link"
+                                   href="{{ url_for('admin.orders', p=page['number'], status=status_id) }}">
+                                    {{ page["name"] }}
+                                </a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </nav>
+            </div>
+        {% endif %}
+    </div>
+{% endblock admin_body %}

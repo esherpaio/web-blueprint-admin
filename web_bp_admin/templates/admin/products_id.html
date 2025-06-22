@@ -1,0 +1,185 @@
+{% extends "admin_main.html" %}
+{% block admin_body %}
+    <script>
+        async function updateProduct(id) {
+            event.preventDefault();
+            updateButton(`update-product`, 1);
+            await patchProductsId(id, {
+                attributes: {
+                    html: htmlEditor.root.innerHTML
+                },
+                type_id: parseInt(document.getElementById(`product-type-id`).value),
+                shipment_class_id: parseInt(document.getElementById(`product-shipment-class-id`).value),
+                unit_price: parseFloat(document.getElementById(`product-unit-price`).value),
+                summary: document.getElementById(`product-summary`).value,
+                consent_required: document.getElementById("product-consent-required").checked,
+                file_url: document.getElementById("product-file-url").value,
+            });
+            await patchSettings({
+                cached_at: null
+            });
+            window.location.reload();
+        }
+        async function deleteProduct(productId) {
+            event.preventDefault();
+            updateButton(`delete-product`, 1);
+            let resp = await deleteProductsId(productId);
+            await patchSettings({
+                cached_at: null
+            });
+            window.location = URL_ADMIN_PRODUCTS;
+        }
+    </script>
+
+    {% include "admin/section/products_nav.html" %}
+
+    <div class="row g-3">
+        <div class="col-12">
+            <div class="btn-toolbar justify-content-end gap-2">
+                <button id="update-product"
+                        class="btn btn-primary btn-load"
+                        onclick="updateProduct({{ product.id }});">Update</button>
+                <button class="btn btn-danger"
+                        data-bs-toggle="modal"
+                        data-bs-target="#modal-delete-product">Delete</button>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="row g-3">
+                <div class="col-12 col-lg-4">
+                    <div class="input-group">
+                        <span class="input-group-text">Name</span>
+                        <input disabled
+                               id="product-name"
+                               class="form-control"
+                               placeholder="Name"
+                               type="text"
+                               value="{{ product.name }}">
+                    </div>
+                </div>
+                <div class="col-12 col-lg-4">
+                    <div class="input-group">
+                        <span class="input-group-text">Type</span>
+                        <select id="product-type-id" class="form-select">
+                            <option {{ 'selected' if not product.type_id }} disabled>
+                                None
+                            </option>
+                            {% for x in cache.product_types %}
+                                <option {{ 'selected' if x.id == product.type_id }} value="{{ x.id }}">
+                                    {{ x.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-12 col-lg-4">
+                    <div class="input-group">
+                        <span class="input-group-text">Shipment class</span>
+                        <select id="product-shipment-class-id" class="form-select">
+                            <option {{ 'selected' if not product.shipment_class_id }}>
+                                None
+                            </option>
+                            {% for x in shipment_classes %}
+                                <option {{ 'selected' if x.id == product.shipment_class_id }}
+                                        value="{{ x.id }}">
+                                    {{ x.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-12 col-lg-4">
+                    <div class="input-group">
+                        <span class="input-group-text">Unit price</span>
+                        <input id="product-unit-price"
+                               class="form-control"
+                               placeholder="Unit price"
+                               type="number"
+                               step="0.01"
+                               value="{{ product.unit_price|price }}">
+                    </div>
+                </div>
+                <div class="col-12 col-lg-4">
+                    <div class="input-group">
+                        <span class="input-group-text">Consent required</span>
+                        <div class="input-group-text">
+                            <input {{ "checked" if product.consent_required }}
+                                   id="product-consent-required"
+                                   class="form-check-input mt-0"
+                                   type="checkbox">
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="input-group">
+                        <span class="input-group-text">Download link</span>
+                        <input id="product-file-url"
+                               class="form-control mt-0"
+                               type="text"
+                               value="{{ product.file_url if product.file_url }}">
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="input-group">
+                        <span class="input-group-text">Summary</span>
+                        <textarea id="product-summary" class="form-control" rows="2">{{ product.summary if product.summary }}</textarea>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="d-block">
+                        <div id="html-editor"></div>
+                    </div>
+                    <script defer>
+                        let htmlElement = document.getElementById('html-editor');
+                        let htmlOptions = [
+                            [{
+                                'header': [3, 4, 5, 6, false]
+                            }],
+                            ['bold', 'italic', 'underline', 'strike'],
+                            ['link'],
+                            [{
+                                'list': 'ordered'
+                            }, {
+                                'list': 'bullet'
+                            }],
+                            [{
+                                'script': 'sub'
+                            }, {
+                                'script': 'super'
+                            }],
+                            ['clean'],
+                        ];
+                        const htmlValue = `{{ product.attributes["html"]|safe if product.attributes["html"] else '' }}`;
+                        htmlEditor = new Quill(htmlElement, {
+                            theme: 'snow',
+                            modules: {
+                                toolbar: htmlOptions
+                            }
+                        });
+                        htmlEditor.clipboard.dangerouslyPasteHTML(htmlValue);
+                    </script>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-delete-product" class="modal fade" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Delete product</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">Are you sure?</p>
+                </div>
+                <div class="modal-footer">
+                    <button id="delete-product"
+                            class="btn btn-load btn-danger"
+                            onclick="deleteProduct({{ product.id }});">Delete</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock admin_body %}

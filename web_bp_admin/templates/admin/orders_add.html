@@ -1,0 +1,732 @@
+{% extends "admin_main.html" %}
+{% block admin_body %}
+    <script>
+        // loading elements
+        async function loadCart(cart) {
+            document.getElementById("cart-coupon-code").innerHTML = cart.coupon_code ? cart.coupon_code : "None";
+            document.getElementById("cart-vat-percentage").innerHTML = cart.vat_percentage;
+            document.getElementById("cart-vat-amount").innerHTML = `${cart.vat_amount} ${cart.currency_code}`;
+            document.getElementById("cart-vat-reverse").innerHTML = cart.vat_reverse ? "Yes" : "No";
+            document.getElementById("cart-discount-price").innerHTML = `${cart.discount_price} ${cart.currency_code}`;
+            document.getElementById("cart-total-price").innerHTML = `${cart.total_price} ${cart.currency_code}`;
+            document.getElementById("cart-total-price-vat").innerHTML = `${cart.total_price_vat} ${cart.currency_code}`;
+        }
+        async function loadCartItems(cartItems, cart) {
+            const tableBody = document.querySelector("#cart-items tbody");
+            tableBody.innerHTML = "";
+            for (const cartItem of cartItems) {
+                const tr = document.createElement("tr");
+                tableBody.appendChild(tr);
+                const idTd = document.createElement("td");
+                idTd.textContent = cartItem.id;
+                tr.appendChild(idTd);
+                const skuNameTd = document.createElement("td");
+                skuNameTd.textContent = cartItem.sku_name;
+                tr.appendChild(skuNameTd);
+                const quantityTd = document.createElement("td");
+                tr.appendChild(quantityTd);
+                const quantityTdInput = document.createElement("input");
+                quantityTdInput.id = `cart-item-quantity-${cartItem.id}`;
+                quantityTdInput.dataset.cartId = cartItem.cart_id;
+                quantityTdInput.dataset.cartItemId = cartItem.id;
+                quantityTdInput.classList.add("form-control", "form-control-sm");
+                quantityTdInput.type = "number";
+                quantityTdInput.value = cartItem.quantity;
+                quantityTdInput.addEventListener("change", (e) => updateCartItemQuantity(e));
+                quantityTd.append(quantityTdInput);
+                const unitPriceTd = document.createElement("td");
+                unitPriceTd.textContent = `${cartItem.unit_price} ${cart.currency_code}`;
+                tr.appendChild(unitPriceTd);
+                const selectionTd = document.createElement("td");
+                selectionTd.classList.add("text-end");
+                tr.appendChild(selectionTd);
+                const selectionTdDiv = document.createElement("div");
+                selectionTdDiv.classList.add("btn-group");
+                selectionTd.append(selectionTdDiv);
+                const selectionButtonDelete = document.createElement("a");
+                selectionButtonDelete.id = `delete-cart-item-${cartItem.id}`;
+                selectionButtonDelete.dataset.cartId = cartItem.cart_id;
+                selectionButtonDelete.dataset.cartItemId = cartItem.id;
+                selectionButtonDelete.classList.add("btn", "btn-load", "btn-sm", "btn-outline-danger");
+                selectionButtonDelete.addEventListener("click", (e) => deleteCartItem(e));
+                selectionButtonDelete.textContent = "Remove";
+                selectionTdDiv.append(selectionButtonDelete);
+            }
+            await initButtons();
+        }
+        async function loadCountries(countries) {
+            const shippingSelect = document.getElementById("shipping-country-id");
+            shippingSelect.options.length = 0;
+            for (const country of countries) {
+                const shippingOption = document.createElement("option");
+                shippingOption.value = country.id;
+                shippingOption.textContent = country.name;
+                shippingSelect.appendChild(shippingOption);
+            }
+            const billingSelect = document.getElementById("billing-country-id");
+            billingSelect.options.length = 0;
+            for (const country of countries) {
+                const billingOption = document.createElement("option");
+                billingOption.value = country.id;
+                billingOption.textContent = country.name;
+                billingSelect.appendChild(billingOption);
+            }
+        }
+        async function loadShipping(cart, user) {
+            let shipping_id = null;
+            if (cart.shipping_id) {
+                shipping_id = cart.shipping_id;
+            } else if (user.shipping_id) {
+                shipping_id = user.shipping_id;
+            } else {
+                return;
+            }
+            const shipping = (await getShippingsId(shipping_id)).data;
+            const idNames = ["address", "city", "country-id", "email", "first-name", "last-name", "phone", "state", "zip-code"];
+            for (const idName of idNames) {
+                const key = idName.replace(/-/g, "_");
+                let value = shipping[key];
+                value = value !== undefined ? value : "";
+                document.getElementById(`shipping-${idName}`).value = value;
+            }
+        }
+        async function loadBilling(cart, user) {
+            let billing_id = null;
+            if (cart.billing_id) {
+                billing_id = cart.billing_id;
+            } else if (user.billing_id) {
+                billing_id = user.billing_id;
+            } else {
+                return;
+            }
+            const billing = (await getBillingsId(billing_id)).data;
+            const idNames = ["address", "city", "country-id", "email", "first-name", "last-name", "phone", "state", "zip-code", "company", "vat"];
+            for (const idName of idNames) {
+                const key = idName.replace(/-/g, "_");
+                let value = billing[key];
+                value = value !== undefined ? value : "";
+                document.getElementById(`billing-${idName}`).value = value;
+            }
+        }
+        async function loadShipmentMethods(shipmentMethods, cart) {
+            const tableBody = document.querySelector("#shipment-methods tbody");
+            tableBody.innerHTML = "";
+            for (const shipmentMethod of shipmentMethods) {
+                const tr = document.createElement("tr");
+                tableBody.appendChild(tr);
+                const nameTd = document.createElement("td");
+                nameTd.textContent = shipmentMethod.name;
+                tr.appendChild(nameTd);
+                const priceTd = document.createElement("td");
+                priceTd.textContent = `${shipmentMethod.unit_price} ${cart.currency_code}`;
+                tr.appendChild(priceTd);
+                const selectionTd = document.createElement("td");
+                selectionTd.classList.add("text-end");
+                tr.appendChild(selectionTd);
+                const selectionTdDiv = document.createElement("div");
+                selectionTdDiv.classList.add("form-check", "d-flex", "justify-content-end");
+                selectionTd.appendChild(selectionTdDiv);
+                const selectionInput = document.createElement("input");
+                selectionInput.id = `shipment-method-${shipmentMethod.id}`;
+                selectionInput.classList.add("form-check-input");
+                selectionInput.type = "radio";
+                selectionInput.name = "shipment-method-id";
+                selectionInput.value = `${shipmentMethod.id}`;
+                selectionInput.dataset.cartId = cart.id;
+                selectionInput.addEventListener("click", (e) => updateShipmentMethod(e));
+                if (shipmentMethod.id === cart.shipment_method_id) selectionInput.checked = true;
+                selectionTdDiv.appendChild(selectionInput);
+            }
+        }
+        async function loadSkus(cart, skus) {
+            const tableBody = document.querySelector("#skus tbody");
+            tableBody.innerHTML = "";
+            for (const sku of skus) {
+                const tr = document.createElement("tr");
+                tableBody.appendChild(tr);
+                const idTd = document.createElement("td");
+                idTd.textContent = sku.id;
+                tr.appendChild(idTd);
+                const nameTd = document.createElement("td");
+                nameTd.textContent = sku.name;
+                tr.appendChild(nameTd);
+                const selectionTd = document.createElement("td");
+                selectionTd.classList.add("text-end");
+                tr.appendChild(selectionTd);
+                const selectionTdDiv = document.createElement("div");
+                selectionTdDiv.classList.add("form-check", "d-flex", "justify-content-end");
+                selectionTd.appendChild(selectionTdDiv);
+                const selectionInput = document.createElement("input");
+                selectionInput.id = `sku-${sku.id}`;
+                selectionInput.classList.add("form-check-input");
+                selectionInput.type = "radio";
+                selectionInput.name = "sku-id";
+                selectionInput.value = `${sku.id}`;
+                selectionTdDiv.appendChild(selectionInput);
+            }
+        }
+        async function loadAddCartItemButton(cart) {
+            const addCartItemButton = document.getElementById("add-cart-item");
+            addCartItemButton.dataset.cartId = cart.id;
+            addCartItemButton.addEventListener("click", (e) => addCartItem(e));
+            await initButtons();
+        }
+        async function loadAddOrderButton(cart) {
+            const addOrderButton = document.getElementById("add-order");
+            addOrderButton.dataset.cartId = cart.id;
+            addOrderButton.addEventListener("click", (e) => addOrder(e));
+            await initButtons();
+        }
+
+        // cart item actions
+        async function addCartItem(event) {
+            const cartId = parseInt(event.target.dataset.cartId);
+            await updateButton(event.target.id, 1);
+            const skuEl = document.querySelector('input[name="sku-id"]:checked');
+            const skuId = parseInt(skuEl.value);
+            const cartData = { sku_id: skuId, quantity: 1 };
+            await postCartsIdItems(cartId, cartData);
+            const cart = (await getCartsId(cartId)).data;
+            await loadCart(cart);
+            const cartItems = (await getCartsIdItems(cart.id)).data;
+            await loadCartItems(cartItems, cart);
+            const shipmentMethods = (await getShipmentMethods({ cart_id: cart.id })).data;
+            await loadShipmentMethods(shipmentMethods, cart);
+            await updateButton(event.target.id, -1);
+        }
+        async function updateCartItemQuantity(event) {
+            const cartId = parseInt(event.target.dataset.cartId);
+            const cartItemId = parseInt(event.target.dataset.cartItemId);
+            const cartItemQuantityEl = document.getElementById(`cart-item-quantity-${cartItemId}`);
+            const cartItemQuantity = parseInt(cartItemQuantityEl.value);
+            const cartData = { quantity: cartItemQuantity };
+            await patchCartsIdItemsId(cartId, cartItemId, cartData);
+            const cart = (await getCartsId(cartId)).data;
+            await loadCart(cart);
+            const cartItems = (await getCartsIdItems(cart.id)).data;
+            await loadCartItems(cartItems, cart);
+            const shipmentMethods = (await getShipmentMethods({ cart_id: cart.id })).data;
+            await loadShipmentMethods(shipmentMethods, cart);
+        }
+        async function deleteCartItem(event) {
+            const cartId = parseInt(event.target.dataset.cartId);
+            const cartItemId = parseInt(event.target.dataset.cartItemId);
+            await updateButton(event.target.id, 1);
+            await deleteCartsIdItemsId(cartId, cartItemId);
+            const cart = (await getCartsId(cartId)).data;
+            await loadCart(cart);
+            const cartItems = (await getCartsIdItems(cart.id)).data;
+            await loadCartItems(cartItems, cart);
+            const shipmentMethods = (await getShipmentMethods({ cart_id: cart.id })).data;
+            await loadShipmentMethods(shipmentMethods, cart);
+        }
+
+        // shipping actions
+        async function updateShipping(cart, silent = false) {
+            const shippingData = emptyStrToNull({
+                address: document.getElementById("shipping-address").value,
+                city: document.getElementById("shipping-city").value,
+                country_id: parseInt(document.getElementById("shipping-country-id").value),
+                email: document.getElementById("shipping-email").value,
+                first_name: document.getElementById("shipping-first-name").value,
+                last_name: document.getElementById("shipping-last-name").value,
+                phone: document.getElementById("shipping-phone").value,
+                state: document.getElementById("shipping-state").value,
+                zip_code: document.getElementById("shipping-zip-code").value,
+            });
+            let shipping;
+            if (cart.shipping_id) {
+                shipping = (await patchShippingsId(cart.shipping_id, shippingData, silent)).data;
+            } else {
+                shipping = (await postShippings(shippingData, silent)).data;
+            }
+            const cartData = { shipping_id: shipping.id };
+            cart = (await patchCartsId(cart.id, cartData, silent)).data;
+            await loadCart(cart);
+            const shipmentMethods = (await getShipmentMethods({ cart_id: cart.id })).data;
+            await loadShipmentMethods(shipmentMethods, cart);
+
+            const checkbox = document.getElementById("checkbox-use-shipping-for-billing");
+            if (checkbox.checked) {
+                const idNames = ["address", "city", "country-id", "email", "first-name", "last-name", "phone", "state", "zip-code"];
+                for (const idName of idNames) {
+                    const shippingValue = document.getElementById(`shipping-${idName}`).value;
+                    document.getElementById(`billing-${idName}`).value = shippingValue;
+                }
+            }
+        }
+
+        // billing actions
+        async function updateBilling(cart, silent = false) {
+            const billingData = emptyStrToNull({
+                address: document.getElementById("billing-address").value,
+                city: document.getElementById("billing-city").value,
+                company: document.getElementById("billing-company").value,
+                country_id: parseInt(document.getElementById("billing-country-id").value),
+                email: document.getElementById("billing-email").value,
+                first_name: document.getElementById("billing-first-name").value,
+                last_name: document.getElementById("billing-last-name").value,
+                phone: document.getElementById("billing-phone").value,
+                state: document.getElementById("billing-state").value,
+                vat: document.getElementById("billing-vat").value,
+                zip_code: document.getElementById("billing-zip-code").value,
+            });
+            let billing;
+            if (cart.billing_id) {
+                billing = (await patchBillingsId(cart.billing_id, billingData, silent)).data;
+            } else {
+                billing = (await postBillings(billingData, silent)).data;
+            }
+            const cartData = { billing_id: billing.id };
+            cart = (await patchCartsId(cart.id, cartData, silent)).data;
+            await loadCart(cart);
+            const shipmentMethods = (await getShipmentMethods({ cart_id: cart.id })).data;
+            await loadShipmentMethods(shipmentMethods, cart);
+        }
+
+        // shipment method actions
+        async function updateShipmentMethod(event) {
+            const cartId = parseInt(event.target.dataset.cartId);
+            const shipmentMethodEl = document.querySelector('input[name="shipment-method-id"]:checked');
+            const shipmentMethodId = shipmentMethodEl ? parseInt(shipmentMethodEl.value) : null;
+            const cartData = { shipment_method_id: shipmentMethodId };
+            const cart = (await patchCartsId(cartId, cartData)).data;
+            await loadCart(cart);
+
+            if (shipmentMethodId !== null) {
+                const shipmentMethod = (await getShipmentMethodsId(shipmentMethodId)).data;
+                const shippingPhoneEl = document.getElementById("shipping-phone");
+                shippingPhoneEl.required = shipmentMethod.phone_required;
+            }
+        }
+
+        // order actions
+        async function addOrder(event) {
+            const cartId = parseInt(event.target.dataset.cartId);
+            await updateButton(event.target.id, 1);
+            const cart = (await getCartsId(cartId)).data;
+            await updateShipping(cart);
+            await updateBilling(cart);
+            const orderData = { cart_id: cart.id, trigger_mail: false };
+            const order = (await postOrders(orderData)).data;
+            const baseUrl = `${location.protocol}//${location.host}`;
+            const redirectUrl = `${location.protocol}//${location.host}${URL_ADMIN_ORDERS}/${order.id}`;
+            await postOrdersIdPayments(order.id, { redirect_url: baseUrl, cancel_url: baseUrl, methods: ["banktransfer"] });
+            await deleteCartsId(cart.id);
+            await updateButton(event.target.id, -1);
+            window.location.href = redirectUrl;
+        }
+
+        // initialization
+        async function loadPage() {
+            const carts = (await getCarts()).data;
+            let cart;
+            if (carts.length > 0) {
+                cart = carts[0];
+            } else {
+                cart = (await postCarts()).data;
+            }
+
+            const cartItems = (await getCartsIdItems(cart.id)).data;
+            const user = (await getUsersId(cart.user_id)).data;
+            const countries = (await getCountries()).data;
+            const shipmentMethods = (await getShipmentMethods({ cart_id: cart.id })).data;
+            const skus = (await getSkus({ is_deleted: false })).data;
+
+            await loadCart(cart);
+            await loadCartItems(cartItems, cart);
+            await loadCountries(countries);
+            await loadShipping(cart, user);
+            await loadBilling(cart, user);
+            await loadShipmentMethods(shipmentMethods, cart);
+            await loadSkus(cart, skus);
+            await loadAddCartItemButton(cart);
+            await loadAddOrderButton(cart);
+
+            document.addEventListener("change", async (event) => {
+                if (event.target.matches(".update-shipping")) {
+                    await updateShipping(cart, true);
+                } else if (event.target.matches(".update-billing")) {
+                    await updateBilling(cart, true);
+                }
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", loadPage);
+    </script>
+
+    <div class="row g-3">
+        <!-- button add order -->
+        <div class="col-12">
+            <div class="d-flex justify-content-between gap-2">
+                <h2 class="mb-0 d-flex align-items-center">
+                    <span class="badge rounded-pill text-bg-dark me-2">BETA</span>
+                    Add order
+                </h2>
+                <div class="btn-toolbar justify-content-end gap-2">
+                    <button class="btn btn-primary"
+                            data-bs-toggle="modal"
+                            data-bs-target="#modal-add-sku">Add SKU</button>
+                    <button class="btn btn-warning"
+                            data-bs-toggle="modal"
+                            data-bs-target="#modal-add-order">Create order</button>
+                </div>
+            </div>
+        </div>
+        <!-- Order -->
+        <div class="col-12">
+            <div class="row g-2 d-flex flex-row justify-content-start justify-content-md-center">
+                <div class="col-auto">
+                    <div class="text-bg-primary rounded-3 p-3 d-flex flex-column align-items-center h-100">
+                        <span class="fw-semibold">Total</span>
+                        <span class="fs-4 fw-semibold"><span id="cart-total-price"></span></span>
+                        <span class="small">With VAT: <span id="cart-total-price-vat"></span></span>
+                    </div>
+                </div>
+                <div class="col-auto">
+                    <div class="text-bg-secondary rounded-3 p-3 d-flex flex-column align-items-center h-100">
+                        <span class="fw-semibold">Discount</span>
+                        <span class="fs-4 fw-semibold"><span id="cart-discount-price"></span></span>
+                        <span class="small">Coupon: <span id="cart-coupon-code"></span></span>
+                    </div>
+                </div>
+                <div class="col-auto">
+                    <div class="text-bg-secondary rounded-3 p-3 d-flex flex-column align-items-center h-100">
+                        <span class="fw-semibold">VAT <span id="cart-vat-percentage"></span>%</span>
+                        <span class="fs-4 fw-semibold"><span id="cart-vat-amount"></span></span>
+                        <span class="small">Reverse VAT: <span id="cart-vat-reverse"></span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12">
+            <h3>SKUs</h3>
+            <div class="table-responsive">
+                <table id="cart-items"
+                       class="table rounded-2 overflow-hidden align-middle mb-0">
+                    <thead class="table-secondary">
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Quantity</th>
+                            <th>Unit Price</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-light">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- shipping -->
+        <div class="col-12">
+            <h3>Shipping</h3>
+            <div class="row g-2">
+                <div class="col-12 col-sm-6">
+                    <div class="form-floating">
+                        <input required
+                               id="shipping-email"
+                               class="form-control update-shipping"
+                               type="email"
+                               placeholder="Email"
+                               autocomplete="email">
+                        <label for="shipping-email">Email</label>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6">
+                    <div class="form-floating">
+                        <input id="shipping-phone"
+                               class="form-control update-shipping"
+                               type="tel"
+                               placeholder="Phone"
+                               autocomplete="tel">
+                        <label for="shipping-phone">Phone</label>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6">
+                    <div class="form-floating">
+                        <input required
+                               id="shipping-first-name"
+                               class="form-control update-shipping"
+                               type="text"
+                               placeholder="First name"
+                               autocomplete="given-name">
+                        <label for="shipping-first-name">First name</label>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6">
+                    <div class="form-floating">
+                        <input required
+                               id="shipping-last-name"
+                               class="form-control update-shipping"
+                               type="text"
+                               placeholder="First name"
+                               autocomplete="family-name">
+                        <label for="shipping-last-name">Last name</label>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6">
+                    <div class="form-floating">
+                        <input required
+                               id="shipping-address"
+                               class="form-control update-shipping"
+                               type="text"
+                               placeholder="Address"
+                               autocomplete="street-address">
+                        <label for="shipping-address">Address</label>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6">
+                    <div class="form-floating">
+                        <input required
+                               id="shipping-city"
+                               class="form-control update-shipping"
+                               type="text"
+                               placeholder="City"
+                               autocomplete="address-level2">
+                        <label for="shipping-city">City</label>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-4">
+                    <div class="form-floating">
+                        <input required
+                               id="shipping-zip-code"
+                               class="form-control update-shipping"
+                               type="text"
+                               placeholder="Postal code"
+                               autocomplete="postal-code">
+                        <label for="shipping-zip-code">Postal code</label>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-4">
+                    <div class="form-floating">
+                        <input id="shipping-state"
+                               class="form-control update-shipping"
+                               type="text"
+                               placeholder="State"
+                               autocomplete="address-level1">
+                        <label for="shipping-zip-code">State</label>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-4">
+                    <div class="form-floating">
+                        <select required
+                                id="shipping-country-id"
+                                class="form-select update-shipping"
+                                autocomplete="country-name">
+                            <option selected disabled value="">Make a selection</option>
+                        </select>
+                        <label for="shipping-country-id">Country</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- billing -->
+        <div class="col-12">
+            <h3>Billing</h3>
+            <div class="form-check mb-2">
+                <input class="form-check-input update-shipping update-billing"
+                       type="checkbox"
+                       id="checkbox-use-shipping-for-billing"
+                       data-bs-toggle="collapse"
+                       data-bs-target=".collapse-billing"
+                       data-bs-animation="false">
+                <label class="form-check-label" for="checkbox-use-shipping-for-billing">
+                    Use shipping as billing information
+                </label>
+            </div>
+            <div class="row g-2">
+                <div class="col-12 col-sm-6 collapse-billing show">
+                    <div class="form-floating">
+                        <input required
+                               id="billing-email"
+                               class="form-control update-billing"
+                               type="email"
+                               placeholder="Email"
+                               autocomplete="email">
+                        <label for="billing-email">Email</label>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 collapse-billing show">
+                    <div class="form-floating">
+                        <input id="billing-phone"
+                               class="form-control update-billing"
+                               type="tel"
+                               placeholder="Phone"
+                               autocomplete="tel">
+                        <label for="billing-phone">Phone</label>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 collapse-billing show">
+                    <div class="form-floating">
+                        <input required
+                               id="billing-first-name"
+                               class="form-control update-billing"
+                               type="text"
+                               placeholder="First name"
+                               autocomplete="given-name">
+                        <label for="billing-first-name">First name</label>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 collapse-billing show">
+                    <div class="form-floating">
+                        <input required
+                               id="billing-last-name"
+                               class="form-control update-billing"
+                               type="text"
+                               placeholder="First name"
+                               autocomplete="family-name">
+                        <label for="billing-last-name">Last name</label>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 collapse-billing show">
+                    <div class="form-floating">
+                        <input required
+                               id="billing-address"
+                               class="form-control update-billing"
+                               type="text"
+                               placeholder="Address"
+                               autocomplete="street-address">
+                        <label for="billing-address">Address</label>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 collapse-billing show">
+                    <div class="form-floating">
+                        <input required
+                               id="billing-city"
+                               class="form-control update-billing"
+                               type="text"
+                               placeholder="City"
+                               autocomplete="address-level2">
+                        <label for="billing-city">City</label>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-4 collapse-billing show">
+                    <div class="form-floating">
+                        <input required
+                               id="billing-zip-code"
+                               class="form-control update-billing"
+                               type="text"
+                               placeholder="Postal code"
+                               autocomplete="postal-code">
+                        <label for="billing-zip-code">Postal code</label>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-4 collapse-billing show">
+                    <div class="form-floating">
+                        <input id="billing-state"
+                               class="form-control update-billing"
+                               type="text"
+                               placeholder="State"
+                               autocomplete="address-level1">
+                        <label for="billing-zip-code">State</label>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-4 collapse-billing show">
+                    <div class="form-floating">
+                        <select required
+                                id="billing-country-id"
+                                class="form-select update-billing"
+                                autocomplete="country-name">
+                            <option selected disabled value="">Make a selection</option>
+                        </select>
+                        <label for="billing-country-id">Country</label>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6">
+                    <div class="form-floating">
+                        <input id="billing-company"
+                               class="form-control update-billing"
+                               type="text"
+                               placeholder="Company"
+                               autocomplete="organization">
+                        <label for="billing-company">Company</label>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6">
+                    <div class="form-floating">
+                        <input id="billing-vat"
+                               class="form-control update-billing"
+                               type="text"
+                               placeholder="VAT">
+                        <label for="billing-vat">VAT</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- shipment methods -->
+        <div class="col-12">
+            <h3>Shipment methods</h3>
+            <div class="table-responsive">
+                <table id="shipment-methods"
+                       class="table rounded-2 overflow-hidden align-middle mb-0">
+                    <thead class="table-secondary">
+                        <tr>
+                            <th>Name</th>
+                            <th>Price</th>
+                            <th class="text-end">Selection</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-light">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- model add sku -->
+    <div id="modal-add-sku" class="modal fade" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add SKU</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <table id="skus" class="table rounded-2 overflow-hidden align-middle mb-0">
+                        <thead class="table-secondary">
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th class="text-end">Selection</th>
+                            </tr>
+                        </thead>
+                        <tbody class="table-light">
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button id="add-cart-item" class="btn btn-load btn-primary">Add</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- model add order -->
+    <div id="modal-add-order" class="modal fade" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create order</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        <b>This action is irreversible.</b>
+                        The customer will <b>not</b> be notified automatically.
+                    </p>
+                    <p class="mb-0">
+                        Payments can only be done through banktransfer.
+                        A payment link will be provided on the order page.
+                        You will be redirected automatically.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button id="add-order" class="btn btn-load btn-warning">Proceed</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock admin_body %}

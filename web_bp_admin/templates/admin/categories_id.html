@@ -1,0 +1,156 @@
+{% extends "admin_main.html" %}
+{% block admin_body %}
+    <script>
+        let _categoryItemId = undefined;
+        async function addCategoryItem(categoryId) {
+            event.preventDefault();
+            updateButton(`add-category-item`, 1);
+            await postCategoriesIdItems(categoryId, {
+                sku_id: parseInt(document.getElementById(`category-item-sku-id`).value),
+                order: parseInt(document.getElementById(`category-item-order`).value),
+            });
+            await patchSettings({
+                cached_at: null
+            });
+            window.location.reload();
+        }
+        async function updateCategoryItem(itemId, categoryId) {
+            event.preventDefault();
+            updateButton(`update-category-item-${itemId}`, 1);
+            await patchCategoriesIdItemsId(categoryId, itemId, {
+                order: parseInt(document.getElementById(`category-item-order-${itemId}`).value)
+            });
+            await patchSettings({
+                cached_at: null
+            });
+            window.location.reload();
+        }
+        async function deleteCategoryItem(itemId, categoryId) {
+            event.preventDefault();
+            updateButton(`delete-category-item`, 1);
+            await deleteCategoriesIdItemsId(categoryId, itemId);
+            await patchSettings({
+                cached_at: null
+            });
+            window.location.reload();
+        }
+    </script>
+
+    <div class="row g-3">
+        <div class="col-12">
+            <div class="d-flex justify-content-between gap-2">
+                <h2 class="mb-0">Category - {{ category.name }}</h2>
+                <button class="btn btn-success"
+                        type="submit"
+                        data-bs-toggle="modal"
+                        data-bs-target="#modal-add-category-item">
+                    Add
+                    <i class="bi bi-plus-square ms-1"></i>
+                </button>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="table-responsive">
+                <table class="table rounded-2 overflow-hidden align-middle mb-0">
+                    <thead class="table-secondary">
+                        <tr>
+                            <th>SKU</th>
+                            <th>Order</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-light">
+                        {% for x in category_items %}
+                            <tr>
+                                <td>{{ x.sku.name }}</td>
+                                <td>
+                                    <input id="category-item-order-{{ x.id }}"
+                                           class="form-control form-control-sm"
+                                           type="number"
+                                           value="{{ x.order if x.order }}">
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group">
+                                        <button id="update-category-item-{{ x.id }}"
+                                                class="btn btn-load btn-sm btn-outline-primary"
+                                                onclick="updateCategoryItem({{ x.id }}, {{ category.id }});">
+                                            Update
+                                        </button>
+                                        <button id="delete-category-item-{{ x.id }}"
+                                                class="btn btn-load btn-sm btn-outline-danger"
+                                                onclick="_categoryItemId = {{ x.id }};"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#modal-delete-category-item">
+                                            Delete
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-add-category-item"
+         class="modal modal-lg fade"
+         tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content" onsubmit="addCategoryItem({{ category.id }});">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add category item</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-2">
+                        <div class="col-12 col-lg-6">
+                            <div class="input-group">
+                                <span class="input-group-text">SKU</span>
+                                <select required id="category-item-sku-id" class="form-select">
+                                    <option disabled selected>None</option>
+                                    {% for x in available_skus %}<option value="{{ x.id }}">{{ x.name }}</option>{% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6">
+                            <div class="input-group">
+                                <span class="input-group-text">Order</span>
+                                <input id="category-item-order"
+                                       class="form-control"
+                                       placeholder="Order"
+                                       type="number">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="add-category-item" class="btn btn-load btn-success" type="submit">Add</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-delete-category-item" class="modal fade" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Delete category item</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">Are you sure?</p>
+                </div>
+                <div class="modal-footer">
+                    <button id="delete-category-item"
+                            class="btn btn-load btn-danger"
+                            onclick="deleteCategoryItem(_categoryItemId, {{ category.id }});">
+                        Delete
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock admin_body %}

@@ -1,0 +1,190 @@
+{% extends "admin_main.html" %}
+{% block admin_body %}
+    <script>
+        let _shipmentMethodId = undefined;
+        async function addShipmentMethod() {
+            event.preventDefault();
+            updateButton('add-shipment-method', 1);
+            await postShipmentMethods({
+                name: document.getElementById('shipment-method-name').value,
+                class_id: parseInt(document.getElementById(`shipment-method-class-id`).value),
+                zone_id: parseInt(document.getElementById(`shipment-method-zone-id`).value),
+                unit_price: parseFloat(document.getElementById(`shipment-method-unit-price`).value),
+            });
+            window.location.reload();
+        }
+        async function updateShipmentMethod(methodId) {
+            event.preventDefault();
+            updateButton(`update-shipment-method-${methodId}`, 1);
+            await patchShipmentMethodsId(methodId, {
+                unit_price: parseFloat(document.getElementById(`shipment-method-unit-price-${methodId}`).value),
+                phone_required: document.getElementById(`shipment-method-phone-required-${methodId}`).checked,
+            });
+            window.location.reload();
+        }
+        async function deleteShipmentMethod(methodId) {
+            event.preventDefault();
+            updateButton(`delete-shipment-method`, 1);
+            await deleteShipmentMethodsId(methodId);
+            window.location.reload();
+        }
+    </script>
+
+    <div class="row g-3">
+        <div class="col-12">
+            <div class="d-flex justify-content-between gap-2">
+                <h2 class="mb-0">Shipment Methods</h2>
+                <button class="btn btn-success"
+                        type="submit"
+                        data-bs-toggle="modal"
+                        data-bs-target="#modal-add-shipment-method">
+                    Add
+                    <i class="bi bi-plus-square ms-1"></i>
+                </button>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="table-responsive">
+                <table class="table rounded-2 overflow-hidden align-middle mb-0">
+                    <thead class="table-secondary">
+                        <tr>
+                            <th>Name</th>
+                            <th>Unit price</th>
+                            <th>Class</th>
+                            <th>Zone</th>
+                            <th>Phone required</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-light">
+                        {% for method in shipment_methods %}
+                            <tr>
+                                <td>{{ method.name }}</td>
+                                <td>
+                                    <input id="shipment-method-unit-price-{{ method.id }}"
+                                           class="form-control form-control-sm"
+                                           type="number"
+                                           step="0.01"
+                                           value="{{ method.unit_price|price }}">
+                                </td>
+                                <td>{{ method.class_.name }}</td>
+                                <td>
+                                    {{ method.zone.country.name if method.zone.country }}
+                                    {{ method.zone.region.name if method.zone.region }}
+                                </td>
+                                <td>
+                                    <input {{ 'checked' if method.phone_required }}
+                                           id="shipment-method-phone-required-{{ method.id }}"
+                                           class="form-check-input"
+                                           type="checkbox">
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group">
+                                        <button id="update-shipment-method-{{ method.id }}"
+                                                class="btn btn-load btn-sm btn-outline-primary"
+                                                onclick="updateShipmentMethod({{ method.id }});">
+                                            Update
+                                        </button>
+                                        <button class="btn btn-load btn-sm btn-outline-danger"
+                                                onclick="_shipmentMethodId = {{ method.id }};"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#modal-delete-shipment-method">
+                                            Delete
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-add-shipment-method"
+         class="modal modal-lg fade"
+         tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content" onsubmit="addShipmentMethod();">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add shipment method</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-2">
+                        <div class="col-12 col-lg-6">
+                            <div class="input-group">
+                                <span class="input-group-text">Name</span>
+                                <input required
+                                       id="shipment-method-name"
+                                       class="form-control"
+                                       placeholder="Name"
+                                       type="text">
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6">
+                            <div class="input-group">
+                                <span class="input-group-text">Unit price</span>
+                                <input required
+                                       id="shipment-method-unit-price"
+                                       class="form-control"
+                                       placeholder="Price"
+                                       type="number"
+                                       step="0.01">
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6">
+                            <div class="input-group">
+                                <span class="input-group-text">Class</span>
+                                <select required id="shipment-method-class-id" class="form-select">
+                                    <option disabled selected>None</option>
+                                    {% for x in shipment_classes %}<option value="{{ x.id }}">{{ x.name }}</option>{% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6">
+                            <div class="input-group">
+                                <span class="input-group-text">Zone</span>
+                                <select required id="shipment-method-zone-id" class="form-select">
+                                    <option disabled selected>None</option>
+                                    {% for x in shipment_zones %}
+                                        <option value="{{ x.id }}">
+                                            {{ x.country.name if x.country }}
+                                            {{ x.region.name if x.region }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="add-shipment-method"
+                            class="btn btn-load btn-success"
+                            type="submit">Add</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-delete-shipment-method" class="modal fade" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Delete shipment method</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">Are you sure?</p>
+                </div>
+                <div class="modal-footer">
+                    <button id="delete-shipment-method"
+                            class="btn btn-load btn-danger"
+                            onclick="deleteShipmentMethod(_shipmentMethodId);">Delete</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock admin_body %}

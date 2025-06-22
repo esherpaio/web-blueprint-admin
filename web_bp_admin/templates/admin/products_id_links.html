@@ -1,0 +1,131 @@
+{% extends "admin_main.html" %}
+{% block admin_body %}
+    <script>
+        let _linkId = undefined;
+        async function addLink(productId) {
+            event.preventDefault();
+            updateButton(`add-link`, 1);
+            await postProductsIdLinks(productId, {
+                type_id: parseInt(document.getElementById(`link-type-id`).value),
+                sku_id: parseInt(document.getElementById(`link-sku-id`).value),
+            });
+            await patchSettings({
+                cached_at: null
+            });
+            window.location.reload();
+        }
+        async function deleteLink(linkId, productId) {
+            event.preventDefault();
+            updateButton(`delete-link`, 1);
+            await deleteProductsIdLinksId(productId, linkId);
+            await patchSettings({
+                cached_at: null
+            });
+            window.location.reload();
+        }
+    </script>
+
+    {% include "admin/section/products_nav.html" %}
+
+    <div class="row g-3">
+        <div class="col-12">
+            <div class="btn-toolbar justify-content-end gap-2">
+                <button class="btn btn-success"
+                        type="submit"
+                        data-bs-toggle="modal"
+                        data-bs-target="#modal-add-link">
+                    Add
+                    <i class="bi bi-plus-square ms-1"></i>
+                </button>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="table-responsive">
+                <table class="table rounded-2 overflow-hidden align-middle mb-0">
+                    <thead class="table-secondary">
+                        <tr>
+                            <th>Type</th>
+                            <th>SKU</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-light">
+                        {% for link in product_links %}
+                            <tr>
+                                <td>{{ link.type_.name }}</td>
+                                <td>{{ link.sku.name }}</td>
+                                <td class="text-end">
+                                    <div class="btn-group">
+                                        <button class="btn btn-load btn-sm btn-outline-danger"
+                                                onclick="_linkId = {{ link.id }};"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#modal-delete-link">Delete</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-add-link" class="modal modal-lg fade" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content" onsubmit="addLink({{ product.id }});">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add link</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-2">
+                        <div class="col-12 col-lg-6">
+                            <div class="input-group">
+                                <span class="input-group-text">Type</span>
+                                <select required id="link-type-id" class="form-select">
+                                    <option disabled selected>None</option>
+                                    {% for x in cache.product_link_types %}
+                                        <option value="{{ x.id }}">{{ x.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6">
+                            <div class="input-group">
+                                <span class="input-group-text">SKU</span>
+                                <select required id="link-sku-id" class="form-select">
+                                    <option disabled selected>None</option>
+                                    {% for x in available_skus %}<option value="{{ x.id }}">{{ x.name }}</option>{% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="add-link" class="btn btn-load btn-success" type="submit">Add</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-delete-link" class="modal fade" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Delete link</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">Are you sure?</p>
+                </div>
+                <div class="modal-footer">
+                    <button id="delete-link"
+                            class="btn btn-load btn-danger"
+                            onclick="deleteLink(_linkId, {{ product.id }});">Delete</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock admin_body %}

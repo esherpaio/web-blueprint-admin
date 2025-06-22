@@ -1,0 +1,151 @@
+{% extends "admin_main.html" %}
+{% block admin_body %}
+    <script>
+        let _optionId = undefined;
+        async function addOption(productId) {
+            event.preventDefault();
+            updateButton(`add-option`, 1);
+            await postProductsIdOptions(productId, {
+                name: document.getElementById(`option-name`).value
+            });
+            await patchSettings({
+                cached_at: null
+            });
+            window.location.reload();
+        }
+        async function updateOption(optionId, productId) {
+            event.preventDefault();
+            updateButton(`update-option-${optionId}`, 1);
+            await patchProductsIdOptionsId(productId, optionId, {
+                order: parseInt(document.getElementById(`option-order-${optionId}`).value),
+            });
+            await patchSettings({
+                cached_at: null
+            });
+            window.location.reload();
+        }
+        async function deleteOption(optionId, productId) {
+            event.preventDefault();
+            updateButton(`delete-option`, 1);
+            await deleteProductsIdOptionsId(productId, optionId);
+            await patchSettings({
+                cached_at: null
+            });
+            window.location.reload();
+        }
+    </script>
+
+    {% include "admin/section/products_nav.html" %}
+
+    <div class="row g-3">
+        <div class="col-12">
+            <div class="btn-toolbar justify-content-end gap-2">
+                <button class="btn btn-success"
+                        type="submit"
+                        data-bs-toggle="modal"
+                        data-bs-target="#modal-add-option">
+                    Add
+                    <i class="bi bi-plus-square ms-1"></i>
+                </button>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="table-responsive">
+                <table class="table rounded-2 overflow-hidden align-middle mb-0">
+                    <thead class="table-secondary">
+                        <tr>
+                            <th>Name</th>
+                            <th>Values</th>
+                            <th>Order</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-light">
+                        {% for option in product_options %}
+                            <tr>
+                                <td>{{ option.name }}</td>
+                                <td>
+                                    {% for value in option.values %}
+                                        {% if not value.is_deleted %}{{ value.name }}{% endif %}
+                                    {% endfor %}
+                                </td>
+                                <td>
+                                    <input id="option-order-{{ option.id }}"
+                                           class="form-control form-control-sm"
+                                           type="number"
+                                           value="{{ option.order if option.order }}">
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group">
+                                        <a href="{{ url_for('admin.products_id_options_id', product_id=product.id, option_id=option.id) }}"
+                                           class="btn btn-sm btn-outline-primary">View</a>
+                                        <button id="update-option-{{ option.id }}"
+                                                class="btn btn-load btn-sm btn-outline-primary"
+                                                onclick="updateOption({{ option.id }}, {{ product.id }});">
+                                            Update
+                                        </button>
+                                        <button class="btn btn-load btn-sm btn-outline-danger"
+                                                onclick="_optionId = {{ option.id }};"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#modal-delete-option">
+                                            Delete
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-add-option" class="modal modal-lg fade" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content" onsubmit="addOption({{ product.id }});">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add option</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-2">
+                        <div class="col-12 col-lg-6">
+                            <div class="input-group">
+                                <span class="input-group-text">Name</span>
+                                <input required
+                                       id="option-name"
+                                       class="form-control"
+                                       placeholder="Name"
+                                       type="text">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="add-option" class="btn btn-load btn-success" type="submit">Add</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-delete-option" class="modal fade" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Delete option</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">Are you sure?</p>
+                </div>
+                <div class="modal-footer">
+                    <button id="delete-option"
+                            class="btn btn-load btn-danger"
+                            onclick="deleteOption(_optionId, {{ product.id }});">Delete</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock admin_body %}

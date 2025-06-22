@@ -1,0 +1,132 @@
+{% extends "admin_main.html" %}
+{% block admin_body %}
+    <script>
+        let _skuId = undefined;
+        async function createSkus(productId) {
+            event.preventDefault();
+            updateButton(`create-skus`, 1);
+            await postProductsIdSkus(productId);
+            await patchSettings({
+                cached_at: null
+            });
+            window.location.reload();
+        }
+        async function updateSku(skuId) {
+            event.preventDefault();
+            updateButton(`update-sku-${skuId}`, 1);
+            await patchSkusId(skuId, {
+                is_visible: document.getElementById(`sku-is-visible-${skuId}`).checked,
+                stock: parseInt(document.getElementById(`sku-stock-${skuId}`).value),
+                number: document.getElementById(`sku-number-${skuId}`).value || null,
+            });
+            await patchSettings({
+                cached_at: null
+            });
+            window.location.reload();
+        }
+        async function deleteSku(skuId) {
+            event.preventDefault();
+            updateButton(`delete-sku`, 1);
+            await deleteSkusId(skuId);
+            await patchSettings({
+                cached_at: null
+            });
+            window.location.reload();
+        }
+    </script>
+
+    {% include "admin/section/products_nav.html" %}
+
+    <div class="row g-3">
+        <div class="col-12">
+            <div class="btn-toolbar justify-content-end gap-2">
+                <button id="create-skus"
+                        class="btn btn-load btn-primary"
+                        type="submit"
+                        onclick="createSkus({{ product.id }});">Generate</button>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="table-responsive">
+                <table class="table rounded-2 overflow-hidden align-middle mb-0">
+                    <thead class="table-secondary">
+                        <tr>
+                            <th>ID</th>
+                            <th>Number</th>
+                            <th>Options</th>
+                            <th>Stock</th>
+                            <th>Visible</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-light">
+                        {% for sku in skus %}
+                            <tr>
+                                <td>{{ sku.id }}</td>
+                                <td>
+                                    <input id="sku-number-{{ sku.id }}"
+                                           class="form-control form-control-sm"
+                                           type="text"
+                                           value="{{ sku.number if sku.number }}">
+                                </td>
+                                <td class="small ps-2">
+                                    {% if sku.details %}
+                                        {% for detail in sku.details %}
+                                            {{ detail.option.name }}: {{ detail.value.name }}
+                                            <br>
+                                        {% endfor %}
+                                    {% else %}
+                                        None
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <input id="sku-stock-{{ sku.id }}"
+                                           class="form-control form-control-sm"
+                                           type="text"
+                                           value="{{ sku.stock if sku.stock is number }}">
+                                </td>
+                                <td>
+                                    <input {{ 'checked' if sku.is_visible }}
+                                           id="sku-is-visible-{{ sku.id }}"
+                                           class="form-check-input"
+                                           type="checkbox">
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group">
+                                        <button id="update-sku-{{ sku.id }}"
+                                                class="btn btn-load btn-sm btn-outline-primary"
+                                                onclick="updateSku({{ sku.id }});">Update</button>
+                                        <button class="btn btn-load btn-sm btn-outline-danger"
+                                                onclick="_skuId = {{ sku.id }};"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#modal-delete-sku">Delete</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-delete-sku" class="modal fade" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Delete SKU</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">Are you sure?</p>
+                </div>
+                <div class="modal-footer">
+                    <button id="delete-sku"
+                            class="btn btn-load btn-danger"
+                            onclick="deleteSku(_skuId);">Delete</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock admin_body %}

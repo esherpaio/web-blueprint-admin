@@ -1,0 +1,179 @@
+{% extends "admin_main.html" %}
+{% block admin_body %}
+    <script>
+        let _valueId = undefined;
+        async function addValue(optionId, productId) {
+            event.preventDefault();
+            updateButton(`add-value`, 1);
+            await postProductsIdValues(productId, {
+                name: document.getElementById('value-name').value,
+                option_id: optionId,
+                unit_price: parseFloat(document.getElementById('value-unit-price').value),
+            });
+            await patchSettings({
+                cached_at: null
+            });
+            window.location.reload();
+        }
+        async function updateValue(valueId, productId) {
+            event.preventDefault();
+            updateButton(`update-value-${valueId}`, 1);
+            await patchProductsIdValuesId(productId, valueId, {
+                media_id: parseInt(document.getElementById(`value-media-id-${valueId}`).value),
+                order: parseInt(document.getElementById(`value-order-${valueId}`).value),
+                unit_price: parseFloat(document.getElementById(`value-unit-price-${valueId}`).value),
+            });
+            await patchSettings({
+                cached_at: null
+            });
+            window.location.reload();
+        }
+        async function deleteValue(valueId, productId) {
+            event.preventDefault();
+            updateButton(`delete-value`, 1);
+            await deleteProductsIdValuesId(productId, valueId);
+            await patchSettings({
+                cached_at: null
+            });
+            window.location.reload();
+        }
+    </script>
+
+    {% include "admin/section/products_nav.html" %}
+
+    <div class="row g-3">
+        <div class="col-12">
+            <div class="btn-toolbar justify-content-end gap-2">
+                <button class="btn btn-success"
+                        type="submit"
+                        data-bs-toggle="modal"
+                        data-bs-target="#modal-add-value">
+                    Add
+                    <i class="bi bi-plus-square ms-1"></i>
+                </button>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="table-responsive">
+                <table class="table rounded-2 overflow-hidden align-middle mb-0">
+                    <thead class="table-secondary">
+                        <tr>
+                            <th>Name</th>
+                            <th>Unit price</th>
+                            <th>Media</th>
+                            <th>Order</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-light">
+                        {% for value in option_values %}
+                            <tr>
+                                <td>{{ value.name }}</td>
+                                <td>
+                                    <input id="value-unit-price-{{ value.id }}"
+                                           class="form-control form-control-sm"
+                                           type="number"
+                                           step="0.01"
+                                           value="{{ value.unit_price|price }}">
+                                </td>
+                                <td>
+                                    <select id="value-media-id-{{ value.id }}" class="form-select form-select-sm">
+                                        <option>None</option>
+                                        {% for media in product_medias %}
+                                            {% if media.file_.description %}
+                                                <option {{ 'selected' if value.media_id == media.id }} value="{{ media.id }}">
+                                                    {{ media.file_.description }}
+                                                </option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td>
+                                    <input id="value-order-{{ value.id }}"
+                                           class="form-control form-control-sm"
+                                           type="number"
+                                           value="{{ value.order }}">
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group">
+                                        <button id="update-value-{{ value.id }}"
+                                                class="btn btn-load btn-sm btn-outline-primary"
+                                                onclick="updateValue({{ value.id }}, {{ option.product_id }});">
+                                            Update
+                                        </button>
+                                        <button class="btn btn-load btn-sm btn-outline-danger"
+                                                onclick="_valueId = {{ value.id }};"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#modal-delete-value">
+                                            Delete
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-add-value" class="modal modal-lg fade" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content"
+                  onsubmit="addValue({{ option.id }}, {{ product.id }});">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add value</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-2">
+                        <div class="col-12 col-lg-6">
+                            <div class="input-group">
+                                <span class="input-group-text">Name</span>
+                                <input required
+                                       id="value-name"
+                                       class="form-control"
+                                       placeholder="Name"
+                                       type="text">
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6">
+                            <div class="input-group">
+                                <span class="input-group-text">Price</span>
+                                <input id="value-unit-price"
+                                       class="form-control"
+                                       placeholder="Price"
+                                       type="number"
+                                       step="0.01">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="add-value" class="btn btn-load btn-success" type="submit">Add</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-delete-value" class="modal fade" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Delete value</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">Are you sure?</p>
+                </div>
+                <div class="modal-footer">
+                    <button id="delete-value"
+                            class="btn btn-load btn-danger"
+                            onclick="deleteValue(_valueId, {{ product.id }});">Delete</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock admin_body %}

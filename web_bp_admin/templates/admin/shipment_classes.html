@@ -1,0 +1,148 @@
+{% extends "admin_main.html" %}
+{% block admin_body %}
+    <script>
+        let _shipmentClassId = undefined;
+        async function addShipmentClass() {
+            event.preventDefault();
+            updateButton('add-shipment-class', 1);
+            await postShipmentClasses({
+                order: parseInt(document.getElementById('shipment-class-order').value),
+                name: document.getElementById('shipment-class-name').value,
+            });
+            window.location.reload();
+        }
+        async function updateShipmentClass(classId) {
+            event.preventDefault();
+            updateButton(`update-shipment-class-${classId}`, 1);
+            await patchShipmentClassesId(classId, {
+                order: parseInt(document.getElementById(`shipment-class-order-${classId}`).value)
+            });
+            window.location.reload();
+        }
+        async function deleteShipmentClass(classId) {
+            event.preventDefault();
+            updateButton(`delete-shipment-class`, 1);
+            await deleteShipmentClassesId(classId);
+            window.location.reload();
+        }
+    </script>
+
+    <div class="row g-3">
+        <div class="col-12">
+            <div class="d-flex justify-content-between gap-2">
+                <h2 class="mb-0">Shipment Classes</h2>
+                <button class="btn btn-success"
+                        type="submit"
+                        data-bs-toggle="modal"
+                        data-bs-target="#modal-add-shipment-class">
+                    Add
+                    <i class="bi bi-plus-square ms-1"></i>
+                </button>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="table-responsive">
+                <table class="table rounded-2 overflow-hidden align-middle mb-0">
+                    <thead class="table-secondary">
+                        <tr>
+                            <th>Name</th>
+                            <th>Order</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-light">
+                        {% for x in shipment_classes %}
+                            <tr>
+                                <td>{{ x.name }}</td>
+                                <td>
+                                    <input id="shipment-class-order-{{ x.id }}"
+                                           class="form-control form-control-sm"
+                                           type="number"
+                                           value="{{ x.order if x.order }}">
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group">
+                                        <button id="update-shipment-class-{{ x.id }}"
+                                                class="btn btn-load btn-sm btn-outline-primary"
+                                                onclick="updateShipmentClass({{ x.id }});">
+                                            Update
+                                        </button>
+                                        <button class="btn btn-load btn-sm btn-outline-danger"
+                                                onclick="_shipmentClassId = {{ x.id }};"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#modal-delete-shipment-class">
+                                            Delete
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-add-shipment-class"
+         class="modal modal-lg fade"
+         tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content" onsubmit="addShipmentClass();">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add shipment class</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-2">
+                        <div class="col-12 col-lg-6">
+                            <div class="input-group">
+                                <span class="input-group-text">Name</span>
+                                <input required
+                                       id="shipment-class-name"
+                                       class="form-control"
+                                       placeholder="Name"
+                                       type="text">
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6">
+                            <div class="input-group">
+                                <span class="input-group-text">Order</span>
+                                <input required
+                                       id="shipment-class-order"
+                                       class="form-control"
+                                       placeholder="Order"
+                                       type="number">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="add-shipment-class"
+                            class="btn btn-load btn-success"
+                            type="submit">Add</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-delete-shipment-class" class="modal fade" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Delete shipment class</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">Are you sure?</p>
+                </div>
+                <div class="modal-footer">
+                    <button id="delete-shipment-class"
+                            class="btn btn-load btn-danger"
+                            onclick="deleteShipmentClass(_shipmentClassId);">Delete</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock admin_body %}

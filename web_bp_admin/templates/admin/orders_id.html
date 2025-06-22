@@ -1,0 +1,395 @@
+{% extends "admin_main.html" %}
+{% block admin_body %}
+    <script>
+        async function updateOrderStatus(orderId) {
+            event.preventDefault();
+            updateButton('update-order-status', 1);
+            await patchOrdersId(orderId, {
+                status_id: parseInt(document.getElementById('order-status-id').value),
+            });
+            window.location.reload();
+        }
+        async function addShipment(orderId) {
+            event.preventDefault();
+            updateButton('add-shipment', 1);
+            await postOrdersIdShipments(orderId, {
+                url: document.getElementById('shipment-url').value,
+            });
+            window.location.reload();
+        }
+        async function cancelOrder(orderId) {
+            event.preventDefault();
+            updateButton('cancel-order', 1);
+            await deleteOrdersId(orderId);
+            window.location.reload();
+        }
+        async function refundOrder(orderId) {
+            event.preventDefault();
+            updateButton('create-refund', 1);
+            await postOrdersIdRefunds(orderId, {
+                total_price: parseFloat(document.getElementById('refund-total-price').value),
+            });
+            window.location.reload();
+        }
+    </script>
+
+    <div class="row g-3">
+        <div class="col-12">
+            <div class="d-flex justify-content-between gap-2">
+                <h2 class="mb-0">Order #{{ order.id }}</h2>
+                <div class="btn-toolbar justify-content-end gap-2">
+                    {% if order.next_statuses(cache.order_statuses) %}
+                        <button class="btn btn-primary"
+                                data-bs-toggle="modal"
+                                data-bs-target="#modal-update-order-status">Update status</button>
+                    {% endif %}
+                    {% if not order.is_pending %}
+                        <button class="btn btn-warning"
+                                data-bs-toggle="modal"
+                                data-bs-target="#modal-add-shipment">Add shipment</button>
+                    {% endif %}
+                    {% if order.is_pending %}
+                        <button class="btn btn-warning"
+                                data-bs-toggle="modal"
+                                data-bs-target="#modal-cancel-order">Cancel order</button>
+                    {% endif %}
+                    {% if order.is_refundable %}
+                        <button class="btn btn-warning"
+                                data-bs-toggle="modal"
+                                data-bs-target="#modal-refund-order">Create refund</button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-lg-6">
+            <div class="bg-light rounded-2 p-4 text-break h-100">
+                <h4>Details</h4>
+                <div class="row g-3">
+                    <div class="col">
+                        <span class="d-block">Order ID</span>
+                        <span class="d-block">Created at</span>
+                        <span class="d-block mb-2">Status</span>
+                        <span class="d-block">Shipment</span>
+                        <span class="d-block mb-2">Shipment price</span>
+                        <span class="d-block">Coupon</span>
+                        <span class="d-block mb-2">Discount</span>
+                        <span class="d-block">VAT rate</span>
+                        <span class="d-block">Total price</span>
+                    </div>
+                    <div class="col">
+                        <span class="d-block">{{ order.id }}</span>
+                        <span class="d-block">{{ order.created_at|datetime }}</span>
+                        <span class="d-block mb-2"><span class="badge {{ order_status_color_map.get(order.status_id, '') }}">{{ order.status.name }}</span></span>
+                        <span class="d-block">{{ order.shipment_name }}</span>
+                        <span class="d-block mb-2">{{ order.shipment_price|price }} {{ order.currency_code }}</span>
+                        <span class="d-block">{{ order.coupon_code }}</span>
+                        <span class="d-block mb-2">{{ order.discount_price|price }} {{ order.currency_code }}</span>
+                        <span class="d-block">{{ order.vat_percentage }} %</span>
+                        <span class="d-block">{{ order.total_price|price }} {{ order.currency_code }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-lg-3">
+            <div class="bg-light rounded-2 p-4 text-break h-100">
+                <h4>Shipping</h4>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <span class="d-block">{{ order.shipping.first_name }} {{ order.shipping.last_name }}</span>
+                        <span class="d-block">{{ order.shipping.address }}</span>
+                        <span class="d-block">{{ order.shipping.zip_code }} {{ order.shipping.city }}</span>
+                        {% if order.shipping.state %}<span class="d-block">{{ order.shipping.state }}</span>{% endif %}
+                        <span class="d-block mb-2">{{ order.shipping.country.name }}</span>
+                        <span class="d-block">{{ order.shipping.email }}</span>
+                        {% if order.shipping.phone is not none %}
+                            <span class="d-block">{{ order.shipping.phone }}</span>
+                        {% endif %}
+                        {% if order.shipping.company %}
+                            <span class="d-block">{{ order.shipping.company }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-lg-3">
+            <div class="bg-light rounded-2 p-4 text-break h-100">
+                <h4>Billing</h4>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <span class="d-block">{{ order.billing.first_name }} {{ order.billing.last_name }}</span>
+                        <span class="d-block">{{ order.billing.address }}</span>
+                        <span class="d-block">{{ order.billing.zip_code }} {{ order.billing.city }}</span>
+                        {% if order.billing.state %}<span class="d-block">{{ order.billing.state }}</span>{% endif %}
+                        <span class="d-block mb-2">{{ order.billing.country.name }}</span>
+                        <span class="d-block">{{ order.billing.email }}</span>
+                        {% if order.billing.phone %}<span class="d-block">{{ order.billing.phone }}</span>{% endif %}
+                        {% if order.billing.company %}<span class="d-block">{{ order.billing.company }}</span>{% endif %}
+                        {% if order.billing.vat %}<span class="d-block">{{ order.billing.vat }}</span>{% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="table-responsive">
+                <h4 class="ms-2 mt-3">Items</h4>
+                <table class="table rounded-2 overflow-hidden align-middle mb-0">
+                    <thead class="table-secondary">
+                        <tr>
+                            <th>Name</th>
+                            <th>Options</th>
+                            <th>Quantity</th>
+                            <th>Total price</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-light">
+                        {% for line in order_lines %}
+                            <tr>
+                                <td>{{ line.sku.product.name }}</td>
+                                <td class="small">
+                                    {% for detail in line.sku.details %}
+                                        {{ detail.option.name }}: {{ detail.value.name }}
+                                        <br>
+                                    {% endfor %}
+                                </td>
+                                <td>{{ line.quantity }}x</td>
+                                <td>{{ line.total_price|price }} {{ order.currency_code }}</td>
+                                <td class="text-end">
+                                    <div class="btn-group">
+                                        {% if line.sku.product.file_url %}
+                                            <a class="btn btn-sm btn-outline-primary"
+                                               href="{{ line.sku.product.file_url }}"
+                                               target="_blank"
+                                               rel="noopener">Open</a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% if invoices %}
+            <div class="col-12">
+                <div class="table-responsive">
+                    <h4 class="ms-2 mt-3">Invoices</h4>
+                    <table class="table rounded-2 overflow-hidden align-middle mb-0">
+                        <thead class="table-secondary">
+                            <tr>
+                                <th>Number</th>
+                                <th>Expires at</th>
+                                <th>Paid at</th>
+                                <th>Payment URL</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="table-light">
+                            {% for invoice in invoices %}
+                                <tr>
+                                    <td>{{ invoice.number }}</td>
+                                    <td>{{ invoice.expires_at|datetime if invoice.expires_at }}</td>
+                                    <td>{{ invoice.paid_at|datetime if invoice.paid_at }}</td>
+                                    <td>
+                                        {% if invoice.payment_url %}
+                                            <a href="{{ invoice.payment_url }}" target="_blank" rel="noopener">{{ invoice.payment_url }}</a>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="btn-group">
+                                            <a class="btn btn-sm btn-outline-primary"
+                                               href="{{ url_for('admin.orders_id_invoices_id_download', order_id=order.id, invoice_id=invoice.id) }}">
+                                                Download
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        {% endif %}
+        {% if order.shipments %}
+            <div class="col-12">
+                <div class="table-responsive">
+                    <h4 class="ms-2 mt-3">Shipments</h4>
+                    <table class="table rounded-2 overflow-hidden align-middle mb-0">
+                        <thead class="table-secondary">
+                            <tr>
+                                <th>Carrier</th>
+                                <th>Code</th>
+                                <th>Tracking URL</th>
+                            </tr>
+                        </thead>
+                        <tbody class="table-light">
+                            {% for shipment in order.shipments %}
+                                <tr>
+                                    <td>{{ shipment.carrier if shipment.carrier }}</td>
+                                    <td>{{ shipment.code if shipment.code }}</td>
+                                    <td>
+                                        {% if shipment.url %}
+                                            <a href="{{ shipment.url }}" target="_blank" rel="noopener">{{ shipment.url }}</a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        {% endif %}
+        {% if refunds %}
+            <div class="col-12">
+                <div class="table-responsive">
+                    <h4 class="ms-2 mt-3">Refunds</h4>
+                    <table class="table rounded-2 overflow-hidden align-middle mb-0">
+                        <thead class="table-secondary">
+                            <tr>
+                                <th>Number</th>
+                                <th>Total price</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="table-light">
+                            {% for refund in refunds %}
+                                <tr>
+                                    <td>{{ refund.number }}</td>
+                                    <td>{{ refund.total_price|price }} {{ order.currency_code }}</td>
+                                    <td class="text-end">
+                                        <div class="btn-group">
+                                            <a class="btn btn-sm btn-outline-primary"
+                                               href="{{ url_for('admin.orders_id_refunds_id_download', order_id=order.id, refund_id=refund.id) }}">
+                                                Download
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <div id="modal-update-order-status" class="modal fade" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Update status</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="input-group">
+                        <span class="input-group-text">Status</span>
+                        <select id="order-status-id" class="form-select">
+                            {% for x in order.next_statuses(cache.order_statuses) %}
+                                <option {{ 'selected' if x.id == order.status_id }} value="{{ x.id }}">
+                                    {{ x.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="update-order-status"
+                            class="btn btn-load btn-warning"
+                            onclick="updateOrderStatus({{ order.id }})">Update</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-add-shipment" class="modal fade" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add shipment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        <b>This action is irreversible.</b>
+                        A shipment will be added and emailed to the customer.
+                    </p>
+                    <div class="input-group">
+                        <span class="input-group-text">URL</span>
+                        <input required
+                               id="shipment-url"
+                               class="form-control"
+                               placeholder="URL"
+                               type="text"
+                               value="">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="add-shipment"
+                            class="btn btn-load btn-warning"
+                            onclick="addShipment({{ order.id }})">Proceed</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-cancel-order" class="modal fade" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Cancel order</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">
+                        <b>This action is irreversible.</b>
+                        The order will be cancelled.
+                        A refund will be created if necessary.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button id="cancel-order"
+                            class="btn btn-load btn-warning"
+                            onclick="cancelOrder({{ order.id }})">Proceed</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-refund-order" class="modal fade" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create refund</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        <b>This action is irreversible.</b>
+                        A refund will be created.
+                        Please enter the amount you wish to refund below.
+                        The default value is the maximum refundable amount.
+                    </p>
+                    <div class="input-group">
+                        <span class="input-group-text">{{ order.currency_code }}</span>
+                        <input required
+                               id="refund-total-price"
+                               class="form-control"
+                               placeholder="Amount"
+                               type="number"
+                               step="0.01"
+                               value="{{ order.remaining_refund_amount|price }}">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="create-refund"
+                            class="btn btn-load btn-warning"
+                            onclick="refundOrder({{ order.id }})">Proceed</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock admin_body %}

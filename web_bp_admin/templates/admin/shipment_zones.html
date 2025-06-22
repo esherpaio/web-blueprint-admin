@@ -1,0 +1,158 @@
+{% extends "admin_main.html" %}
+{% block admin_body %}
+    <script>
+        let _shipmentZoneId = undefined;
+        async function addShipmentZone() {
+            event.preventDefault();
+            updateButton('add-shipment-zone', 1);
+            await postShipmentZones({
+                order: parseInt(document.getElementById('shipment-zone-order').value),
+                country_id: parseInt(document.getElementById(`shipment-zone-country-id`).value),
+                region_id: parseInt(document.getElementById(`shipment-zone-region-id`).value)
+            });
+            window.location.reload();
+        }
+        async function updateShipmentZone(zoneId) {
+            event.preventDefault();
+            updateButton(`update-shipment-zone-${zoneId}`, 1);
+            await patchShipmentZonesId(zoneId, {
+                order: parseInt(document.getElementById(`shipment-zone-order-${zoneId}`).value)
+            });
+            window.location.reload();
+        }
+        async function deleteShipmentZone(zoneId) {
+            event.preventDefault();
+            updateButton(`delete-shipment-zone`, 1);
+            await deleteShipmentZonesId(zoneId);
+            window.location.reload();
+        }
+    </script>
+
+    <div class="row g-3">
+        <div class="col-12">
+            <div class="d-flex justify-content-between gap-2">
+                <h2 class="mb-0">Shipment Zones</h2>
+                <button class="btn btn-success"
+                        type="submit"
+                        data-bs-toggle="modal"
+                        data-bs-target="#modal-add-shipment-zone">
+                    Add
+                    <i class="bi bi-plus-square ms-1"></i>
+                </button>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="table-responsive">
+                <table class="table rounded-2 overflow-hidden align-middle mb-0">
+                    <thead class="table-secondary">
+                        <tr>
+                            <th>Zone</th>
+                            <th>Order</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-light">
+                        {% for zone in shipment_zones %}
+                            <tr>
+                                <td>
+                                    {{ zone.country.name if zone.country }}
+                                    {{ zone.region.name if zone.region }}
+                                </td>
+                                <td>
+                                    <input id="shipment-zone-order-{{ zone.id }}"
+                                           class="form-control form-control-sm"
+                                           type="number"
+                                           value="{{ zone.order }}">
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group">
+                                        <button id="update-shipment-zone-{{ zone.id }}"
+                                                class="btn btn-load btn-sm btn-outline-primary"
+                                                onclick="updateShipmentZone({{ zone.id }});">
+                                            Update
+                                        </button>
+                                        <button class="btn btn-load btn-sm btn-outline-danger"
+                                                onclick="_shipmentZoneId = {{ zone.id }};"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#modal-delete-shipment-zone">
+                                            Delete
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-add-shipment-zone"
+         class="modal modal-lg fade"
+         tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content" onsubmit="addShipmentZone();">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add shipment zone</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-2">
+                        <div class="col-12 col-lg-6">
+                            <div class="input-group">
+                                <span class="input-group-text">Country</span>
+                                <select id="shipment-zone-country-id" class="form-select">
+                                    <option selected>None</option>
+                                    {% for x in cache.countries %}<option value="{{ x.id }}">{{ x.name }}</option>{% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6">
+                            <div class="input-group">
+                                <span class="input-group-text">Region</span>
+                                <select id="shipment-zone-region-id" class="form-select">
+                                    <option selected>None</option>
+                                    {% for x in cache.regions %}<option value="{{ x.id }}">{{ x.name }}</option>{% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6">
+                            <div class="input-group">
+                                <span class="input-group-text">Order</span>
+                                <input required
+                                       id="shipment-zone-order"
+                                       class="form-control"
+                                       placeholder="Order"
+                                       type="number">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="add-shipment-zone" class="btn btn-load btn-success" type="submit">Add</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-delete-shipment-zone" class="modal fade" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Delete shipment zone</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">Are you sure?</p>
+                </div>
+                <div class="modal-footer">
+                    <button id="delete-shipment-zone"
+                            class="btn btn-load btn-danger"
+                            onclick="deleteShipmentZone(_shipmentZoneId);">Delete</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock admin_body %}

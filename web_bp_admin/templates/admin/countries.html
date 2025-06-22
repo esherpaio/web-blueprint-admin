@@ -1,0 +1,70 @@
+{% extends "admin_main.html" %}
+{% block admin_body %}
+    <script>
+        let _countryId = undefined;
+        async function updateCountry(countryId) {
+            event.preventDefault();
+            updateButton(`update-country-${countryId}`, 1);
+            await patchCountriesId(countryId, {
+                state_required: document.getElementById(`country-state-required-${countryId}`).checked,
+                vat_required: document.getElementById(`country-vat-required-${countryId}`).checked,
+            });
+            await patchSettings({
+                cached_at: null
+            });
+            window.location.reload();
+        }
+    </script>
+
+    <div class="row g-3">
+        <div class="col-12">
+            <div class="d-flex justify-content-between gap-2">
+                <h2 class="mb-0">Countries</h2>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="table-responsive">
+                <table class="table rounded-2 overflow-hidden align-middle mb-0">
+                    <thead class="table-secondary">
+                        <tr>
+                            <th>Name</th>
+                            <th>Code</th>
+                            <th>State required</th>
+                            <th>VAT required</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-light">
+                        {% for x in countries %}
+                            <tr>
+                                <td>{{ x.name }}</td>
+                                <td>{{ x.code }}</td>
+                                <td>
+                                    <input {{ 'checked' if x.state_required }}
+                                           id="country-state-required-{{ x.id }}"
+                                           class="form-check-input"
+                                           type="checkbox">
+                                </td>
+                                <td>
+                                    <input {{ 'checked' if x.vat_required }}
+                                           id="country-vat-required-{{ x.id }}"
+                                           class="form-check-input"
+                                           type="checkbox">
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group">
+                                        <button id="update-country-{{ x.id }}"
+                                                class="btn btn-load btn-sm btn-outline-primary"
+                                                onclick="updateCountry({{ x.id }});">
+                                            Update
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock admin_body %}

@@ -1,0 +1,119 @@
+{% extends "admin_main.html" %}
+{% block admin_body %}
+    <script>
+        async function addCoupon() {
+            event.preventDefault();
+            updateButton('add-coupon', 1);
+            await postCoupons({
+                code: document.getElementById('coupon-code').value,
+                percentage: parseInt(document.getElementById('coupon-percentage').value),
+                amount: parseFloat(document.getElementById('coupon-amount').value)
+            });
+            window.location.reload();
+        }
+        async function deleteCoupon(couponId) {
+            event.preventDefault();
+            updateButton(`delete-coupon-${couponId}`, 1);
+            await deleteCouponsId(couponId);
+            window.location.reload();
+        }
+    </script>
+
+    <div class="row g-3">
+        <div class="col-12">
+            <div class="d-flex justify-content-between gap-2">
+                <h2 class="mb-0">Coupons</h2>
+                <button class="btn btn-success"
+                        type="submit"
+                        data-bs-toggle="modal"
+                        data-bs-target="#modal-add-coupon">
+                    Add
+                    <i class="bi bi-plus-square ms-1"></i>
+                </button>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="table-responsive">
+                <table class="table rounded-2 overflow-hidden align-middle mb-0">
+                    <thead class="table-secondary">
+                        <tr>
+                            <th>Code</th>
+                            <th>Percentage</th>
+                            <th>Amount</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-light">
+                        {% for x in coupons %}
+                            <tr>
+                                <td>{{ x.code }}</td>
+                                <td>
+                                    {% if x.rate %}
+                                        {{ x.percentage }}%
+                                    {% endif %}
+                                </td>
+                                <td>{{ x.amount|price if x.amount }}</td>
+                                <td class="text-end">
+                                    <div class="btn-group">
+                                        <button id="delete-coupon-{{ x.id }}"
+                                                class="btn btn-load btn-sm btn-outline-danger"
+                                                onclick="deleteCoupon({{ x.id }});">Delete</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-add-coupon" class="modal modal-lg fade" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content" onsubmit="addCoupon();">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add coupon</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-2">
+                        <div class="col-12 col-lg-6">
+                            <div class="input-group">
+                                <span class="input-group-text">Code</span>
+                                <input required
+                                       id="coupon-code"
+                                       class="form-control"
+                                       placeholder="Code"
+                                       type="text">
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6">
+                            <div class="input-group">
+                                <span class="input-group-text">Percentage</span>
+                                <input id="coupon-percentage"
+                                       class="form-control"
+                                       placeholder="Percentage"
+                                       type="number"
+                                       step="1">
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6">
+                            <div class="input-group">
+                                <span class="input-group-text">Amount</span>
+                                <input id="coupon-amount"
+                                       class="form-control"
+                                       placeholder="Amount"
+                                       type="number"
+                                       step="0.01">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="add-coupon" class="btn btn-load btn-success" type="submit">Add</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock admin_body %}
