@@ -14,7 +14,8 @@ DATA = [
 def find_requirements() -> list[str]:
     with open("requirements.txt") as f:
         lines = f.read().splitlines()
-    return [x for x in lines if x and not x.startswith("#")]
+    filtered = [x for x in lines if x and not x.startswith(("#", "git+"))]
+    return filtered
 
 
 setup(
