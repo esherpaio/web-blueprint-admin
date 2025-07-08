@@ -152,7 +152,7 @@
                        data-bs-target="#sidebar">
                         <i class="bi bi-layout-sidebar-inset"></i>
                     </a>
-                    <span class="navbar-brand fw-semibold" target="_blank">{{ settings.WEBSITE_NAME }}</span>
+                    <span class="navbar-brand fw-semibold" target="_blank">{{ config.META_WEBSITE_NAME }}</span>
                     <div class="position-relative">
                         <a class="d-block d-md-none text-white fs-2"
                            href="#"
@@ -171,7 +171,7 @@
                                 <a class="dropdown-item"
                                    href="#"
                                    onclick="logoutUser();"
-                                   data-redirect="{{ url_for(settings.ENDPOINT_HOME) }}">
+                                   data-redirect="{{ url_for(config.ENDPOINT_HOME) }}">
                                     <i class="bi bi-box-arrow-right me-1"></i>
                                     Logout
                                 </a>
