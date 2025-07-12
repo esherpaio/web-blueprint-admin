@@ -1,7 +1,5 @@
-import os
-
+import requests
 from flask import render_template
-from web.setup import config
 from web.utils.markdown import Markdown
 
 from web_bp_admin import admin_bp
@@ -9,10 +7,11 @@ from web_bp_admin import admin_bp
 
 @admin_bp.get("/admin/changelog")
 def changelog() -> str:
-    changelog_fp = os.path.join(config.BASE_DIR, "RELEASE.md")
-    with open(changelog_fp, "r") as file_:
-        changelog_lines = file_.readlines()
-    changelog_html = Markdown(*changelog_lines).html
+    url = "https://raw.githubusercontent.com/esherpaio/web-framework/main/RELEASE.md"
+    response = requests.get(url)
+    response.raise_for_status()
+    lines = response.iter_lines(decode_unicode=True)
+    changelog_html = Markdown(*lines).html
     return render_template(
         "admin/changelog.html",
         active_menu="changelog",
