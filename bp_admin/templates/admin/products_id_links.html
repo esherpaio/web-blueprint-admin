@@ -6,7 +6,7 @@
             event.preventDefault();
             updateButton(`add-link`, 1);
             await postProductsIdLinks(productId, {
-                type_id: parseInt(document.getElementById(`link-type-id`).value),
+                type_id: document.getElementById(`link-type-id`).value,
                 sku_id: parseInt(document.getElementById(`link-sku-id`).value),
             });
             await patchSettings({

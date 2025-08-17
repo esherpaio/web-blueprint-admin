@@ -3,6 +3,7 @@ venv:
 	python3.12 -m venv .venv
 packages:
 	pip install --upgrade pip
+	pip freeze | grep '^web-' | sed 's/ @.*//' | xargs -r pip uninstall -y
 	pip install -r requirements.txt
 	pip install -r requirements-dev.txt
 

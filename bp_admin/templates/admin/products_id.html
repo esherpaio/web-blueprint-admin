@@ -8,7 +8,7 @@
                 attributes: {
                     html: htmlEditor.root.innerHTML
                 },
-                type_id: parseInt(document.getElementById(`product-type-id`).value),
+                type_id: document.getElementById(`product-type-id`).value,
                 shipment_class_id: parseInt(document.getElementById(`product-shipment-class-id`).value),
                 unit_price: parseFloat(document.getElementById(`product-unit-price`).value),
                 summary: document.getElementById(`product-summary`).value,

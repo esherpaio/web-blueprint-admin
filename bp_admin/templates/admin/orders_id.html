@@ -5,7 +5,7 @@
             event.preventDefault();
             updateButton('update-order-status', 1);
             await patchOrdersId(orderId, {
-                status_id: parseInt(document.getElementById('order-status-id').value),
+                status_id: document.getElementById('order-status-id').value,
             });
             window.location.reload();
         }
