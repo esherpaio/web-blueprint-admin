@@ -6,7 +6,7 @@ from web.database import conn
 from web.database.model import Category, CategoryItem, Sku, SkuDetail
 from werkzeug import Response
 
-from web_bp_admin import admin_bp
+from bp_admin import admin_bp
 
 
 @admin_bp.get("/admin/categories")

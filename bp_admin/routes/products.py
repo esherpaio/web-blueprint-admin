@@ -14,7 +14,7 @@ from web.database.model import (
 )
 from werkzeug import Response
 
-from web_bp_admin import admin_bp
+from bp_admin import admin_bp
 
 
 @admin_bp.get("/admin/products")

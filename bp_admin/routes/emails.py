@@ -3,8 +3,8 @@ from web.database import conn
 from web.database.model import Email
 from web.mail.enum import MailEvent
 
-from web_bp_admin import admin_bp
-from web_bp_admin.utils import get_pages
+from bp_admin import admin_bp
+from bp_admin.utils import get_pages
 
 
 @admin_bp.get("/admin/emails")

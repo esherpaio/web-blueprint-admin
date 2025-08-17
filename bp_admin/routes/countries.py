@@ -2,7 +2,7 @@ from flask import render_template
 from web.database import conn
 from web.database.model import Country
 
-from web_bp_admin import admin_bp
+from bp_admin import admin_bp
 
 
 @admin_bp.get("/admin/countries")

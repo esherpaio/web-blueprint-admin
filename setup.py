@@ -27,5 +27,5 @@ setup(
     install_requires=find_requirements(),
     include_package_data=True,
     package_data={"": DATA},
-    packages=find_packages(include=["web_bp_admin", "web_bp_admin.*"]),
+    packages=find_packages(include=["bp_admin", "bp_admin.*"]),
 )

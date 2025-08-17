@@ -2,7 +2,7 @@ import requests
 from flask import render_template
 from web.utils.markdown import Markdown
 
-from web_bp_admin import admin_bp
+from bp_admin import admin_bp
 
 
 @admin_bp.get("/admin/changelog")
