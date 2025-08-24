@@ -35,10 +35,8 @@ jobs:
           TIMESTAMP=$(date +%Y%m%d)
           mkdir -p bundles
           git bundle create "bundles/${TIMESTAMP}_${{ github.event.repository.name }}.bundle" --all
-      - name: Check bundle size
-        run: |
           ls -lh your-bundle.zip
-          stat -c "%n %s bytes" your-bundle.zip || stat -f "%N %z" your-bundle.zip
+          stat -c "%n %s bytes" your-bundle.zip || stat -f "%N %z" "bundles/${TIMESTAMP}_${{ github.event.repository.name }}.bundle"
       - name: Test FTP upload
         run: |
           echo "test file" | curl -v -u "${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}" \
