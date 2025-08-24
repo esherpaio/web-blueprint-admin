@@ -1,0 +1,52 @@
+name: Workflow
+on: [push, pull_request]
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+      - name: Install dependencies
+        run: make packages
+      - name: Run linters
+        run: make lint
+
+  backup:
+    runs-on: ubuntu-latest
+    needs: lint
+    if: github.ref == 'refs/heads/main'
+    strategy:
+      matrix:
+        python-version: ["3.12"]
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Create bundle
+        run: |
+          TIMESTAMP=$(date +%Y%m%d)
+          mkdir -p bundles
+          git bundle create "bundles/${TIMESTAMP}_${{ github.event.repository.name }}.bundle" --all
+      - name: Upload via curl
+        run: |
+          set -euo pipefail
+          for f in bundles/*; do
+            base=$(basename "$f")
+            curl -v -u "${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}" \
+              --ssl-reqd --ftp-pasv --disable-epsv --ftp-create-dirs \
+              -T "$f" "ftp://${{ secrets.FTP_HOSTNAME }}:21/backups/$base"
+          done
+          echo "List /backups:"
+          curl -u "${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}" \
+            --ssl-reqd --ftp-pasv --disable-epsv \
+            "ftp://${{ secrets.FTP_HOSTNAME }}:21/backups/" -l || true
