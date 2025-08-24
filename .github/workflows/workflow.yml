@@ -27,7 +27,19 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.12"]
+    if: ${{ github.event_name != 'pull_request' }}
     steps:
+      - name: Check FTP secrets & PWD
+        run: |
+          set -euo pipefail
+          : "${{ secrets.FTP_USERNAME }}" || (echo 'FTP_USERNAME missing' && exit 1)
+          : "${{ secrets.FTP_PASSWORD }}" || (echo 'FTP_PASSWORD missing' && exit 1)
+          HOST='${{ secrets.FTP_HOSTNAME }}'
+          if [ -z "$HOST" ]; then HOST='storage.bunnycdn.com'; fi
+          echo "Using host: $HOST"
+          curl -v -u "${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}" \
+               --ssl-reqd --ftp-pasv --disable-epsv \
+               --quote PWD "ftp://$HOST:21/" -l || true
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
       - name: Create bundle
@@ -42,9 +54,9 @@ jobs:
             base=$(basename "$f")
             curl -v -u "${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}" \
               --ssl-reqd --ftp-pasv --disable-epsv --ftp-create-dirs \
-              -T "$f" "ftp://${{ secrets.FTP_HOSTNAME }}:21/backups/$base"
+              -T "$f" "ftp://${{ secrets.FTP_HOSTNAME || 'storage.bunnycdn.com' }}:21/backups/$base"
           done
           echo "List /backups:"
           curl -u "${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}" \
             --ssl-reqd --ftp-pasv --disable-epsv \
-            "ftp://${{ secrets.FTP_HOSTNAME }}:21/backups/" -l || true
+            "ftp://${{ secrets.FTP_HOSTNAME || 'storage.bunnycdn.com' }}:21/backups/" -l || true
