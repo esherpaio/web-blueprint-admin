@@ -35,6 +35,14 @@ jobs:
           TIMESTAMP=$(date +%Y%m%d)
           mkdir -p bundles
           git bundle create "bundles/${TIMESTAMP}_${{ github.event.repository.name }}.bundle" --all
+      - name: Test FTP upload
+        run: |
+          echo "test file" | curl -v -u "${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}" \
+            --ssl-reqd --ftp-pasv --disable-epsv --ftp-create-dirs \
+            -T - "ftp://${{ secrets.FTP_HOSTNAME }}:21/backups/test-${{ github.run_id }}.txt"
+          curl -u "${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}" \
+            --ssl-reqd --ftp-pasv --disable-epsv \
+            "ftp://${{ secrets.FTP_HOSTNAME }}:21/backups/" -l
       - name: Upload via curl
         run: |
           set -euo pipefail
