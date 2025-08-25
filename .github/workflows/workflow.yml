@@ -35,27 +35,22 @@ jobs:
           TIMESTAMP=$(date +%Y%m%d)
           mkdir -p bundles
           git bundle create "bundles/${TIMESTAMP}_${{ github.event.repository.name }}.bundle" --all
-      - name: Upload via curl
+      - name: Upload via lftp
         run: |
-          set -euo pipefail
-          echo "Bundled files:"
-          ls -l bundles || true
+          sudo apt-get update && sudo apt-get install -y lftp zip
+          TIMESTAMP=$(date +%Y%m%d)
           for f in bundles/*; do
             [ -f "$f" ] || { echo "No bundle files found"; exit 1; }
             base=$(basename "$f")
-            safe="${base%.bundle}.bin"
-            # Show diagnostics before upload
-            echo "\nPreparing upload for: $f"
-            md5sum "$f" || true
-            stat -c '%n %s bytes' "$f" 2>/dev/null || wc -c "$f"
-            cp "$f" "/tmp/$safe"
-            echo "Uploading as (renamed for FTP): /tmp/$safe -> /backups/$safe"
-            curl -v --quote "TYPE I" --ftp-method nocwd \
-              -u "${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}" \
-              --ssl-reqd --ftp-pasv --disable-epsv --ftp-create-dirs --disable-eprt \
-              -T "/tmp/$safe" "ftp://${{ secrets.FTP_HOSTNAME }}:21/backups/$safe"
+            safe="${base%.bundle}.zip"
+            # Zip to avoid server content filters
+            zip "/tmp/$safe" "$f"
+            echo "Uploading /tmp/$safe -> /backups/$safe"
+            lftp -u "${{ secrets.FTP_USERNAME }},${{ secrets.FTP_PASSWORD }}" ftps://${{ secrets.FTP_HOSTNAME }}:21 <<EOF
+set ftp:ssl-force true
+set ftp:ssl-protect-data true
+put /tmp/$safe -o /backups/$safe
+ls /backups/
+bye
+EOF
           done
-          echo "\nList /backups:"
-          curl -u "${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}" \
-            --ssl-reqd --ftp-pasv --disable-epsv --ftp-method nocwd --disable-eprt \
-            "ftp://${{ secrets.FTP_HOSTNAME }}:21/backups/" -l || true
