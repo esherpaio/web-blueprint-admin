@@ -52,10 +52,10 @@ jobs:
             echo "Uploading as (renamed for FTP): /tmp/$safe -> /backups/$safe"
             curl -v --quote "TYPE I" --ftp-method nocwd \
               -u "${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}" \
-              --ssl-reqd --ftp-pasv --disable-epsv --ftp-create-dirs \
+              --ssl-reqd --ftp-pasv --disable-epsv --ftp-create-dirs --disable-eprt \
               -T "/tmp/$safe" "ftp://${{ secrets.FTP_HOSTNAME }}:21/backups/$safe"
           done
           echo "\nList /backups:"
           curl -u "${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}" \
-            --ssl-reqd --ftp-pasv --disable-epsv --ftp-method nocwd \
+            --ssl-reqd --ftp-pasv --disable-epsv --ftp-method nocwd --disable-eprt \
             "ftp://${{ secrets.FTP_HOSTNAME }}:21/backups/" -l || true
