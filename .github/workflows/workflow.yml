@@ -35,19 +35,18 @@ jobs:
           TIMESTAMP=$(date +%Y%m%d)
           mkdir -p bundles
           git bundle create "bundles/${TIMESTAMP}_${{ github.event.repository.name }}.bundle" --all
-      - name: Upload via curl
+      - name: Upload via lftp
         run: |
-          sudo apt-get update && sudo apt-get install -y zip
-          set -euo pipefail
+          sudo apt-get update && sudo apt-get install -y lftp
           for f in bundles/*; do
+            [ -f "$f" ] || { echo "No bundle files found"; exit 1; }
             base=$(basename "$f")
-            zipfile="/tmp/${base%.bundle}.zip"
-            zip -j "$zipfile" "$f"
-            curl -v -u "${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}" \
-              --ssl-reqd --ftp-pasv --disable-epsv --ftp-create-dirs \
-              -T "$zipfile" "ftp://${{ secrets.FTP_HOSTNAME }}:21/backups/$(basename "$zipfile")"
+            echo "Uploading $f -> /backups/$base"
+            lftp -u "${{ secrets.FTP_USERNAME }},${{ secrets.FTP_PASSWORD }}" ftps://${{ secrets.FTP_HOSTNAME }}:21 <<-'EOF'
+set ftp:ssl-force true
+set ftp:ssl-protect-data true
+put $f -o /backups/$base
+ls /backups/
+bye
+EOF
           done
-          echo "List /backups:"
-          curl -u "${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}" \
-            --ssl-reqd --ftp-pasv --disable-epsv \
-            "ftp://${{ secrets.FTP_HOSTNAME }}:21/backups/" -l || true
