@@ -42,5 +42,5 @@ jobs:
             [ -f "$f" ] || { echo "No bundle files found"; exit 1; }
             base=$(basename "$f")
             echo "Uploading $f -> /backups/$base"
-            lftp -u "${{ secrets.FTP_USERNAME }},${{ secrets.FTP_PASSWORD }}" ftps://${{ secrets.FTP_HOSTNAME }}:21 -e "set ftp:ssl-force true; set ftp:ssl-protect-data true; put $f -o /backups/$base; ls /backups/; bye"
+            lftp -u "${{ secrets.FTP_USERNAME }},${{ secrets.FTP_PASSWORD }}" ftp://${{ secrets.FTP_HOSTNAME }}:21 -e "set ftp:ssl-force true; set ftp:ssl-protect-data true; set ftp:passive-mode true; set ftp:ssl-auth TLS; put $f -o /backups/$base; ls /backups/; bye"
           done
