@@ -6,6 +6,7 @@
             event.preventDefault();
             updateButton(`update-country-${countryId}`, 1);
             await patchCountriesId(countryId, {
+                is_active: document.getElementById(`country-is-active-${countryId}`).checked,
                 state_required: document.getElementById(`country-state-required-${countryId}`).checked,
                 vat_required: document.getElementById(`country-vat-required-${countryId}`).checked,
             });
@@ -31,6 +32,7 @@
                             <th>Code</th>
                             <th>State required</th>
                             <th>VAT required</th>
+                            <th>Active</th>
                             <th class="text-end">Actions</th>
                         </tr>
                     </thead>
@@ -48,6 +50,12 @@
                                 <td>
                                     <input {{ 'checked' if x.vat_required }}
                                            id="country-vat-required-{{ x.id }}"
+                                           class="form-check-input"
+                                           type="checkbox">
+                                </td>
+                                <td>
+                                    <input {{ 'checked' if x.is_active }}
+                                           id="country-is-active-{{ x.id }}"
                                            class="form-check-input"
                                            type="checkbox">
                                 </td>
