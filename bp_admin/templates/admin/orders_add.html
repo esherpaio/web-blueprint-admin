@@ -296,7 +296,7 @@
             if (shipmentMethodId !== null) {
                 const shipmentMethod = (await getShipmentMethodsId(shipmentMethodId)).data;
                 const shippingPhoneEl = document.getElementById("shipping-phone");
-                shippingPhoneEl.required = shipmentMethod.phone_required;
+                shippingPhoneEl.required = shipmentMethod.requires_billing_phone;
             }
         }
 
