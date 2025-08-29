@@ -6,8 +6,9 @@
             event.preventDefault();
             updateButton(`update-country-${countryId}`, 1);
             await patchCountriesId(countryId, {
-                state_required: document.getElementById(`country-state-required-${countryId}`).checked,
-                vat_required: document.getElementById(`country-vat-required-${countryId}`).checked,
+                allows_shipping: document.getElementById(`country-allows-shipping-${countryId}`).checked,
+                requires_billing_state: document.getElementById(`country-requires-billing-state-${countryId}`).checked,
+                requires_billing_vat: document.getElementById(`country-requires-billing-vat-${countryId}`).checked,
             });
             await patchSettings({
                 cached_at: null
@@ -29,8 +30,9 @@
                         <tr>
                             <th>Name</th>
                             <th>Code</th>
-                            <th>State required</th>
-                            <th>VAT required</th>
+                            <th>Billing state required</th>
+                            <th>Billing VAT required</th>
+                            <th>Shipping allowed</th>
                             <th class="text-end">Actions</th>
                         </tr>
                     </thead>
@@ -40,14 +42,20 @@
                                 <td>{{ x.name }}</td>
                                 <td>{{ x.code }}</td>
                                 <td>
-                                    <input {{ 'checked' if x.state_required }}
-                                           id="country-state-required-{{ x.id }}"
+                                    <input {{ 'checked' if x.requires_billing_state }}
+                                           id="country-requires-billing-state-{{ x.id }}"
                                            class="form-check-input"
                                            type="checkbox">
                                 </td>
                                 <td>
-                                    <input {{ 'checked' if x.vat_required }}
-                                           id="country-vat-required-{{ x.id }}"
+                                    <input {{ 'checked' if x.requires_billing_vat }}
+                                           id="country-requires-billing-vat-{{ x.id }}"
+                                           class="form-check-input"
+                                           type="checkbox">
+                                </td>
+                                <td>
+                                    <input {{ 'checked' if x.allows_shipping }}
+                                           id="country-allows-shipping-{{ x.id }}"
                                            class="form-check-input"
                                            type="checkbox">
                                 </td>
