@@ -1,4 +1,4 @@
-{% extends "admin_main.html" %}
+{% extends "_templates/main.html" %}
 {% block admin_body %}
     <script>
         let _linkId = undefined;
@@ -25,7 +25,7 @@
         }
     </script>
 
-    {% include "admin/section/products_nav.html" %}
+    {% include "_templates/products_nav.html" %}
 
     <div class="row g-3">
         <div class="col-12">

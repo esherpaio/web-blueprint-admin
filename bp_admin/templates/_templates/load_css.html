@@ -1,0 +1,15 @@
+
+{% for blueprint in cache.blueprints %}
+    {% if blueprint.endpoint == request.blueprint %}
+        {% if blueprint.css_path %}
+            <link type="text/css"
+                  rel="stylesheet"
+                  href="{{ cdn_url(blueprint.css_path) }}">
+        {% endif %}
+    {% endif %}
+{% endfor %}
+{% for route in cache.routes %}
+    {% if route.endpoint == request.endpoint %}
+        {% if route.css_path %}<script defer src="{{ cdn_url(route.css_path) }}"></script>{% endif %}
+    {% endif %}
+{% endfor %}

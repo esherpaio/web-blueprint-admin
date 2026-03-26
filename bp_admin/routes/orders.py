@@ -22,7 +22,7 @@ from web.utils import remove_file
 from werkzeug import Response
 
 from bp_admin import admin_bp
-from bp_admin.utils import get_pages
+from bp_admin.pagination import get_pages
 
 order_status_color_map = {
     OrderStatusId.PENDING: "text-bg-danger",

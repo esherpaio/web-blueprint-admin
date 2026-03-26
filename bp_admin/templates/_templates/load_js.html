@@ -1,0 +1,12 @@
+{% for blueprint in cache.blueprints %}
+    {% if blueprint.endpoint == request.blueprint %}
+        {% if blueprint.js_path %}
+            <script defer src="{{ cdn_url(blueprint.js_path) }}"></script>
+        {% endif %}
+    {% endif %}
+{% endfor %}
+{% for route in cache.routes %}
+    {% if route.endpoint == request.endpoint %}
+        {% if route.js_path %}<script defer src="{{ cdn_url(route.js_path) }}"></script>{% endif %}
+    {% endif %}
+{% endfor %}

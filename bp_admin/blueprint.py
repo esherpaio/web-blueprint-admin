@@ -1,12 +1,11 @@
 import os
 
 from flask import Blueprint
-from web.app.javascript import js_bundle
 from web.app.meta import Meta
 from web.auth import authorize_user
 from web.automation.task import StaticJob, StaticType
 from web.database.model import AppBlueprint, UserRoleLevel
-from web.packer.bundle import CssBundle
+from web.packer.bundle import CssBundle, JsBundle
 from werkzeug import Response
 
 _dir = os.path.dirname(os.path.abspath(__file__))
@@ -27,7 +26,7 @@ admin_static_jobs = [
     ),
     StaticJob(
         type_=StaticType.JS,
-        bundles=[js_bundle],
+        bundles=[JsBundle(os.path.join(_dir, "static"))],
         model=AppBlueprint,
         endpoint="admin",
     ),

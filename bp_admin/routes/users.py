@@ -4,7 +4,7 @@ from web.database import conn
 from web.database.model import User
 
 from bp_admin import admin_bp
-from bp_admin.utils import get_pages
+from bp_admin.pagination import get_pages
 
 
 @admin_bp.get("/admin/users")
