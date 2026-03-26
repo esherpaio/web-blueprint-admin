@@ -310,7 +310,7 @@
             const orderData = { cart_id: cart.id, trigger_mail: false };
             const order = (await postOrders(orderData)).data;
             const baseUrl = `${location.protocol}//${location.host}`;
-            const redirectUrl = `${location.protocol}//${location.host}${URL_ADMIN_ORDERS}/${order.id}`;
+            const redirectUrl = `${location.protocol}//${location.host}/admin/orders/${order.id}`;
             await postOrdersIdPayments(order.id, { redirect_url: baseUrl, cancel_url: baseUrl, methods: ["banktransfer"] });
             await deleteCartsId(cart.id);
             await updateButton(event.target.id, -1);
