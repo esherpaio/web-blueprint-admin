@@ -13,8 +13,8 @@
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
         <script type="module" src="https://cdn.jsdelivr.net/npm/zero-md@3?register"></script>
-        {% include "_templates/load_css.html" %}
-        {% include "_templates/load_js.html" %}
+        {% include "admin/_templates/load_css.html" %}
+        {% include "admin/_templates/load_js.html" %}
     </head>
     <body class="h-100 w-100 d-flex flex-row">
         <nav id="sidebar" class="offcanvas offcanvas-start" tabindex="-1">
@@ -152,7 +152,7 @@
                 {% block admin_body %}
                 {% endblock admin_body %}
             </div>
-            {% include "_templates/message.html" %}
+            {% include "admin/_templates/message.html" %}
         </div>
     </body>
 </html>
