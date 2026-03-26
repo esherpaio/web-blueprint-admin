@@ -6,8 +6,7 @@ DATA = [
     "*.md",
     "static/*.css",
     "static/*.js",
-    "templates/_templates/*.html",
-    "templates/*.html",
+    "templates/admin/_templates/*.html",
     "templates/admin/*.html",
 ]
 
