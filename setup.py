@@ -4,10 +4,9 @@ from version import __version__
 
 DATA = [
     "*.md",
-    "static/*.css",
-    "static/*.js",
-    "templates/admin/_templates/*.html",
-    "templates/admin/*.html",
+    "static/**/*.css",
+    "static/**/*.js",
+    "templates/**/*.html",
 ]
 
 
