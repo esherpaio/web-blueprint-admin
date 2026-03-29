@@ -4,7 +4,7 @@ from web.database.model import Email
 from web.mail.enum import MailEvent
 
 from bp_admin import admin_bp
-from bp_admin.utils import get_pages
+from bp_admin.pagination import get_pages
 
 
 @admin_bp.get("/admin/emails")

@@ -1,4 +1,4 @@
-from ._bp import (
+from .blueprint import (
     admin_bp,
     admin_static_jobs,
 )
