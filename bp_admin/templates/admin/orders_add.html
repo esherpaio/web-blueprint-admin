@@ -76,8 +76,8 @@
             let shipping_id = null;
             if (cart.shipping_id) {
                 shipping_id = cart.shipping_id;
-            } else if (user.shipping_id) {
-                shipping_id = user.shipping_id;
+            } else if (user.default_shipping_id) {
+                shipping_id = user.default_shipping_id;
             } else {
                 return;
             }
@@ -94,8 +94,8 @@
             let billing_id = null;
             if (cart.billing_id) {
                 billing_id = cart.billing_id;
-            } else if (user.billing_id) {
-                billing_id = user.billing_id;
+            } else if (user.default_billing_id) {
+                billing_id = user.default_billing_id;
             } else {
                 return;
             }
