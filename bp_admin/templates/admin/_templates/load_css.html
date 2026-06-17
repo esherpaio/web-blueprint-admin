@@ -9,6 +9,8 @@
 {% endfor %}
 {% for route in cache.routes %}
     {% if route.endpoint == request.endpoint %}
-        {% if route.css_path %}<script defer src="{{ cdn_url(route.css_path) }}"></script>{% endif %}
+        {% if route.css_path %}
+            <script defer src="{{ cdn_url(route.css_path) }}"></script>
+        {% endif %}
     {% endif %}
 {% endfor %}

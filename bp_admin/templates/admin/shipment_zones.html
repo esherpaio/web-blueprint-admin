@@ -103,7 +103,9 @@
                                 <span class="input-group-text">Country</span>
                                 <select id="shipment-zone-country-id" class="form-select">
                                     <option selected>None</option>
-                                    {% for x in cache.countries %}<option value="{{ x.id }}">{{ x.name }}</option>{% endfor %}
+                                    {% for x in cache.countries %}
+                                        <option value="{{ x.id }}">{{ x.name }}</option>
+                                    {% endfor %}
                                 </select>
                             </div>
                         </div>
@@ -112,7 +114,9 @@
                                 <span class="input-group-text">Region</span>
                                 <select id="shipment-zone-region-id" class="form-select">
                                     <option selected>None</option>
-                                    {% for x in cache.regions %}<option value="{{ x.id }}">{{ x.name }}</option>{% endfor %}
+                                    {% for x in cache.regions %}
+                                        <option value="{{ x.id }}">{{ x.name }}</option>
+                                    {% endfor %}
                                 </select>
                             </div>
                         </div>

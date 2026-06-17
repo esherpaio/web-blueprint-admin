@@ -138,7 +138,9 @@
                                 <span class="input-group-text">Class</span>
                                 <select required id="shipment-method-class-id" class="form-select">
                                     <option disabled selected>None</option>
-                                    {% for x in shipment_classes %}<option value="{{ x.id }}">{{ x.name }}</option>{% endfor %}
+                                    {% for x in shipment_classes %}
+                                        <option value="{{ x.id }}">{{ x.name }}</option>
+                                    {% endfor %}
                                 </select>
                             </div>
                         </div>

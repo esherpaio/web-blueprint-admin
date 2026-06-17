@@ -95,7 +95,9 @@
                                 <span class="input-group-text">SKU</span>
                                 <select required id="link-sku-id" class="form-select">
                                     <option disabled selected>None</option>
-                                    {% for x in available_skus %}<option value="{{ x.id }}">{{ x.name }}</option>{% endfor %}
+                                    {% for x in available_skus %}
+                                        <option value="{{ x.id }}">{{ x.name }}</option>
+                                    {% endfor %}
                                 </select>
                             </div>
                         </div>
