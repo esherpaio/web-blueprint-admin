@@ -28,7 +28,6 @@ class PercentageField(IntegerField):
     def apply(self, obj: Any, value: Any) -> None:
         if value is None:
             return
-        obj.amount = None
         obj.rate = Decimal("1") - (Decimal(value) / Decimal("100"))
 
 
@@ -36,7 +35,6 @@ class AmountField(DecimalField):
     def apply(self, obj: Any, value: Any) -> None:
         if value is None:
             return
-        obj.rate = None
         obj.amount = value
 
 

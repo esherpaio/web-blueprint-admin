@@ -6,13 +6,14 @@
     "error": "Something went wrong."
 } %}
 {% if error %}
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+    <div class="alert alert-danger alert-dismissible mb-0 fade show"
+         role="alert">
         {{ error }}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 {% endif %}
 {% if saved %}
-    <div class="alert {{ "alert-danger" if saved == "error" else "alert-success" }} alert-dismissible fade show"
+    <div class="alert {{ 'alert-danger' if saved == 'error' else 'alert-success' }} alert-dismissible mb-0 fade show"
          role="alert">
         {{ messages.get(saved, "Saved.") }}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
