@@ -26,6 +26,7 @@ class ShipmentClassView(CachedModelView):
     order = 40
 
     order_by = [ShipmentClass.order, ShipmentClass.id]
+    reorderable = True
     columns = [
         Column("name"),
         Column("order", editable=True, field=IntegerField("order")),
@@ -46,6 +47,7 @@ class ShipmentZoneView(CachedModelView):
     order = 41
 
     order_by = [ShipmentZone.order, ShipmentZone.id]
+    reorderable = True
     columns = [
         Column("id", "ID"),
         Column("order", editable=True, field=IntegerField("order")),

@@ -90,6 +90,9 @@
                     <table class="table rounded-2 overflow-hidden align-middle mb-0">
                         <thead class="table-secondary">
                             <tr>
+                                {% if view.reorderable %}
+                                    <th style="width:2rem"></th>
+                                {% endif %}
                                 {% if select_col %}
                                     <th style="width:2.5rem">
                                         {% if view.can_delete %}
@@ -105,9 +108,15 @@
                                 {% endif %}
                             </tr>
                         </thead>
-                        <tbody class="table-light">
+                        <tbody class="table-light"
+                               {% if view.reorderable %}data-sortable data-sort-field="{{ view.order_field }}"{% endif %}>
                             {% for obj in rows %}
                                 <tr>
+                                    {% if view.reorderable %}
+                                        <td class="text-muted text-center" style="cursor:grab">
+                                            <i class="bi bi-grip-vertical" data-drag-handle></i>
+                                        </td>
+                                    {% endif %}
                                     {% if select_col %}
                                         <td>
                                             {% if view.has_bulk_edit %}

@@ -29,6 +29,7 @@ class CategoryView(CachedModelView):
 
     searchable = ["name"]
     order_by = [Category.order, Category.id]
+    reorderable = True
 
     columns = [
         Column("id", "ID"),
@@ -71,5 +72,6 @@ class CategoryView(CachedModelView):
                 IntegerField("order"),
             ],
             order_by=CategoryItem.order,
+            reorderable=True,
         ),
     ]

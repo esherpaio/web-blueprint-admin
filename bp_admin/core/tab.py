@@ -89,6 +89,8 @@ class InlineTableTab(Tab):
         soft_delete: bool | None = None,
         can_create: bool = True,
         can_delete: bool = True,
+        reorderable: bool = False,
+        order_field: str = "order",
         key: str | None = None,
     ) -> None:
         super().__init__(label, key)
@@ -101,6 +103,8 @@ class InlineTableTab(Tab):
         self._soft_delete = soft_delete
         self.can_create = can_create
         self.can_delete = can_delete
+        self.reorderable = reorderable
+        self.order_field = order_field
 
     @property
     def soft_delete(self) -> bool:

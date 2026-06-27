@@ -62,6 +62,8 @@ class ModelView:
     filters: list[Filter] = []
     page_size: int = 40
     order_by: Any = None
+    reorderable: bool = False
+    order_field: str = "order"
 
     # Create (modal)
     create_fields: list[Field] = []
