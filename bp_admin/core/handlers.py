@@ -207,7 +207,7 @@ def tab_endpoint(view: ModelView, id_: Any, tab_key: str) -> Response | str:
             form_values=request.form,
         )
     return _redirect(
-        f"admin.{view.endpoint}_detail", id=id_, tab=tab_key, saved="saved"
+        f"admin.{view.endpoint}_detail", id_=id_, tab=tab_key, saved="saved"
     )
 
 
@@ -225,7 +225,7 @@ def action_endpoint(view: ModelView, id_: Any, name: str) -> Response | str:
             view.after_write(s, obj)
     except WriteError as error:
         return render_detail(view, id_, error=error_message(error))
-    return _redirect(f"admin.{view.endpoint}_detail", id=id_, saved="done")
+    return _redirect(f"admin.{view.endpoint}_detail", id_=id_, saved="done")
 
 
 def delete_endpoint(view: ModelView, id_: Any) -> Response:
@@ -234,7 +234,7 @@ def delete_endpoint(view: ModelView, id_: Any) -> Response:
             delete_objects(s, view.model, [id_], soft_delete=view.soft_delete)
             view.after_write(s, None)
     except WriteError:
-        return _redirect(f"admin.{view.endpoint}_detail", id=id_, saved="error")
+        return _redirect(f"admin.{view.endpoint}_detail", id_=id_, saved="error")
     return _redirect(f"admin.{view.endpoint}", saved="deleted")
 
 
