@@ -102,11 +102,13 @@
         <div data-attributes-rows class="row g-2">
             {% for row in field.rows_from(data) %}{{ attribute_row(field, row.key, row.type, row.value) }}{% endfor %}
         </div>
-        <button type="button" class="btn btn-sm btn-light mt-2" data-attributes-add>
-            <i class="bi bi-plus-square me-1"></i>
-            Add attribute
-        </button>
-        <template data-attributes-template>{{ attribute_row(field, "", "text", "") }}</template>
+        {% if not field.readonly %}
+            <button type="button" class="btn btn-sm btn-light mt-2" data-attributes-add>
+                <i class="bi bi-plus-square me-1"></i>
+                Add attribute
+            </button>
+            <template data-attributes-template>{{ attribute_row(field, "", "text", "") }}</template>
+        {% endif %}
     </div>
 {% endmacro %}
 {% macro attribute_row(field, key, type, value) %}
@@ -117,8 +119,12 @@
                    type="text"
                    name="attr-key"
                    placeholder="Key"
-                   value="{{ key }}">
-            <select class="form-select" style="max-width:9rem" name="attr-type">
+                   value="{{ key }}"
+                   {% if field.readonly %}disabled{% endif %}>
+            <select class="form-select"
+                    style="max-width:9rem"
+                    name="attr-type"
+                    {% if field.readonly %}disabled{% endif %}>
                 {% for type_value, type_label in field.VALUE_TYPES %}
                     <option value="{{ type_value }}"
                             {% if type_value == type %}selected{% endif %}>{{ type_label }}</option>
@@ -128,10 +134,13 @@
                    type="text"
                    name="attr-value"
                    placeholder="Value"
-                   value="{{ value }}">
-            <button type="button" class="btn btn-light" data-attributes-remove>
-                <i class="bi bi-trash"></i>
-            </button>
+                   value="{{ value }}"
+                   {% if field.readonly %}disabled{% endif %}>
+            {% if not field.readonly %}
+                <button type="button" class="btn btn-light" data-attributes-remove>
+                    <i class="bi bi-trash"></i>
+                </button>
+            {% endif %}
         </div>
     </div>
 {% endmacro %}

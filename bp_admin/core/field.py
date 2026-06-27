@@ -270,8 +270,14 @@ class JsonAttributesField(Field):
         ("dict", "Dict"),
     )
 
-    def __init__(self, name: str = "attributes", label: str = "Attributes") -> None:
-        super().__init__(name, label)
+    def __init__(
+        self,
+        name: str = "attributes",
+        label: str = "Attributes",
+        *,
+        readonly: bool = False,
+    ) -> None:
+        super().__init__(name, label, readonly=readonly)
 
     @staticmethod
     def type_of(value: Any) -> str:
