@@ -30,6 +30,7 @@ class UserView(CachedModelView):
         Column("email", "Email"),
         Column("display_name", "Name"),
         Column("role.name", "Role"),
+        Column("created_at", "Created", format="datetime"),
         Column("is_active", "Active", editable=True, field=BoolField("is_active")),
     ]
 

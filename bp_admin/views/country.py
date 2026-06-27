@@ -25,7 +25,6 @@ class CountryView(CachedModelView):
     columns = [
         Column("code", "Code"),
         Column("name"),
-        Column("region.name", "Region"),
         Column(
             "allows_shipping",
             "Shipping",
@@ -45,11 +44,14 @@ class CountryView(CachedModelView):
         FormTab(
             "General",
             [
-                StringField("name", required=True),
-                StringField("code", required=True),
-                SelectField.from_model("currency_id", Currency, label_attr="code"),
-                SelectField.from_model("region_id", Region, label_attr="name"),
-                BoolField("in_sitemap"),
+                StringField("name", required=True, readonly=True),
+                StringField("code", required=True, readonly=True),
+                SelectField.from_model(
+                    "currency_id", Currency, label_attr="code", readonly=True
+                ),
+                SelectField.from_model(
+                    "region_id", Region, label_attr="name", readonly=True
+                ),
                 BoolField("requires_billing_state"),
                 BoolField("requires_billing_vat"),
                 BoolField("allows_shipping"),

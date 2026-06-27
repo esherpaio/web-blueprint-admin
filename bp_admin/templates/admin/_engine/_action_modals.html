@@ -1,4 +1,5 @@
 {% from "admin/_engine/_macros.html" import field_input %}
+
 {% for action in view.actions %}
     {% if action.fields and action.is_visible(obj) %}
         <div id="{{ action.modal_id }}" class="modal modal-lg fade" tabindex="-1">

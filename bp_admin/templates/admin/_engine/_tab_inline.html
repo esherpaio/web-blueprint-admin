@@ -1,6 +1,8 @@
 {% from "admin/_engine/_macros.html" import cell_input, display_cell, form_modal %}
+
 {% set tab_action = url_for("admin." ~ view.endpoint ~ "_tab", id_=obj.id, tab_key=tab.key) %}
 {% set form_id = "inline-form-" ~ tab.key %}
+
 <div class="d-flex flex-wrap justify-content-end gap-2 mb-3">
     {% if tab.can_create and tab_ctx.create_fields %}
         <button class="btn btn-success"
@@ -48,28 +50,40 @@
             <tbody class="table-light"
                    {% if tab.reorderable %}data-sortable data-sort-field="{{ tab.order_field }}"{% endif %}>
                 {% for row in tab_ctx.rows %}
+                    {% set ns = namespace(rowid=true) %}
                     <tr>
                         {% if tab.reorderable %}
                             <td class="text-muted text-center" style="cursor:grab">
                                 <i class="bi bi-grip-vertical" data-drag-handle></i>
+                                {% if ns.rowid %}
+                                    <input type="hidden" name="row-id" value="{{ row.id }}">
+                                    {% set ns.rowid = false %}
+                                {% endif %}
                                 <input type="hidden"
                                        name="rows-{{ row.id }}-{{ tab.order_field }}"
                                        value="{{ row|attr(tab.order_field) }}">
                             </td>
                         {% endif %}
-                        <td>
-                            <input type="hidden" name="row-id" value="{{ row.id }}">
-                            {% if tab.can_delete %}
+                        {% if tab.can_delete %}
+                            <td>
+                                {% if ns.rowid %}
+                                    <input type="hidden" name="row-id" value="{{ row.id }}">
+                                    {% set ns.rowid = false %}
+                                {% endif %}
                                 <input class="form-check-input"
                                        type="checkbox"
                                        name="select"
                                        value="{{ row.id }}"
                                        data-select-row>
-                            {% endif %}
-                        </td>
+                            </td>
+                        {% endif %}
                         {% for column in tab_ctx.columns %}
                             {% if not (tab.reorderable and column.name == tab.order_field) %}
                                 <td>
+                                    {% if ns.rowid %}
+                                        <input type="hidden" name="row-id" value="{{ row.id }}">
+                                        {% set ns.rowid = false %}
+                                    {% endif %}
                                     {% if column.editable %}
                                         {{ cell_input(column, row, tab_ctx.choices, form_values) }}
                                     {% else %}

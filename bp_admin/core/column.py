@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Any, Callable
 
-from .field import Field, StringField
+from .field import Field, StringField, default_label
 
 
 def getattr_path(obj: Any, path: str) -> Any:
@@ -39,7 +39,7 @@ class Column:
         align: str | None = None,
     ) -> None:
         self.name = name
-        self.label = label if label is not None else name.replace("_", " ").capitalize()
+        self.label = label if label is not None else default_label(name)
         self.editable = editable
         self.field = field if field is not None else StringField(name)
         self.format = format

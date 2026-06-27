@@ -1,4 +1,3 @@
-{# Reusable rendering macros for the declarative admin engine. #}
 {% macro field_input(field, value, choices={}, name=None) %}
     {% set fname = name or field.name %}
     {% if field.input_type == "attributes" %}
@@ -56,6 +55,7 @@
         </div>
     {% endif %}
 {% endmacro %}
+
 {% macro cell_input(column, obj, choices={}, form_values={}) %}
     {% set field = column.field %}
     {% set cell_name = "rows-" ~ obj.id ~ "-" ~ column.name %}
@@ -84,6 +84,7 @@
                {% for key, attr_value in field.attrs.items() %}{{ key }}="{{ attr_value }}"{% endfor %}>
     {% endif %}
 {% endmacro %}
+
 {% macro display_cell(column, obj) %}
     {% set value = column.value(obj) %}
     {% if column.format_name == "price" %}
@@ -96,6 +97,7 @@
         {{ column.display(obj) if column.display(obj) is not none }}
     {% endif %}
 {% endmacro %}
+
 {% macro attributes_editor(field, data) %}
     <div class="admin-attributes" data-attributes>
         <label class="form-label fw-semibold">{{ field.label }}</label>
@@ -111,6 +113,7 @@
         {% endif %}
     </div>
 {% endmacro %}
+
 {% macro attribute_row(field, key, type, value) %}
     <div class="col-12 admin-attribute-row">
         <div class="input-group">
@@ -144,6 +147,7 @@
         </div>
     </div>
 {% endmacro %}
+
 {% macro form_modal(modal_id, title, action, fields, choices={}, values={}, error=None, hidden={}) %}
     <div id="{{ modal_id }}"
          class="modal modal-lg fade"

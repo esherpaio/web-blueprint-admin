@@ -25,6 +25,11 @@ Choice = tuple[Any, str]
 ChoiceProvider = Sequence[Choice] | Callable[[Session], Sequence[Choice]]
 
 
+def default_label(name: str) -> str:
+    base = name[:-3] if name.endswith("_id") else name
+    return base.replace("_", " ").strip().capitalize()
+
+
 class Field:
     """Base field. Renders as a single-line text input by default."""
 
@@ -43,7 +48,7 @@ class Field:
         attrs: dict[str, Any] | None = None,
     ) -> None:
         self.name = name
-        self.label = label if label is not None else name.replace("_", " ").capitalize()
+        self.label = label if label is not None else default_label(name)
         self.required = required
         self.readonly = readonly
         self.placeholder = placeholder
