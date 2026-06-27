@@ -34,7 +34,6 @@ class CategoryView(CachedModelView):
         Column("id", "ID"),
         Column("name"),
         Column("order", editable=True, field=IntegerField("order")),
-        Column("slug", "Slug"),
     ]
 
     create_fields = [
@@ -46,9 +45,9 @@ class CategoryView(CachedModelView):
         FormTab(
             "General",
             [
-                StringField("name", required=True),
+                StringField("name", required=True, readonly=True),
                 IntegerField("order"),
-                JsonAttributesField(),
+                JsonAttributesField(readonly=True),
             ],
         ),
         InlineTableTab(
@@ -58,7 +57,7 @@ class CategoryView(CachedModelView):
             columns=[
                 Column("id", "ID"),
                 Column("order", editable=True, field=IntegerField("order")),
-                Column("sku.slug", "SKU"),
+                Column("sku.name", "SKU"),
             ],
             create_fields=[
                 IntegerField("order"),
