@@ -43,7 +43,7 @@ class ShipmentZoneView(CachedModelView):
     endpoint = "shipment_zones"
     icon = "bi-truck"
     menu_group = "Shipments"
-    order = 40
+    order = 41
 
     order_by = [ShipmentZone.order, ShipmentZone.id]
     columns = [
@@ -68,7 +68,7 @@ class ShipmentMethodView(CachedModelView):
     endpoint = "shipment_methods"
     icon = "bi-truck"
     menu_group = "Shipments"
-    order = 40
+    order = 42
 
     order_by = [ShipmentMethod.name]
     columns = [

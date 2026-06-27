@@ -56,8 +56,8 @@ class CategoryView(CachedModelView):
             "category_id",
             columns=[
                 Column("id", "ID"),
-                Column("order", editable=True, field=IntegerField("order")),
                 Column("sku.name", "SKU"),
+                Column("order", editable=True, field=IntegerField("order")),
             ],
             create_fields=[
                 SelectField.from_model(
