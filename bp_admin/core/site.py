@@ -40,7 +40,6 @@ class AdminSite:
         section: str = "main",
         match: str | None = None,
     ) -> None:
-        """Register a manual menu link to a custom (non-engine) page."""
         self.links.append(
             {
                 "label": label,
@@ -148,7 +147,6 @@ class AdminSite:
     #
 
     def build_menu(self) -> dict[str, list[dict[str, Any]]]:
-        """Build the sidebar menu grouped into sections and dropdown groups."""
         sections: dict[str, dict[str, dict[str, Any]]] = {"main": {}, "bottom": {}}
         flat: dict[str, list[dict[str, Any]]] = {"main": [], "bottom": []}
 

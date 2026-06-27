@@ -60,7 +60,7 @@
     {% set field = column.field %}
     {% set cell_name = "rows-" ~ obj.id ~ "-" ~ column.name %}
     {% set submitted = form_values.get(cell_name) %}
-    {% set value = submitted if submitted is not none else column.value(obj) %}
+    {% set value = submitted if submitted is not none else field.value_from_obj(obj) %}
     {% if field.input_type == "checkbox" %}
         <input class="form-check-input"
                type="checkbox"
@@ -102,9 +102,7 @@
         <div data-attributes-rows class="row g-2">
             {% for row in field.rows_from(data) %}{{ attribute_row(field, row.key, row.type, row.value) }}{% endfor %}
         </div>
-        <button type="button"
-                class="btn btn-sm btn-outline-secondary mt-2"
-                data-attributes-add>
+        <button type="button" class="btn btn-sm btn-light mt-2" data-attributes-add>
             <i class="bi bi-plus-square me-1"></i>
             Add attribute
         </button>
@@ -131,7 +129,7 @@
                    name="attr-value"
                    placeholder="Value"
                    value="{{ value }}">
-            <button type="button" class="btn btn-outline-danger" data-attributes-remove>
+            <button type="button" class="btn btn-light" data-attributes-remove>
                 <i class="bi bi-trash"></i>
             </button>
         </div>

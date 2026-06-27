@@ -59,7 +59,6 @@ class Field:
         return getattr(obj, self.name, None)
 
     def choices(self, s: Session) -> list[Choice]:
-        """Resolved ``(value, label)`` options. Only meaningful for selects."""
         return []
 
     #
@@ -67,10 +66,11 @@ class Field:
     #
 
     def parse(self, form: Any, files: Any = None, name: str | None = None) -> Any:
-        """Coerce the submitted value identified by ``name`` (defaults to the
-        field name, but a different key is used for inline table rows)."""
         raw = form.get(name or self.name)
         return self._coerce(raw)
+
+    def apply(self, obj: Any, value: Any) -> None:
+        setattr(obj, self.name, value)
 
     def _coerce(self, raw: Any) -> Any:
         if raw is None:
@@ -84,7 +84,6 @@ class Field:
 
     @classmethod
     def scaffold(cls, column: InstrumentedAttribute) -> "Field":
-        """Derive a sensible field from a SQLAlchemy column."""
         name = column.key
         try:
             python_type = column.type.python_type
@@ -186,8 +185,6 @@ class SelectField(Field):
         coerce: Callable[[Any], Any] | None = int,
         **kwargs: Any,
     ) -> "SelectField":
-        """Build a select populated from a related model's rows."""
-
         def provider(s: Session) -> list[Choice]:
             query = s.query(model)
             if where is not None:
@@ -257,15 +254,14 @@ class JsonAttributesField(Field):
     """Editor for a JSONB ``attributes`` column.
 
     Renders the dict as typed key/value rows. Supported value types: ``text``,
-    ``longtext``, ``integer``, ``float``, ``boolean``, ``timestamp``, ``list``
-    and ``dict``. Lists are entered one item per line; dicts as JSON.
+    ``integer``, ``float``, ``boolean``, ``timestamp``, ``list`` and ``dict``.
+    Lists are entered one item per line; dicts as JSON.
     """
 
     input_type = "attributes"
 
     VALUE_TYPES = (
         ("text", "Text"),
-        ("longtext", "Long text"),
         ("integer", "Integer"),
         ("float", "Float"),
         ("boolean", "Boolean"),
@@ -292,7 +288,6 @@ class JsonAttributesField(Field):
         return "text"
 
     def rows_from(self, data: Any) -> list[dict[str, Any]]:
-        """Render an attributes dict as ``{key, type, value}`` rows."""
         data = data or {}
         result = []
         for key, value in data.items():

@@ -1,33 +1,43 @@
-"""Coupon admin view — demonstrates a modal create form and a custom action
-(setting a discount percentage) backed by server-side logic, mirroring the
-order-style action buttons."""
+"""Coupon admin view.
+
+A coupon is either a fixed-amount discount or a percentage discount (the model
+stores those as mutually exclusive ``amount`` / ``rate`` columns). The
+``PercentageField`` and ``AmountField`` below let the admin edit either one as a
+plain column: setting one clears the other so the database constraint is always
+satisfied.
+"""
 
 from __future__ import annotations
 
 from decimal import Decimal
 from typing import Any
 
-from sqlalchemy.orm.session import Session
 from web.database.model import Coupon
 
-from bp_admin.core import (
-    Action,
-    Column,
-    DecimalField,
-    FormTab,
-    IntegerField,
-    StringField,
-)
+from bp_admin.core import Column, DecimalField, FormTab, IntegerField, StringField
 
 from .base import CachedModelView
 
 
-def _set_percentage(s: Session, coupon: Any, data: dict[str, Any]) -> None:
-    percentage = data.get("percentage")
-    if percentage is None:
-        return
-    coupon.amount = None
-    coupon.rate = Decimal("1") - (Decimal(percentage) / Decimal("100"))
+class PercentageField(IntegerField):
+    def value_from_obj(self, obj: Any) -> int | None:
+        if obj.rate is None:
+            return None
+        return int(round((1 - obj.rate) * 100))
+
+    def apply(self, obj: Any, value: Any) -> None:
+        if value is None:
+            return
+        obj.amount = None
+        obj.rate = Decimal("1") - (Decimal(value) / Decimal("100"))
+
+
+class AmountField(DecimalField):
+    def apply(self, obj: Any, value: Any) -> None:
+        if value is None:
+            return
+        obj.rate = None
+        obj.amount = value
 
 
 class CouponView(CachedModelView):
@@ -38,14 +48,20 @@ class CouponView(CachedModelView):
     order = 50
 
     columns = [
-        Column("code", editable=True, field=StringField("code", required=True)),
-        Column("percentage", "Percentage"),
+        Column("code", "Code"),
+        Column(
+            "percentage",
+            "Percentage",
+            editable=True,
+            field=PercentageField("percentage"),
+        ),
         Column("amount", "Amount", format="price"),
     ]
 
     create_fields = [
         StringField("code", required=True),
-        DecimalField("amount"),
+        AmountField("amount"),
+        PercentageField("percentage"),
     ]
 
     tabs = [
@@ -53,18 +69,8 @@ class CouponView(CachedModelView):
             "General",
             [
                 StringField("code", required=True),
-                DecimalField("amount"),
+                AmountField("amount"),
+                PercentageField("percentage"),
             ],
-        ),
-    ]
-
-    actions = [
-        Action(
-            "set_percentage",
-            "Set percentage",
-            handler=_set_percentage,
-            fields=[IntegerField("percentage", required=True)],
-            style="warning",
-            icon="bi-percent",
         ),
     ]

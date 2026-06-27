@@ -176,6 +176,4 @@ class ModelView:
     #
 
     def after_write(self, s: Session, obj: Any = None) -> None:
-        """Called after any successful write (``obj`` is ``None`` for bulk and
-        delete operations). Override for side effects such as busting a cache
-        (e.g. resetting ``AppSettings.cached_at``)."""
+        pass

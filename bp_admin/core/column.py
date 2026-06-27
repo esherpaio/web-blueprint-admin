@@ -12,7 +12,6 @@ from .field import Field, StringField
 
 
 def getattr_path(obj: Any, path: str) -> Any:
-    """Resolve a dotted attribute path, e.g. ``"role.name"``."""
     value = obj
     for part in path.split("."):
         if value is None:
@@ -51,11 +50,9 @@ class Column:
         return self.format if isinstance(self.format, str) else None
 
     def value(self, obj: Any) -> Any:
-        """Raw value for this column (supports dotted paths for display)."""
         return getattr_path(obj, self.name)
 
     def display(self, obj: Any) -> Any:
-        """Display value, applying a callable formatter when provided."""
         value = self.value(obj)
         if callable(self.format):
             return self.format(value)

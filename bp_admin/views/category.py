@@ -32,7 +32,7 @@ class CategoryView(CachedModelView):
 
     columns = [
         Column("id", "ID"),
-        Column("name", editable=True, field=StringField("name", required=True)),
+        Column("name"),
         Column("order", editable=True, field=IntegerField("order")),
         Column("slug", "Slug"),
     ]

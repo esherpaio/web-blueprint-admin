@@ -1,7 +1,8 @@
 {% from "admin/_engine/_macros.html" import cell_input, display_cell, form_modal %}
 {% set tab_action = url_for("admin." ~ view.endpoint ~ "_tab", id_=obj.id, tab_key=tab.key) %}
-{% if tab.can_create and tab_ctx.create_fields %}
-    <div class="d-flex justify-content-end mb-3">
+{% set form_id = "inline-form-" ~ tab.key %}
+<div class="d-flex flex-wrap justify-content-end gap-2 mb-3">
+    {% if tab.can_create and tab_ctx.create_fields %}
         <button class="btn btn-success"
                 type="button"
                 data-bs-toggle="modal"
@@ -9,9 +10,22 @@
             Add
             <i class="bi bi-plus-square ms-1"></i>
         </button>
-    </div>
-{% endif %}
-<form method="post" action="{{ tab_action }}">
+    {% endif %}
+    <button class="btn btn-primary"
+            type="submit"
+            form="{{ form_id }}"
+            name="_op"
+            value="save">Save changes</button>
+    {% if tab.can_delete %}
+        <button class="btn btn-danger"
+                type="submit"
+                form="{{ form_id }}"
+                name="_op"
+                value="delete"
+                data-confirm="Delete the selected records?">Delete selected</button>
+    {% endif %}
+</div>
+<form id="{{ form_id }}" method="post" action="{{ tab_action }}">
     <div class="table-responsive">
         <table class="table align-middle mb-0">
             <thead class="table-secondary">
@@ -56,16 +70,6 @@
                 {% endfor %}
             </tbody>
         </table>
-    </div>
-    <div class="d-flex gap-2 mt-3">
-        <button class="btn btn-primary" type="submit" name="_op" value="save">Save changes</button>
-        {% if tab.can_delete %}
-            <button class="btn btn-danger"
-                    type="submit"
-                    name="_op"
-                    value="delete"
-                    data-confirm="Delete the selected records?">Delete selected</button>
-        {% endif %}
     </div>
 </form>
 {% if tab.can_create and tab_ctx.create_fields %}

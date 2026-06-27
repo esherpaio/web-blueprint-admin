@@ -27,7 +27,7 @@ class ShipmentClassView(CachedModelView):
 
     order_by = [ShipmentClass.order, ShipmentClass.id]
     columns = [
-        Column("name", editable=True, field=StringField("name", required=True)),
+        Column("name"),
         Column("order", editable=True, field=IntegerField("order")),
     ]
     create_fields = [
@@ -72,7 +72,7 @@ class ShipmentMethodView(CachedModelView):
 
     order_by = [ShipmentMethod.name]
     columns = [
-        Column("name", editable=True, field=StringField("name", required=True)),
+        Column("name"),
         Column(
             "unit_price",
             "Price",

@@ -8,7 +8,7 @@ from typing import Any
 from sqlalchemy.orm.session import Session
 from web.database.model import User
 
-from bp_admin.core import BoolField, Column, StringField
+from bp_admin.core import BoolField, Column
 
 from .base import CachedModelView
 
@@ -28,12 +28,7 @@ class UserView(CachedModelView):
     columns = [
         Column("id", "ID"),
         Column("email", "Email"),
-        Column(
-            "display_name",
-            "Name",
-            editable=True,
-            field=StringField("display_name"),
-        ),
+        Column("display_name", "Name"),
         Column("role.name", "Role"),
         Column("is_active", "Active", editable=True, field=BoolField("is_active")),
     ]

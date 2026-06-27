@@ -24,7 +24,7 @@ class CountryView(CachedModelView):
 
     columns = [
         Column("code", "Code"),
-        Column("name", editable=True, field=StringField("name", required=True)),
+        Column("name"),
         Column("region.name", "Region"),
         Column(
             "allows_shipping",
