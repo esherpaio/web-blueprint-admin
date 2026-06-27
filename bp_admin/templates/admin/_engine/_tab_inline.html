@@ -1,0 +1,73 @@
+{% from "admin/_engine/_macros.html" import cell_input, display_cell, form_modal %}
+{% set tab_action = url_for("admin." ~ view.endpoint ~ "_tab", id_=obj.id, tab_key=tab.key) %}
+{% if tab.can_create and tab_ctx.create_fields %}
+    <div class="d-flex justify-content-end mb-3">
+        <button class="btn btn-success"
+                type="button"
+                data-bs-toggle="modal"
+                data-bs-target="#modal-add-{{ tab.key }}">
+            Add
+            <i class="bi bi-plus-square ms-1"></i>
+        </button>
+    </div>
+{% endif %}
+<form method="post" action="{{ tab_action }}">
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead class="table-secondary">
+                <tr>
+                    <th style="width:2.5rem">
+                        {% if tab.can_delete %}
+                            <input class="form-check-input" type="checkbox" data-select-all>
+                        {% endif %}
+                    </th>
+                    {% for column in tab_ctx.columns %}
+                        <th>{{ column.label }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody class="table-light">
+                {% for row in tab_ctx.rows %}
+                    <tr>
+                        <td>
+                            <input type="hidden" name="row-id" value="{{ row.id }}">
+                            {% if tab.can_delete %}
+                                <input class="form-check-input"
+                                       type="checkbox"
+                                       name="select"
+                                       value="{{ row.id }}"
+                                       data-select-row>
+                            {% endif %}
+                        </td>
+                        {% for column in tab_ctx.columns %}
+                            <td>
+                                {% if column.editable %}
+                                    {{ cell_input(column, row, tab_ctx.choices, form_values) }}
+                                {% else %}
+                                    {{ display_cell(column, row) }}
+                                {% endif %}
+                            </td>
+                        {% endfor %}
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td class="text-muted" colspan="99">No records.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="d-flex gap-2 mt-3">
+        <button class="btn btn-primary" type="submit" name="_op" value="save">Save changes</button>
+        {% if tab.can_delete %}
+            <button class="btn btn-danger"
+                    type="submit"
+                    name="_op"
+                    value="delete"
+                    data-confirm="Delete the selected records?">Delete selected</button>
+        {% endif %}
+    </div>
+</form>
+{% if tab.can_create and tab_ctx.create_fields %}
+    {{ form_modal("modal-add-" ~ tab.key, "Add", tab_action, tab_ctx.create_fields, tab_ctx.choices, {}, none, {"_op": "add"}) }}
+{% endif %}

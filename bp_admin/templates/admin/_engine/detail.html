@@ -1,0 +1,45 @@
+{% extends "admin/_templates/main.html" %}
+{% from "admin/_engine/_macros.html" import field_input %}
+{% block admin_body %}
+    <div class="row g-3">
+        <div class="col-12">
+            <div class="d-flex justify-content-between gap-2 flex-wrap">
+                <h2 class="mb-0">{{ obj.name if obj.name else view.name ~ " #" ~ obj.id }}</h2>
+                <div class="btn-toolbar gap-2">
+                    {% include "admin/_engine/_actions.html" %}
+                    {% if view.can_delete %}
+                        <form method="post"
+                              action="{{ url_for('admin.' ~ view.endpoint ~ '_delete', id_=obj.id) }}">
+                            <button class="btn btn-danger"
+                                    type="submit"
+                                    data-confirm="Delete this {{ view.name|lower }}?">Delete</button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-12">{% include "admin/_engine/_alerts.html" %}</div>
+        <div class="col-12">
+            <ul class="nav nav-tabs" role="tablist">
+                {% for item in tabs_ctx %}
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link py-2 {{ "active" if item.tab.key == active_tab }}"
+                           href="{{ url_for('admin.' ~ view.endpoint ~ '_detail', id_=obj.id, tab=item.tab.key) }}">
+                            {{ item.tab.label }}
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+            <div class="tab-content border border-top-0 rounded-bottom-2 p-3 bg-white">
+                {% for item in tabs_ctx %}
+                    {% if item.tab.key == active_tab %}
+                        {% set tab = item.tab %}
+                        {% set tab_ctx = item.ctx %}
+                        {% include item.tab.template %}
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% include "admin/_engine/_action_modals.html" %}
+{% endblock admin_body %}

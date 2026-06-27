@@ -17,99 +17,15 @@
         {% include "admin/_templates/load_js.html" %}
     </head>
     <body class="h-100 w-100 d-flex flex-row">
+        {% from "admin/_engine/_menu.html" import nav_items %}
         <nav id="sidebar" class="offcanvas offcanvas-start" tabindex="-1">
             <div class="offcanvas-header justify-content-center text-bg-secondary">
                 <h5 class="offcanvas-title">Admin Panel</h5>
             </div>
             <div class="offcanvas-body text-bg-light">
                 <div class="d-flex flex-column justify-content-between h-100">
-                    <div class="nav nav-pills w-100 flex-column">
-                        <li class="nav-item">
-                            <a class="nav-link {{ 'active' if active_menu == 'orders' }}"
-                               href="{{ url_for('admin.orders') }}">
-                                <i class="bi bi-receipt-cutoff me-1"></i>
-                                Orders
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {{ 'active' if active_menu == 'categories' }}"
-                               href="{{ url_for('admin.categories') }}">
-                                <i class="bi bi-tags me-1"></i>
-                                Categories
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {{ 'active' if active_menu == 'products' }}"
-                               href="{{ url_for('admin.products') }}">
-                                <i class="bi bi-boxes me-1"></i>
-                                Products
-                            </a>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle {{ 'active' if active_menu == 'shipments' }}"
-                               href="#"
-                               role="button"
-                               data-bs-toggle="dropdown">
-                                <i class="bi bi-truck me-1"></i>
-                                Shipments
-                            </a>
-                            <ul class="dropdown-menu ms-auto">
-                                <li>
-                                    <a class="dropdown-item" href="{{ url_for('admin.shipment_classes') }}">Classes</a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="{{ url_for('admin.shipment_zones') }}">Zones</a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="{{ url_for('admin.shipment_methods') }}">Methods</a>
-                                </li>
-                            </ul>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {{ 'active' if active_menu == 'coupons' }}"
-                               href="{{ url_for('admin.coupons') }}">
-                                <i class="bi bi-ticket-perforated me-1"></i>
-                                Coupons
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {{ 'active' if active_menu == 'users' }}"
-                               href="{{ url_for('admin.users') }}">
-                                <i class="bi bi-people me-1"></i>
-                                Users
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {{ 'active' if active_menu == 'emails' }}"
-                               href="{{ url_for('admin.emails') }}">
-                                <i class="bi bi-mailbox me-1"></i>
-                                Emails
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {{ 'active' if active_menu == 'countries' }}"
-                               href="{{ url_for('admin.countries') }}">
-                                <i class="bi bi-flag me-1"></i>
-                                Countries
-                            </a>
-                        </li>
-                    </div>
-                    <div class="nav nav-pills w-100 flex-column">
-                        <li class="nav-item">
-                            <a class="nav-link {{ 'active' if active_menu == 'changelog' }}"
-                               href="{{ url_for('admin.changelog') }}">
-                                <i class="bi bi-newspaper me-1"></i>
-                                Changelog
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {{ 'active' if active_menu == 'settings' }}"
-                               href="{{ url_for('admin.settings') }}">
-                                <i class="bi bi-gear-wide-connected me-1"></i>
-                                Settings
-                            </a>
-                        </li>
-                    </div>
+                    <div class="nav nav-pills w-100 flex-column">{{ nav_items(admin_menu.main) }}</div>
+                    <div class="nav nav-pills w-100 flex-column">{{ nav_items(admin_menu.bottom) }}</div>
                 </div>
             </div>
         </nav>

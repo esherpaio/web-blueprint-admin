@@ -1,0 +1,171 @@
+{# Reusable rendering macros for the declarative admin engine. #}
+{% macro field_input(field, value, choices={}, name=None) %}
+    {% set fname = name or field.name %}
+    {% if field.input_type == "attributes" %}
+        {{ attributes_editor(field, value) }}
+    {% elif field.input_type == "checkbox" %}
+        <div class="input-group">
+            <span class="input-group-text">{{ field.label }}</span>
+            <div class="input-group-text">
+                <input class="form-check-input mt-0"
+                       type="checkbox"
+                       name="{{ fname }}"
+                       {% if value %}checked{% endif %}
+                       {% if field.readonly %}disabled{% endif %}>
+            </div>
+        </div>
+    {% elif field.input_type == "select" %}
+        <div class="input-group">
+            <span class="input-group-text">{{ field.label }}</span>
+            <select class="form-select"
+                    name="{{ fname }}"
+                    {% if field.required %}required{% endif %}
+                    {% if field.readonly %}disabled{% endif %}>
+                {% if field.empty_label is not none or not field.required %}
+                    <option value="">{{ field.empty_label or "None" }}</option>
+                {% endif %}
+                {% for option_value, option_label in choices.get(field.name, []) %}
+                    <option value="{{ option_value }}"
+                            {% if value is not none and value|string == option_value|string %}selected{% endif %}>
+                        {{ option_label }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+    {% elif field.input_type == "textarea" %}
+        <div class="input-group">
+            <span class="input-group-text">{{ field.label }}</span>
+            <textarea class="form-control"
+                      name="{{ fname }}"
+                      rows="{{ field.rows }}"
+                      {% if field.placeholder %}placeholder="{{ field.placeholder }}"{% endif %}
+                      {% if field.required %}required{% endif %}
+                      {% if field.readonly %}disabled{% endif %}>{{ value if value is not none else "" }}</textarea>
+        </div>
+    {% else %}
+        <div class="input-group">
+            <span class="input-group-text">{{ field.label }}</span>
+            <input class="form-control"
+                   type="{{ "datetime-local" if field.input_type == "datetime" else field.input_type }}"
+                   name="{{ fname }}"
+                   value="{{ value if value is not none else "" }}"
+                   {% if field.placeholder %}placeholder="{{ field.placeholder }}"{% endif %}
+                   {% for key, attr_value in field.attrs.items() %}{{ key }}="{{ attr_value }}"{% endfor %}
+                   {% if field.required %}required{% endif %}
+                   {% if field.readonly %}disabled{% endif %}>
+        </div>
+    {% endif %}
+{% endmacro %}
+{% macro cell_input(column, obj, choices={}, form_values={}) %}
+    {% set field = column.field %}
+    {% set cell_name = "rows-" ~ obj.id ~ "-" ~ column.name %}
+    {% set submitted = form_values.get(cell_name) %}
+    {% set value = submitted if submitted is not none else column.value(obj) %}
+    {% if field.input_type == "checkbox" %}
+        <input class="form-check-input"
+               type="checkbox"
+               name="{{ cell_name }}"
+               {% if value %}checked{% endif %}>
+    {% elif field.input_type == "select" %}
+        <select class="form-select form-select-sm" name="{{ cell_name }}">
+            {% if not field.required %}<option value="">{{ field.empty_label or "None" }}</option>{% endif %}
+            {% for option_value, option_label in choices.get(field.name, []) %}
+                <option value="{{ option_value }}"
+                        {% if value is not none and value|string == option_value|string %}selected{% endif %}>
+                    {{ option_label }}
+                </option>
+            {% endfor %}
+        </select>
+    {% else %}
+        <input class="form-control form-control-sm"
+               type="{{ field.input_type }}"
+               name="{{ cell_name }}"
+               value="{{ value if value is not none else "" }}"
+               {% for key, attr_value in field.attrs.items() %}{{ key }}="{{ attr_value }}"{% endfor %}>
+    {% endif %}
+{% endmacro %}
+{% macro display_cell(column, obj) %}
+    {% set value = column.value(obj) %}
+    {% if column.format_name == "price" %}
+        {{ value|price if value is not none }}
+    {% elif column.format_name == "datetime" %}
+        {{ value|datetime if value is not none }}
+    {% elif column.format_name == "bool" %}
+        <i class="bi {{ "bi-check-circle-fill text-success" if value else "bi-dash-circle text-muted" }}"></i>
+    {% else %}
+        {{ column.display(obj) if column.display(obj) is not none }}
+    {% endif %}
+{% endmacro %}
+{% macro attributes_editor(field, data) %}
+    <div class="admin-attributes" data-attributes>
+        <label class="form-label fw-semibold">{{ field.label }}</label>
+        <div data-attributes-rows class="row g-2">
+            {% for row in field.rows_from(data) %}{{ attribute_row(field, row.key, row.type, row.value) }}{% endfor %}
+        </div>
+        <button type="button"
+                class="btn btn-sm btn-outline-secondary mt-2"
+                data-attributes-add>
+            <i class="bi bi-plus-square me-1"></i>
+            Add attribute
+        </button>
+        <template data-attributes-template>{{ attribute_row(field, "", "text", "") }}</template>
+    </div>
+{% endmacro %}
+{% macro attribute_row(field, key, type, value) %}
+    <div class="col-12 admin-attribute-row">
+        <div class="input-group">
+            <input class="form-control"
+                   style="max-width:14rem"
+                   type="text"
+                   name="attr-key"
+                   placeholder="Key"
+                   value="{{ key }}">
+            <select class="form-select" style="max-width:9rem" name="attr-type">
+                {% for type_value, type_label in field.VALUE_TYPES %}
+                    <option value="{{ type_value }}"
+                            {% if type_value == type %}selected{% endif %}>{{ type_label }}</option>
+                {% endfor %}
+            </select>
+            <input class="form-control"
+                   type="text"
+                   name="attr-value"
+                   placeholder="Value"
+                   value="{{ value }}">
+            <button type="button" class="btn btn-outline-danger" data-attributes-remove>
+                <i class="bi bi-trash"></i>
+            </button>
+        </div>
+    </div>
+{% endmacro %}
+{% macro form_modal(modal_id, title, action, fields, choices={}, values={}, error=None, hidden={}) %}
+    <div id="{{ modal_id }}"
+         class="modal modal-lg fade"
+         tabindex="-1"
+         {% if error %}data-show-modal{% endif %}>
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content" method="post" action="{{ action }}">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ title }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    {% if error %}
+                        <div class="alert alert-danger" role="alert">{{ error }}</div>
+                    {% endif %}
+                    {% for key, hidden_value in hidden.items() %}
+                        <input type="hidden" name="{{ key }}" value="{{ hidden_value }}">
+                    {% endfor %}
+                    <div class="row g-2">
+                        {% for field in fields %}
+                            <div class="col-12">{{ field_input(field, values.get(field.name) , choices) }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-success" type="submit">Add</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endmacro %}

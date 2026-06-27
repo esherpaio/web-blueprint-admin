@@ -1,0 +1,23 @@
+{% for action in view.actions %}
+    {% if action.is_visible(obj) %}
+        {% if action.fields %}
+            <button class="btn btn-{{ action.style }}"
+                    type="button"
+                    data-bs-toggle="modal"
+                    data-bs-target="#{{ action.modal_id }}">
+                {% if action.icon %}<i class="bi {{ action.icon }} me-1"></i>{% endif %}
+                {{ action.label }}
+            </button>
+        {% else %}
+            <form method="post"
+                  action="{{ url_for('admin.' ~ view.endpoint ~ '_action', id_=obj.id, name=action.name) }}">
+                <button class="btn btn-{{ action.style }}"
+                        type="submit"
+                        {% if action.confirm %}data-confirm="{{ action.confirm }}"{% endif %}>
+                    {% if action.icon %}<i class="bi {{ action.icon }} me-1"></i>{% endif %}
+                    {{ action.label }}
+                </button>
+            </form>
+        {% endif %}
+    {% endif %}
+{% endfor %}
