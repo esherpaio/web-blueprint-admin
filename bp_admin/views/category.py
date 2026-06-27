@@ -60,14 +60,15 @@ class CategoryView(CachedModelView):
                 Column("sku.name", "SKU"),
             ],
             create_fields=[
-                IntegerField("order"),
                 SelectField.from_model(
                     "sku_id",
                     Sku,
+                    label="SKU",
                     label_attr="slug",
                     order_by=Sku.slug,
                     where=Sku.is_deleted.is_(False),
                 ),
+                IntegerField("order"),
             ],
             order_by=CategoryItem.order,
         ),

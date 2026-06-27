@@ -53,7 +53,7 @@ class CouponView(CachedModelView):
             editable=True,
             field=PercentageField("percentage"),
         ),
-        Column("amount", "Amount", format="price"),
+        Column("amount", "Amount", editable=True, field=AmountField("amount")),
     ]
 
     create_fields = [

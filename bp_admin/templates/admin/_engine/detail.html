@@ -18,7 +18,9 @@
                 </div>
             </div>
         </div>
-        <div class="col-12">{% include "admin/_engine/_alerts.html" %}</div>
+        {% if error or saved %}
+            <div class="col-12">{% include "admin/_engine/_alerts.html" %}</div>
+        {% endif %}
         <div class="col-12">
             <ul class="nav nav-tabs flex-wrap" role="tablist">
                 {% for item in tabs_ctx %}

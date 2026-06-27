@@ -79,7 +79,9 @@
                 </div>
             </div>
         {% endif %}
-        <div class="col-12">{% include "admin/_engine/_alerts.html" %}</div>
+        {% if error or saved %}
+            <div class="col-12">{% include "admin/_engine/_alerts.html" %}</div>
+        {% endif %}
         <div class="col-12">
             <form id="bulk-form"
                   method="post"
@@ -131,7 +133,7 @@
                                     {% endfor %}
                                     {% if view.has_detail %}
                                         <td class="text-end">
-                                            <a class="btn btn-sm btn-light"
+                                            <a class="btn btn-sm btn-secondary"
                                                href="{{ url_for('admin.' ~ view.endpoint ~ '_detail', id_=obj.id) }}">View</a>
                                         </td>
                                     {% endif %}
