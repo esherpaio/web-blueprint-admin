@@ -101,7 +101,9 @@
                                     </th>
                                 {% endif %}
                                 {% for column in view.columns %}
-                                    <th class="{{ "text-" ~ column.align if column.align }}">{{ column.label }}</th>
+                                    {% if not (view.reorderable and column.name == view.order_field) %}
+                                        <th class="{{ "text-" ~ column.align if column.align }}">{{ column.label }}</th>
+                                    {% endif %}
                                 {% endfor %}
                                 {% if view.has_detail %}
                                     <th class="text-end">Actions</th>
@@ -115,6 +117,9 @@
                                     {% if view.reorderable %}
                                         <td class="text-muted text-center" style="cursor:grab">
                                             <i class="bi bi-grip-vertical" data-drag-handle></i>
+                                            <input type="hidden"
+                                                   name="rows-{{ obj.id }}-{{ view.order_field }}"
+                                                   value="{{ obj|attr(view.order_field) }}">
                                         </td>
                                     {% endif %}
                                     {% if select_col %}
@@ -132,13 +137,15 @@
                                         </td>
                                     {% endif %}
                                     {% for column in view.columns %}
-                                        <td class="{{ "text-" ~ column.align if column.align }}">
-                                            {% if column.editable %}
-                                                {{ cell_input(column, obj, choices, form_values) }}
-                                            {% else %}
-                                                {{ display_cell(column, obj) }}
-                                            {% endif %}
-                                        </td>
+                                        {% if not (view.reorderable and column.name == view.order_field) %}
+                                            <td class="{{ "text-" ~ column.align if column.align }}">
+                                                {% if column.editable %}
+                                                    {{ cell_input(column, obj, choices, form_values) }}
+                                                {% else %}
+                                                    {{ display_cell(column, obj) }}
+                                                {% endif %}
+                                            </td>
+                                        {% endif %}
                                     {% endfor %}
                                     {% if view.has_detail %}
                                         <td class="text-end">

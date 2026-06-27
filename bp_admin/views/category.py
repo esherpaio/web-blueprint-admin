@@ -9,7 +9,6 @@ from bp_admin.core import (
     Column,
     FormTab,
     InlineTableTab,
-    IntegerField,
     JsonAttributesField,
     SelectField,
     StringField,
@@ -34,12 +33,10 @@ class CategoryView(CachedModelView):
     columns = [
         Column("id", "ID"),
         Column("name"),
-        Column("order", editable=True, field=IntegerField("order")),
     ]
 
     create_fields = [
         StringField("name", required=True),
-        IntegerField("order"),
     ]
 
     tabs = [
@@ -47,7 +44,6 @@ class CategoryView(CachedModelView):
             "General",
             [
                 StringField("name", required=True, readonly=True),
-                IntegerField("order"),
                 JsonAttributesField(readonly=True),
             ],
         ),
@@ -58,7 +54,6 @@ class CategoryView(CachedModelView):
             columns=[
                 Column("id", "ID"),
                 Column("sku.name", "SKU"),
-                Column("order", editable=True, field=IntegerField("order")),
             ],
             create_fields=[
                 SelectField.from_model(
@@ -69,7 +64,6 @@ class CategoryView(CachedModelView):
                     order_by=Sku.slug,
                     where=Sku.is_deleted.is_(False),
                 ),
-                IntegerField("order"),
             ],
             order_by=CategoryItem.order,
             reorderable=True,

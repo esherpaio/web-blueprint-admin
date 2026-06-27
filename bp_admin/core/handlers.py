@@ -155,7 +155,13 @@ def list_endpoint(view: ModelView) -> str | Response:
                         soft_delete=view.soft_delete,
                     )
                 else:
-                    apply_bulk_edits(s, view.model, view.columns, request.form)
+                    apply_bulk_edits(
+                        s,
+                        view.model,
+                        view.columns,
+                        request.form,
+                        order_field=view.order_field if view.reorderable else None,
+                    )
                 view.after_write(s, None)
         except WriteError as error:
             return render_list(

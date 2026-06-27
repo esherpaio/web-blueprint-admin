@@ -148,7 +148,13 @@ class InlineTableTab(Tab):
                 s, self.model, form.getlist("select"), soft_delete=self.soft_delete
             )
         else:
-            apply_bulk_edits(s, self.model, self.columns, form)
+            apply_bulk_edits(
+                s,
+                self.model,
+                self.columns,
+                form,
+                order_field=self.order_field if self.reorderable else None,
+            )
         view.after_write(s, obj)
 
 

@@ -107,7 +107,7 @@ class ModelView:
 
     @property
     def has_bulk_edit(self) -> bool:
-        return any(column.editable for column in self.columns)
+        return self.reorderable or any(column.editable for column in self.columns)
 
     def tab_by_key(self, key: str) -> Tab | None:
         for tab in self.tabs:

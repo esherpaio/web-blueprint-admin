@@ -39,7 +39,9 @@
                         {% endif %}
                     </th>
                     {% for column in tab_ctx.columns %}
-                        <th>{{ column.label }}</th>
+                        {% if not (tab.reorderable and column.name == tab.order_field) %}
+                            <th>{{ column.label }}</th>
+                        {% endif %}
                     {% endfor %}
                 </tr>
             </thead>
@@ -50,6 +52,9 @@
                         {% if tab.reorderable %}
                             <td class="text-muted text-center" style="cursor:grab">
                                 <i class="bi bi-grip-vertical" data-drag-handle></i>
+                                <input type="hidden"
+                                       name="rows-{{ row.id }}-{{ tab.order_field }}"
+                                       value="{{ row|attr(tab.order_field) }}">
                             </td>
                         {% endif %}
                         <td>
@@ -63,13 +68,15 @@
                             {% endif %}
                         </td>
                         {% for column in tab_ctx.columns %}
-                            <td>
-                                {% if column.editable %}
-                                    {{ cell_input(column, row, tab_ctx.choices, form_values) }}
-                                {% else %}
-                                    {{ display_cell(column, row) }}
-                                {% endif %}
-                            </td>
+                            {% if not (tab.reorderable and column.name == tab.order_field) %}
+                                <td>
+                                    {% if column.editable %}
+                                        {{ cell_input(column, row, tab_ctx.choices, form_values) }}
+                                    {% else %}
+                                        {{ display_cell(column, row) }}
+                                    {% endif %}
+                                </td>
+                            {% endif %}
                         {% endfor %}
                     </tr>
                 {% else %}

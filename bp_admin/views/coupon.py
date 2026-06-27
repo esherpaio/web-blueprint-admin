@@ -14,7 +14,7 @@ from typing import Any
 
 from web.database.model import Coupon
 
-from bp_admin.core import Column, DecimalField, FormTab, IntegerField, StringField
+from bp_admin.core import Column, DecimalField, IntegerField, StringField
 
 from .base import CachedModelView
 
@@ -50,25 +50,13 @@ class CouponView(CachedModelView):
         Column(
             "percentage",
             "Percentage",
-            editable=True,
             field=PercentageField("percentage"),
         ),
-        Column("amount", "Amount", editable=True, field=AmountField("amount")),
+        Column("amount", "Amount", field=AmountField("amount")),
     ]
 
     create_fields = [
         StringField("code", required=True),
         AmountField("amount"),
         PercentageField("percentage"),
-    ]
-
-    tabs = [
-        FormTab(
-            "General",
-            [
-                StringField("code", required=True),
-                AmountField("amount"),
-                PercentageField("percentage"),
-            ],
-        ),
     ]

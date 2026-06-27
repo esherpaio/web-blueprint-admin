@@ -11,7 +11,7 @@ from web.database.model import (
     ShipmentZone,
 )
 
-from bp_admin.core import Column, DecimalField, IntegerField, SelectField, StringField
+from bp_admin.core import Column, DecimalField, SelectField, StringField
 
 from .base import CachedModelView
 
@@ -29,11 +29,9 @@ class ShipmentClassView(CachedModelView):
     reorderable = True
     columns = [
         Column("name"),
-        Column("order", editable=True, field=IntegerField("order")),
     ]
     create_fields = [
         StringField("name", required=True),
-        IntegerField("order"),
     ]
 
 
@@ -50,12 +48,10 @@ class ShipmentZoneView(CachedModelView):
     reorderable = True
     columns = [
         Column("id", "ID"),
-        Column("order", editable=True, field=IntegerField("order")),
         Column("country.name", "Country"),
         Column("region.name", "Region"),
     ]
     create_fields = [
-        IntegerField("order"),
         SelectField.from_model(
             "country_id", Country, label_attr="name", order_by=Country.name
         ),

@@ -35,11 +35,16 @@ def apply_fields(
 
 
 def apply_bulk_edits(
-    s: Session, model: Any, columns: Iterable[Column], form: Any
+    s: Session,
+    model: Any,
+    columns: Iterable[Column],
+    form: Any,
+    *,
+    order_field: str | None = None,
 ) -> int:
     editable = [c for c in columns if c.editable]
     row_ids = form.getlist("row-id")
-    if not editable or not row_ids:
+    if not row_ids or (not editable and order_field is None):
         return 0
     rows = {
         str(row.id): row for row in s.query(model).filter(model.id.in_(row_ids)).all()
@@ -51,6 +56,13 @@ def apply_bulk_edits(
         for column in editable:
             value = column.field.parse(form, name=f"rows-{row_id}-{column.name}")
             column.field.apply(row, value)
+        if order_field is not None:
+            raw = form.get(f"rows-{row_id}-{order_field}")
+            if raw not in (None, ""):
+                try:
+                    setattr(row, order_field, int(raw))
+                except (TypeError, ValueError):
+                    pass
     return len(row_ids)
 
 
