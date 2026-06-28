@@ -269,7 +269,7 @@ class JsonAttributesField(Field):
         name: str = "attributes",
         label: str = "Attributes",
         *,
-        readonly: bool = False,
+        readonly: bool = True,
     ) -> None:
         super().__init__(name, label, readonly=readonly)
 
