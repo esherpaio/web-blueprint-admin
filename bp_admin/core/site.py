@@ -10,6 +10,7 @@ from typing import Any, Callable
 from flask import Blueprint, request
 
 from . import handlers
+from .enums import CellFormat, InputType, Op
 from .view import ModelView
 
 
@@ -57,6 +58,9 @@ class AdminSite:
     def init_blueprint(self, bp: Blueprint) -> None:
         for view in self.views:
             self._register_view(bp, view)
+        bp.add_app_template_global(Op, "Op")
+        bp.add_app_template_global(InputType, "InputType")
+        bp.add_app_template_global(CellFormat, "CellFormat")
         bp.context_processor(lambda: {"admin_menu": self.build_menu()})
 
     def _register_view(self, bp: Blueprint, view: ModelView) -> None:

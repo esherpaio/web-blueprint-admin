@@ -51,6 +51,10 @@ class Column:
     def format_name(self) -> str | None:
         return self.format if isinstance(self.format, str) else None
 
+    @property
+    def align_class(self) -> str:
+        return f"text-{self.align}" if self.align else ""
+
     def value(self, obj: Any) -> Any:
         return getattr_path(obj, self.name)
 

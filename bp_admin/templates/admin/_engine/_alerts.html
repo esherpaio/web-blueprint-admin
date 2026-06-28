@@ -1,11 +1,3 @@
-{% set messages = {
-    "created": "Created successfully.",
-    "saved": "Changes saved.",
-    "deleted": "Deleted successfully.",
-    "done": "Action completed.",
-    "error": "Something went wrong."
-} %}
-
 {% if error %}
     <div class="alert alert-danger alert-dismissible mb-0 fade show"
          role="alert">
@@ -13,10 +5,10 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 {% endif %}
-{% if saved %}
-    <div class="alert {{ 'alert-danger' if saved == 'error' else 'alert-success' }} alert-dismissible mb-0 fade show"
+{% if notice %}
+    <div class="alert alert-{{ notice.level }} alert-dismissible mb-0 fade show"
          role="alert">
-        {{ messages.get(saved, "Saved.") }}
+        {{ notice.text }}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 {% endif %}

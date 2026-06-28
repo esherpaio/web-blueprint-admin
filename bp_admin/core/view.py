@@ -13,6 +13,7 @@ from web.app.urls import url_for
 
 from .action import Action
 from .column import Column, row_input_name
+from .enums import MenuSection
 from .field import Field, default_label
 from .tab import Tab
 from .util import apply_fields, supports_soft_delete
@@ -52,7 +53,7 @@ class ModelView:
     # Menu placement
     icon: str | None = None
     menu_group: str | None = None
-    menu_section: str = "main"
+    menu_section: MenuSection = MenuSection.MAIN
     order: int = 100
 
     # List page
@@ -107,6 +108,10 @@ class ModelView:
 
     def title(self, obj: Any) -> str:
         return getattr(obj, "name", None) or f"{self.name} #{obj.id}"
+
+    @property
+    def create_title(self) -> str:
+        return f"Add {self.name.lower()}"
 
     @property
     def soft_delete(self) -> bool:

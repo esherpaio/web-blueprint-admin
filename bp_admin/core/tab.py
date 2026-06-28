@@ -13,6 +13,7 @@ from typing import Any, Callable
 from sqlalchemy.orm.session import Session
 
 from .column import Column, row_input_name
+from .enums import Op
 from .field import Field
 from .util import (
     apply_bulk_edits,
@@ -166,13 +167,13 @@ class InlineTableTab(Tab):
         self, view: Any, s: Session, obj: Any, form: Any, files: Any
     ) -> None:
         op = form.get("_op")
-        if op == "add" and self.can_create:
+        if op == Op.ADD and self.can_create:
             child = self.model()
             setattr(child, self.fk, obj.id)
             apply_fields(child, self.create_fields, form, files, respect_readonly=False)
             s.add(child)
             s.flush()
-        elif op == "delete" and self.can_delete:
+        elif op == Op.DELETE and self.can_delete:
             delete_objects(
                 s,
                 self.model,

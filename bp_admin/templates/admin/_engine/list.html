@@ -31,14 +31,14 @@
                                 type="submit"
                                 form="bulk-form"
                                 name="_op"
-                                value="save">Save changes</button>
+                                value="{{ Op.SAVE }}">Save changes</button>
                     {% endif %}
                     {% if view.can_delete %}
                         <button class="btn btn-danger"
                                 type="submit"
                                 form="bulk-form"
                                 name="_op"
-                                value="delete"
+                                value="{{ Op.DELETE }}"
                                 data-confirm="Delete the selected records?">Delete selected</button>
                     {% endif %}
                 </div>
@@ -79,7 +79,7 @@
                 </div>
             </div>
         {% endif %}
-        {% if error or saved %}
+        {% if error or notice %}
             <div class="col-12" data-alert-wrapper>{% include "admin/_engine/_alerts.html" %}</div>
         {% endif %}
         <div class="col-12">
@@ -103,7 +103,7 @@
                                 {% endif %}
                                 {% for column in view.columns %}
                                     {% if not (view.reorderable and column.name == view.order_field) %}
-                                        <th class="{{ 'text-'' ~ column.align if column.align }}">{{ column.label }}</th>
+                                        <th class="{{ column.align_class }}">{{ column.label }}</th>
                                     {% endif %}
                                 {% endfor %}
                                 {% if view.has_detail %}
@@ -134,7 +134,7 @@
                                     {% endif %}
                                     {% for column in view.columns %}
                                         {% if not (view.reorderable and column.name == view.order_field) %}
-                                            <td class="{{ 'text-'' ~ column.align if column.align }}">
+                                            <td class="{{ column.align_class }}">
                                                 {% if column.editable %}
                                                     {{ cell_input(column, obj, choices, form_values) }}
                                                 {% else %}
@@ -175,6 +175,6 @@
         {% endif %}
     </div>
     {% if view.can_create %}
-        {{ form_modal("modal-create", "Add " ~ view.name|lower, view.url("create") , view.create_fields, choices, create_values, create_error) }}
+        {{ form_modal('modal-create', view.create_title, view.url('create') , view.create_fields, choices, create_values, create_error) }}
     {% endif %}
 {% endblock admin_body %}

@@ -18,14 +18,14 @@
                     type="submit"
                     form="{{ tab.form_id }}"
                     name="_op"
-                    value="save">Save changes</button>
+                    value="{{ Op.SAVE }}">Save changes</button>
         {% endif %}
         {% if tab.can_delete %}
             <button class="btn btn-danger"
                     type="submit"
                     form="{{ tab.form_id }}"
                     name="_op"
-                    value="delete"
+                    value="{{ Op.DELETE }}"
                     data-confirm="Delete the selected records?">Delete selected</button>
         {% endif %}
     </div>
@@ -99,5 +99,5 @@
 </form>
 
 {% if tab.show_add %}
-    {{ form_modal(tab.add_modal_id, "Add", tab_action, tab_ctx.create_fields, tab_ctx.choices, {}, none, {"_op": "add"}) }}
+    {{ form_modal(tab.add_modal_id, 'Add', tab_action, tab_ctx.create_fields, tab_ctx.choices, {}, none, {'_op': Op.ADD}) }}
 {% endif %}

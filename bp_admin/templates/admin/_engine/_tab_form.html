@@ -10,7 +10,7 @@
       action="{{ view.url('tab', id_=obj.id, tab_key=tab.key) }}">
     <div class="row g-3">
         {% for field in tab_ctx.fields %}
-            <div class="{{ 'col-12' if field.input_type in ('textarea', 'attributes') else 'col-12 col-lg-6' }}">
+            <div class="{{ field.col_class }}">
                 {{ field_input(field, field.form_value(obj, form_values) , tab_ctx.choices) }}
             </div>
         {% endfor %}

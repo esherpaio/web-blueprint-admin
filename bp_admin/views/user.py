@@ -6,7 +6,14 @@ from typing import Any
 from sqlalchemy.orm.session import Session
 from web.database.model import Email, Order, User, UserRoleId
 
-from bp_admin.core import BoolField, Column, FormTab, InlineTableTab, StringField
+from bp_admin.core import (
+    BoolField,
+    CellFormat,
+    Column,
+    FormTab,
+    InlineTableTab,
+    StringField,
+)
 
 from .base import CachedModelView
 
@@ -24,7 +31,7 @@ class UserView(CachedModelView):
 
     columns = [
         Column("id", "ID"),
-        Column("created_at", "Created", format="datetime"),
+        Column("created_at", "Created", format=CellFormat.DATETIME),
         Column("email", "Email"),
         Column("display_name", "Name"),
         Column("role.name", "Role"),
@@ -47,9 +54,9 @@ class UserView(CachedModelView):
             "user_id",
             columns=[
                 Column("id", "ID"),
-                Column("created_at", "Date", format="datetime"),
+                Column("created_at", "Date", format=CellFormat.DATETIME),
                 Column("status.name", "Status"),
-                Column("total_price", "Total", format="price"),
+                Column("total_price", "Total", format=CellFormat.PRICE),
             ],
             can_create=False,
             can_delete=False,
@@ -62,7 +69,7 @@ class UserView(CachedModelView):
             "user_id",
             columns=[
                 Column("id", "ID"),
-                Column("created_at", "Date", format="datetime"),
+                Column("created_at", "Date", format=CellFormat.DATETIME),
                 Column("event_id", "Event"),
                 Column("status.name", "Status"),
             ],

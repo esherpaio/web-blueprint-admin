@@ -18,6 +18,8 @@ from typing import Any, Callable, Sequence
 
 from sqlalchemy.orm.session import Session
 
+from .enums import AttrType, InputType
+
 Choice = tuple[Any, str]
 ChoiceProvider = Sequence[Choice] | Callable[[Session], Sequence[Choice]]
 
@@ -30,7 +32,7 @@ def default_label(name: str) -> str:
 class Field:
     """Base field. Renders as a single-line text input by default."""
 
-    input_type = "text"
+    input_type = InputType.TEXT
 
     def __init__(
         self,
@@ -50,6 +52,18 @@ class Field:
         self.placeholder = placeholder
         self.attrs = attrs or {}
         self.suffix = suffix
+
+    @property
+    def col_class(self) -> str:
+        if self.input_type in (InputType.TEXTAREA, InputType.ATTRIBUTES):
+            return "col-12"
+        return "col-12 col-lg-6"
+
+    @property
+    def html_input_type(self) -> str:
+        if self.input_type == InputType.DATETIME:
+            return "datetime-local"
+        return self.input_type
 
     #
     # Reading
@@ -84,11 +98,11 @@ class Field:
 
 
 class StringField(Field):
-    input_type = "text"
+    input_type = InputType.TEXT
 
 
 class TextAreaField(Field):
-    input_type = "textarea"
+    input_type = InputType.TEXTAREA
 
     def __init__(self, *args: Any, rows: int = 3, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
@@ -96,7 +110,7 @@ class TextAreaField(Field):
 
 
 class IntegerField(Field):
-    input_type = "number"
+    input_type = InputType.NUMBER
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         kwargs.setdefault("attrs", {}).setdefault("step", "1")
@@ -128,7 +142,7 @@ class PercentageField(IntegerField):
 
 
 class DecimalField(Field):
-    input_type = "number"
+    input_type = InputType.NUMBER
 
     def __init__(self, *args: Any, step: str = "0.01", **kwargs: Any) -> None:
         kwargs.setdefault("attrs", {}).setdefault("step", step)
@@ -144,14 +158,14 @@ class DecimalField(Field):
 
 
 class BoolField(Field):
-    input_type = "checkbox"
+    input_type = InputType.CHECKBOX
 
     def parse(self, form: Any, files: Any = None, name: str | None = None) -> bool:
         return (name or self.name) in form
 
 
 class SelectField(Field):
-    input_type = "select"
+    input_type = InputType.SELECT
 
     def __init__(
         self,
@@ -212,7 +226,7 @@ class SelectField(Field):
 
 
 class DateTimeField(Field):
-    input_type = "datetime"
+    input_type = InputType.DATETIME
 
     def _coerce(self, raw: Any) -> datetime | None:
         if raw is None or raw == "":
@@ -227,7 +241,7 @@ class DateTimeField(Field):
 
 
 class HiddenField(Field):
-    input_type = "hidden"
+    input_type = InputType.HIDDEN
 
 
 class JsonAttributesField(Field):
@@ -238,16 +252,16 @@ class JsonAttributesField(Field):
     Lists are entered one item per line; dicts as JSON.
     """
 
-    input_type = "attributes"
+    input_type = InputType.ATTRIBUTES
 
     VALUE_TYPES = (
-        ("text", "Text"),
-        ("integer", "Integer"),
-        ("float", "Float"),
-        ("boolean", "Boolean"),
-        ("timestamp", "Timestamp"),
-        ("list", "List"),
-        ("dict", "Dict"),
+        (AttrType.TEXT, "Text"),
+        (AttrType.INTEGER, "Integer"),
+        (AttrType.FLOAT, "Float"),
+        (AttrType.BOOLEAN, "Boolean"),
+        (AttrType.TIMESTAMP, "Timestamp"),
+        (AttrType.LIST, "List"),
+        (AttrType.DICT, "Dict"),
     )
 
     def __init__(
@@ -260,18 +274,18 @@ class JsonAttributesField(Field):
         super().__init__(name, label, readonly=readonly)
 
     @staticmethod
-    def type_of(value: Any) -> str:
+    def type_of(value: Any) -> AttrType:
         if isinstance(value, bool):
-            return "boolean"
+            return AttrType.BOOLEAN
         if isinstance(value, int):
-            return "integer"
+            return AttrType.INTEGER
         if isinstance(value, float):
-            return "float"
+            return AttrType.FLOAT
         if isinstance(value, list):
-            return "list"
+            return AttrType.LIST
         if isinstance(value, dict):
-            return "dict"
-        return "text"
+            return AttrType.DICT
+        return AttrType.TEXT
 
     def rows_from(self, data: Any) -> list[dict[str, Any]]:
         data = data or {}
@@ -306,23 +320,23 @@ class JsonAttributesField(Field):
     @staticmethod
     def _coerce_value(type_: str, raw: str) -> Any:
         raw = raw if raw is not None else ""
-        if type_ == "boolean":
+        if type_ == AttrType.BOOLEAN:
             return raw.strip().lower() in ("1", "true", "yes", "on")
-        if type_ == "integer":
+        if type_ == AttrType.INTEGER:
             try:
                 return int(raw)
             except (TypeError, ValueError):
                 return 0
-        if type_ == "float":
+        if type_ == AttrType.FLOAT:
             try:
                 return float(raw)
             except (TypeError, ValueError):
                 return 0.0
-        if type_ == "timestamp":
+        if type_ == AttrType.TIMESTAMP:
             return raw.strip()
-        if type_ == "list":
+        if type_ == AttrType.LIST:
             return [line.strip() for line in raw.splitlines() if line.strip()]
-        if type_ == "dict":
+        if type_ == AttrType.DICT:
             try:
                 parsed = json.loads(raw) if raw.strip() else {}
             except (TypeError, ValueError):

@@ -18,6 +18,7 @@ from werkzeug import Response
 
 from bp_admin.pagination import get_pages
 
+from .enums import Notice, Op
 from .util import apply_bulk_edits, delete_objects, resolve_choices
 from .view import ModelView
 
@@ -44,6 +45,30 @@ def error_message(error: Exception) -> str:
             return "A related record prevents this change."
         return "Could not save due to a database constraint."
     return "Something went wrong."
+
+
+def notice_text(notice: Notice, view: ModelView) -> str:
+    if notice == Notice.CREATED:
+        return f"{view.name} created."
+    if notice == Notice.DELETED:
+        return f"{view.name} deleted."
+    if notice == Notice.SAVED:
+        return "Changes saved."
+    if notice == Notice.DONE:
+        return "Action completed."
+    return "Something went wrong."
+
+
+def build_notice(view: ModelView) -> dict[str, str] | None:
+    code = request.args.get("saved")
+    if not code:
+        return None
+    try:
+        notice = Notice(code)
+    except ValueError:
+        return None
+    level = "danger" if notice == Notice.ERROR else "success"
+    return {"text": notice_text(notice, view), "level": level}
 
 
 #
@@ -95,7 +120,7 @@ def render_list(
             form_values=form_values or {},
             create_error=create_error,
             create_values=create_values or {},
-            saved=request.args.get("saved"),
+            notice=build_notice(view),
             active_menu=view.endpoint,
         )
 
@@ -132,7 +157,7 @@ def render_detail(
             action_choices=action_choices,
             error=error,
             form_values=form_values or {},
-            saved=request.args.get("saved"),
+            notice=build_notice(view),
             active_menu=view.endpoint,
         )
 
@@ -147,7 +172,7 @@ def list_endpoint(view: ModelView) -> str | Response:
         op = request.form.get("_op")
         try:
             with conn.begin() as s:
-                if op == "delete" and view.can_delete:
+                if op == Op.DELETE and view.can_delete:
                     delete_objects(
                         s,
                         view.model,
@@ -169,7 +194,7 @@ def list_endpoint(view: ModelView) -> str | Response:
             return render_list(
                 view, error=error_message(error), form_values=request.form
             )
-        saved = "deleted" if op == "delete" else "saved"
+        saved = Notice.DELETED if op == Op.DELETE else Notice.SAVED
         return _redirect(f"admin.{view.endpoint}", saved=saved)
     return render_list(view)
 
@@ -184,7 +209,7 @@ def create_endpoint(view: ModelView) -> Response | str:
             create_error=error_message(error),
             create_values=request.form.to_dict(),
         )
-    return _redirect(f"admin.{view.endpoint}", saved="created")
+    return _redirect(f"admin.{view.endpoint}", saved=Notice.CREATED)
 
 
 #
@@ -215,7 +240,7 @@ def tab_endpoint(view: ModelView, id_: Any, tab_key: str) -> Response | str:
             form_values=request.form,
         )
     return _redirect(
-        f"admin.{view.endpoint}_detail", id_=id_, tab=tab_key, saved="saved"
+        f"admin.{view.endpoint}_detail", id_=id_, tab=tab_key, saved=Notice.SAVED
     )
 
 
@@ -233,7 +258,7 @@ def action_endpoint(view: ModelView, id_: Any, name: str) -> Response | str:
             view.after_write(s, obj)
     except WriteError as error:
         return render_detail(view, id_, error=error_message(error))
-    return _redirect(f"admin.{view.endpoint}_detail", id_=id_, saved="done")
+    return _redirect(f"admin.{view.endpoint}_detail", id_=id_, saved=Notice.DONE)
 
 
 def delete_endpoint(view: ModelView, id_: Any) -> Response:
@@ -242,8 +267,8 @@ def delete_endpoint(view: ModelView, id_: Any) -> Response:
             delete_objects(s, view.model, [id_], soft_delete=view.soft_delete)
             view.after_write(s, None)
     except WriteError:
-        return _redirect(f"admin.{view.endpoint}_detail", id_=id_, saved="error")
-    return _redirect(f"admin.{view.endpoint}", saved="deleted")
+        return _redirect(f"admin.{view.endpoint}_detail", id_=id_, saved=Notice.ERROR)
+    return _redirect(f"admin.{view.endpoint}", saved=Notice.DELETED)
 
 
 def _redirect(endpoint: str, **values: Any) -> Response:
