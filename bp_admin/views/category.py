@@ -64,7 +64,7 @@ class CategoryView(CachedModelView):
                     "sku_id",
                     Sku,
                     label="SKU",
-                    label_attr="slug",
+                    label_attr="name",
                     order_by=Sku.slug,
                     where=Sku.is_deleted.is_(False),
                 ),
