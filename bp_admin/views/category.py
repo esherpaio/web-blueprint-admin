@@ -32,7 +32,7 @@ class CategoryView(CachedModelView):
 
     can_create = False
     can_delete = False
-    can_edit = False
+    can_edit = True
 
     columns = [
         Column("id", "ID"),
