@@ -66,7 +66,7 @@ class ShipmentClassView(CachedModelView):
         FormTab(
             "General",
             [
-                StringField("name", required=True),
+                StringField("name", readonly=True, required=True),
             ],
         ),
         InlineTableTab(
@@ -84,7 +84,10 @@ class ShipmentClassView(CachedModelView):
                     "Zone",
                     editable=True,
                     field=SelectField(
-                        "zone_id", "Zone", choices=_zone_choices, coerce=int
+                        "zone_id",
+                        "Zone",
+                        choices=_zone_choices,
+                        coerce=int,
                     ),
                 ),
                 Column(
