@@ -132,8 +132,10 @@
         document
             .querySelectorAll("[data-alert-wrapper]")
             .forEach(function (wrapper) {
-                wrapper.addEventListener("closed.bs.alert", function () {
-                    wrapper.remove();
+                wrapper.querySelectorAll(".alert").forEach(function (alert) {
+                    alert.addEventListener("closed.bs.alert", function () {
+                        wrapper.remove();
+                    });
                 });
             });
     }
