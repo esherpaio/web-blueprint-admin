@@ -166,8 +166,7 @@
                     <ul class="pagination mb-0">
                         {% for page in pagination %}
                             <li class="page-item {{ page["classes"] }}">
-                                <a class="page-link"
-                                   href="{{ view.url(p=page['number'], s=search) }}">{{ page["name"] }}</a>
+                                <a class="page-link" href="{{ view.url(p=page['number'], s=search) }}">{{ page["name"] }}</a>
                             </li>
                         {% endfor %}
                     </ul>
