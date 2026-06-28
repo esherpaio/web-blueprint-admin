@@ -30,6 +30,10 @@ class CategoryView(CachedModelView):
     order_by = [Category.order, Category.id]
     reorderable = True
 
+    can_create = False
+    can_delete = False
+    can_edit = False
+
     columns = [
         Column("id", "ID"),
         Column("name"),

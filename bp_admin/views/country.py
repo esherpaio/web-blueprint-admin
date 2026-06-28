@@ -20,6 +20,7 @@ class CountryView(CachedModelView):
 
     searchable = ["name", "code"]
     order_by = [Country.name]
+    can_create = False
     can_delete = False
 
     columns = [

@@ -20,17 +20,17 @@ class UserView(CachedModelView):
     icon = "bi-people"
     order = 55
 
-    searchable = ["email"]
+    searchable = ["email", "display_name"]
     order_by = [User.id.desc()]
     can_create = False
     can_delete = False
 
     columns = [
         Column("id", "ID"),
+        Column("created_at", "Created", format="datetime"),
         Column("email", "Email"),
         Column("display_name", "Name"),
         Column("role.name", "Role"),
-        Column("created_at", "Created", format="datetime"),
         Column("is_active", "Active", editable=True, field=BoolField("is_active")),
     ]
 

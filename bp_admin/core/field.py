@@ -136,6 +136,18 @@ class IntegerField(Field):
             return None
 
 
+class PercentageField(IntegerField):
+    def value_from_obj(self, obj: Any) -> int | None:
+        if obj.rate is None:
+            return None
+        return int(round((1 - obj.rate) * 100))
+
+    def apply(self, obj: Any, value: Any) -> None:
+        if value is None:
+            return
+        obj.rate = Decimal("1") - (Decimal(value) / Decimal("100"))
+
+
 class DecimalField(Field):
     input_type = "number"
 

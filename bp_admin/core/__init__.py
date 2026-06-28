@@ -16,6 +16,7 @@ from .field import (
     HiddenField,
     IntegerField,
     JsonAttributesField,
+    PercentageField,
     SelectField,
     StringField,
     TextAreaField,
@@ -23,26 +24,3 @@ from .field import (
 from .site import AdminSite
 from .tab import FormTab, InlineTableTab, Tab, TemplateTab
 from .view import Filter, ModelView
-
-__all__ = [
-    "Action",
-    "AdminSite",
-    "BoolField",
-    "Column",
-    "DateTimeField",
-    "DecimalField",
-    "Field",
-    "FileField",
-    "Filter",
-    "FormTab",
-    "HiddenField",
-    "InlineTableTab",
-    "IntegerField",
-    "JsonAttributesField",
-    "ModelView",
-    "SelectField",
-    "StringField",
-    "Tab",
-    "TemplateTab",
-    "TextAreaField",
-]

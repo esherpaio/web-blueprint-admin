@@ -9,33 +9,11 @@ satisfied.
 
 from __future__ import annotations
 
-from decimal import Decimal
-from typing import Any
-
 from web.database.model import Coupon
 
-from bp_admin.core import Column, DecimalField, IntegerField, StringField
+from bp_admin.core import Column, DecimalField, PercentageField, StringField
 
 from .base import CachedModelView
-
-
-class PercentageField(IntegerField):
-    def value_from_obj(self, obj: Any) -> int | None:
-        if obj.rate is None:
-            return None
-        return int(round((1 - obj.rate) * 100))
-
-    def apply(self, obj: Any, value: Any) -> None:
-        if value is None:
-            return
-        obj.rate = Decimal("1") - (Decimal(value) / Decimal("100"))
-
-
-class AmountField(DecimalField):
-    def apply(self, obj: Any, value: Any) -> None:
-        if value is None:
-            return
-        obj.amount = value
 
 
 class CouponView(CachedModelView):
@@ -52,11 +30,11 @@ class CouponView(CachedModelView):
             "Percentage",
             field=PercentageField("percentage"),
         ),
-        Column("amount", "Amount", field=AmountField("amount")),
+        Column("amount", "Amount", field=DecimalField("amount")),
     ]
 
     create_fields = [
         StringField("code", required=True),
-        AmountField("amount"),
+        DecimalField("amount"),
         PercentageField("percentage"),
     ]
