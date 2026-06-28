@@ -1,6 +1,8 @@
 """Shipment admin views: shipment classes (each with its per-zone pricing) and
 shipment zones."""
 
+from typing import Any
+
 from sqlalchemy.orm.session import Session
 from web.database.model import (
     Country,
@@ -11,6 +13,7 @@ from web.database.model import (
 )
 
 from bp_admin.core import (
+    BoolField,
     Column,
     DecimalField,
     FormTab,
@@ -22,6 +25,16 @@ from bp_admin.core import (
 from .base import CachedModelView
 
 
+def _zone_label(zone: Any) -> str:
+    if zone is None:
+        return ""
+    if zone.country is not None:
+        return zone.country.name
+    if zone.region is not None:
+        return zone.region.name
+    return f"Zone {zone.id}"
+
+
 def _zone_choices(s: Session) -> list:
     zones = (
         s.query(ShipmentZone)
@@ -29,16 +42,7 @@ def _zone_choices(s: Session) -> list:
         .order_by(ShipmentZone.order, ShipmentZone.id)
         .all()
     )
-    choices = []
-    for zone in zones:
-        if zone.country is not None:
-            label = zone.country.name
-        elif zone.region is not None:
-            label = zone.region.name
-        else:
-            label = f"Zone {zone.id}"
-        choices.append((zone.id, label))
-    return choices
+    return [(zone.id, _zone_label(zone)) for zone in zones]
 
 
 class ShipmentClassView(CachedModelView):
@@ -66,41 +70,34 @@ class ShipmentClassView(CachedModelView):
         FormTab(
             "General",
             [
-                StringField("name", readonly=True, required=True),
+                StringField("name", required=True),
             ],
         ),
         InlineTableTab(
-            "Zones",
+            "Shipment methods",
             ShipmentMethod,
             "class_id",
             columns=[
-                Column(
-                    "name",
-                    editable=True,
-                    field=StringField("name", required=True),
-                ),
-                Column(
-                    "zone_id",
-                    "Zone",
-                    editable=True,
-                    field=SelectField(
-                        "zone_id",
-                        "Zone",
-                        choices=_zone_choices,
-                        coerce=int,
-                    ),
-                ),
+                Column("name", "Name"),
+                Column("zone", "Zone", format=_zone_label),
                 Column(
                     "unit_price",
-                    "Price",
+                    "Unit price",
                     editable=True,
                     field=DecimalField("unit_price"),
+                ),
+                Column(
+                    "requires_billing_phone",
+                    "Phone required",
+                    editable=True,
+                    field=BoolField("requires_billing_phone"),
                 ),
             ],
             create_fields=[
                 StringField("name", required=True),
                 SelectField("zone_id", "Zone", choices=_zone_choices, coerce=int),
                 DecimalField("unit_price"),
+                BoolField("requires_billing_phone"),
             ],
             order_by=ShipmentMethod.name,
         ),

@@ -42,8 +42,8 @@ class CategoryView(CachedModelView):
         FormTab(
             "General",
             [
-                StringField("name", required=True, readonly=True),
-                JsonAttributesField(readonly=True),
+                StringField("name", required=True),
+                JsonAttributesField(),
             ],
         ),
         InlineTableTab(

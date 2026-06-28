@@ -138,6 +138,20 @@
             });
     }
 
+    // Drop the transient ?saved=... param so a reload won't re-show the message.
+    function initCleanUrl() {
+        const url = new URL(window.location.href);
+        if (url.searchParams.has("saved")) {
+            url.searchParams.delete("saved");
+            const query = url.searchParams.toString();
+            window.history.replaceState(
+                {},
+                "",
+                url.pathname + (query ? "?" + query : "") + url.hash,
+            );
+        }
+    }
+
     window.addEventListener("load", function () {
         initSelectAll();
         initConfirm();
@@ -145,5 +159,6 @@
         initAttributes();
         initSortable();
         initAlertDismiss();
+        initCleanUrl();
     });
 })();

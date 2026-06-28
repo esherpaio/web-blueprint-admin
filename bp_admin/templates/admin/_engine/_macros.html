@@ -1,5 +1,6 @@
-{% macro field_input(field, value, choices={}, name=None) %}
+{% macro field_input(field, value, choices={}, name=None, editable=None) %}
     {% set fname = name or field.name %}
+    {% set is_readonly = field.readonly if editable is none else not editable %}
     {% if field.input_type == "attributes" %}
         {{ attributes_editor(field, value) }}
     {% elif field.input_type == "checkbox" %}
@@ -10,7 +11,7 @@
                        type="checkbox"
                        name="{{ fname }}"
                        {% if value %}checked{% endif %}
-                       {% if field.readonly %}disabled{% endif %}>
+                       {% if is_readonly %}disabled{% endif %}>
             </div>
         </div>
     {% elif field.input_type == "select" %}
@@ -19,7 +20,7 @@
             <select class="form-select"
                     name="{{ fname }}"
                     {% if field.required %}required{% endif %}
-                    {% if field.readonly %}disabled{% endif %}>
+                    {% if is_readonly %}disabled{% endif %}>
                 {% if field.empty_label is not none or not field.required %}
                     <option value="">{{ field.empty_label or "None" }}</option>
                 {% endif %}
@@ -39,7 +40,7 @@
                       rows="{{ field.rows }}"
                       {% if field.placeholder %}placeholder="{{ field.placeholder }}"{% endif %}
                       {% if field.required %}required{% endif %}
-                      {% if field.readonly %}disabled{% endif %}>{{ value if value is not none else "" }}</textarea>
+                      {% if is_readonly %}disabled{% endif %}>{{ value if value is not none else "" }}</textarea>
         </div>
     {% else %}
         <div class="input-group">
@@ -51,7 +52,7 @@
                    {% if field.placeholder %}placeholder="{{ field.placeholder }}"{% endif %}
                    {% for key, attr_value in field.attrs.items() %}{{ key }}="{{ attr_value }}"{% endfor %}
                    {% if field.required %}required{% endif %}
-                   {% if field.readonly %}disabled{% endif %}>
+                   {% if is_readonly %}disabled{% endif %}>
             {% if field.suffix %}<span class="input-group-text">{{ field.suffix }}</span>{% endif %}
         </div>
     {% endif %}
@@ -178,7 +179,7 @@
                     {% endfor %}
                     <div class="row g-2">
                         {% for field in fields %}
-                            <div class="col-12">{{ field_input(field, values.get(field.name) , choices) }}</div>
+                            <div class="col-12">{{ field_input(field, values.get(field.name) , choices, editable=true) }}</div>
                         {% endfor %}
                     </div>
                 </div>

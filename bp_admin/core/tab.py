@@ -138,7 +138,7 @@ class InlineTableTab(Tab):
         if op == "add" and self.can_create:
             child = self.model()
             setattr(child, self.fk, obj.id)
-            apply_fields(child, self.create_fields, form, files)
+            apply_fields(child, self.create_fields, form, files, respect_readonly=False)
             s.add(child)
             s.flush()
         elif op == "delete" and self.can_delete:

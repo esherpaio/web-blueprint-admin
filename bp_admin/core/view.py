@@ -165,7 +165,7 @@ class ModelView:
 
     def create(self, s: Session, form: Any, files: Any) -> Any:
         obj = self.model()
-        apply_fields(obj, self.create_fields, form, files)
+        apply_fields(obj, self.create_fields, form, files, respect_readonly=False)
         s.add(obj)
         s.flush()
         self.after_write(s, obj)

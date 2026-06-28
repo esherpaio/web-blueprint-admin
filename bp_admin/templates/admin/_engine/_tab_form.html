@@ -1,10 +1,13 @@
 {% from "admin/_engine/_macros.html" import field_input %}
 
 {% set form_id = "form-" ~ tab.key %}
+{% set editable_fields = tab_ctx.fields | rejectattr("readonly") | list %}
 
-<div class="d-flex flex-wrap justify-content-end gap-2 mb-3">
-    <button class="btn btn-primary" type="submit" form="{{ form_id }}">Save</button>
-</div>
+{% if editable_fields %}
+    <div class="d-flex flex-wrap justify-content-end gap-2 mb-3">
+        <button class="btn btn-primary" type="submit" form="{{ form_id }}">Save</button>
+    </div>
+{% endif %}
 <form id="{{ form_id }}"
       method="post"
       action="{{ url_for('admin.' ~ view.endpoint ~ '_tab', id_=obj.id, tab_key=tab.key) }}">

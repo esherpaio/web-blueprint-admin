@@ -42,17 +42,13 @@ class CountryView(CachedModelView):
         FormTab(
             "General",
             [
-                StringField("name", required=True, readonly=True),
-                StringField("code", required=True, readonly=True),
-                SelectField.from_model(
-                    "currency_id", Currency, label_attr="code", readonly=True
-                ),
-                SelectField.from_model(
-                    "region_id", Region, label_attr="name", readonly=True
-                ),
-                BoolField("requires_billing_state"),
-                BoolField("requires_billing_vat"),
-                BoolField("allows_shipping"),
+                StringField("name", required=True),
+                StringField("code", required=True),
+                SelectField.from_model("currency_id", Currency, label_attr="code"),
+                SelectField.from_model("region_id", Region, label_attr="name"),
+                BoolField("requires_billing_state", readonly=False),
+                BoolField("requires_billing_vat", readonly=False),
+                BoolField("allows_shipping", readonly=False),
             ],
         ),
     ]

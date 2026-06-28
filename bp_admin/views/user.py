@@ -4,9 +4,9 @@ create/delete (users are managed through authentication flows)."""
 from typing import Any
 
 from sqlalchemy.orm.session import Session
-from web.database.model import User
+from web.database.model import Email, Order, User, UserRoleId
 
-from bp_admin.core import BoolField, Column, FormTab, StringField
+from bp_admin.core import BoolField, Column, FormTab, InlineTableTab, StringField
 
 from .base import CachedModelView
 
@@ -35,13 +35,43 @@ class UserView(CachedModelView):
         FormTab(
             "General",
             [
-                StringField("email", readonly=True),
-                StringField("display_name", readonly=True),
-                BoolField("is_active"),
-                BoolField("bulk_email"),
+                StringField("email"),
+                StringField("display_name"),
+                BoolField("is_active", readonly=False),
+                BoolField("bulk_email", readonly=False),
             ],
+        ),
+        InlineTableTab(
+            "Orders",
+            Order,
+            "user_id",
+            columns=[
+                Column("id", "ID"),
+                Column("created_at", "Date", format="datetime"),
+                Column("status.name", "Status"),
+                Column("total_price", "Total", format="price"),
+            ],
+            can_create=False,
+            can_delete=False,
+            order_by=Order.created_at.desc(),
+            key="orders",
+        ),
+        InlineTableTab(
+            "Emails",
+            Email,
+            "user_id",
+            columns=[
+                Column("id", "ID"),
+                Column("created_at", "Date", format="datetime"),
+                Column("event_id", "Event"),
+                Column("status.name", "Status"),
+            ],
+            can_create=False,
+            can_delete=False,
+            order_by=Email.created_at.desc(),
+            key="emails",
         ),
     ]
 
     def get_query(self, s: Session) -> Any:
-        return s.query(User).filter(User.email.is_not(None))
+        return s.query(User).filter(User.role_id != UserRoleId.GUEST)

@@ -25,9 +25,11 @@ def apply_fields(
     fields: Iterable[Field],
     form: Any,
     files: Any = None,
+    *,
+    respect_readonly: bool = True,
 ) -> None:
     for field in fields:
-        if field.readonly:
+        if respect_readonly and field.readonly:
             continue
         field.apply(obj, field.parse(form, files))
 

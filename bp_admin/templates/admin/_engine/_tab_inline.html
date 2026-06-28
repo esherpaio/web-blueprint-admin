@@ -2,31 +2,38 @@
 
 {% set tab_action = url_for("admin." ~ view.endpoint ~ "_tab", id_=obj.id, tab_key=tab.key) %}
 {% set form_id = "inline-form-" ~ tab.key %}
+{% set editable_cols = tab_ctx.columns | selectattr("editable") | list %}
+{% set show_add = tab.can_create and tab_ctx.create_fields %}
+{% set show_save = tab.reorderable or editable_cols %}
 
-<div class="d-flex flex-wrap justify-content-end gap-2 mb-3">
-    {% if tab.can_create and tab_ctx.create_fields %}
-        <button class="btn btn-success"
-                type="button"
-                data-bs-toggle="modal"
-                data-bs-target="#modal-add-{{ tab.key }}">
-            Add
-            <i class="bi bi-plus-square ms-1"></i>
-        </button>
-    {% endif %}
-    <button class="btn btn-primary"
-            type="submit"
-            form="{{ form_id }}"
-            name="_op"
-            value="save">Save changes</button>
-    {% if tab.can_delete %}
-        <button class="btn btn-danger"
-                type="submit"
-                form="{{ form_id }}"
-                name="_op"
-                value="delete"
-                data-confirm="Delete the selected records?">Delete selected</button>
-    {% endif %}
-</div>
+{% if show_add or show_save or tab.can_delete %}
+    <div class="d-flex flex-wrap justify-content-end gap-2 mb-3">
+        {% if show_add %}
+            <button class="btn btn-success"
+                    type="button"
+                    data-bs-toggle="modal"
+                    data-bs-target="#modal-add-{{ tab.key }}">
+                Add
+                <i class="bi bi-plus-square ms-1"></i>
+            </button>
+        {% endif %}
+        {% if show_save %}
+            <button class="btn btn-primary"
+                    type="submit"
+                    form="{{ form_id }}"
+                    name="_op"
+                    value="save">Save changes</button>
+        {% endif %}
+        {% if tab.can_delete %}
+            <button class="btn btn-danger"
+                    type="submit"
+                    form="{{ form_id }}"
+                    name="_op"
+                    value="delete"
+                    data-confirm="Delete the selected records?">Delete selected</button>
+        {% endif %}
+    </div>
+{% endif %}
 <form id="{{ form_id }}" method="post" action="{{ tab_action }}">
     <div class="table-responsive">
         <table class="table align-middle mb-0">

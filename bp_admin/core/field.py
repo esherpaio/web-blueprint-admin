@@ -39,7 +39,7 @@ class Field:
         label: str | None = None,
         *,
         required: bool = False,
-        readonly: bool = False,
+        readonly: bool = True,
         placeholder: str | None = None,
         help_text: str | None = None,
         default: Any = None,
