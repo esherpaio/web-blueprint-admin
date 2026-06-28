@@ -2,7 +2,7 @@
     {% for item in items %}
         {% if item.type == "group" %}
             <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle {{ "active" if item.active }}"
+                <a class="nav-link dropdown-toggle {{ 'active' if item.active }}"
                    href="#"
                    role="button"
                    data-bs-toggle="dropdown">
@@ -19,7 +19,7 @@
             </li>
         {% else %}
             <li class="nav-item">
-                <a class="nav-link {{ "active" if item.active }}"
+                <a class="nav-link {{ 'active' if item.active }}"
                    href="{{ url_for(item.endpoint) }}">
                     {% if item.icon %}
                         <i class="bi {{ item.icon }} me-1"></i>

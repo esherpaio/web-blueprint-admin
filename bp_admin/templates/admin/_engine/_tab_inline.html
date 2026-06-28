@@ -97,6 +97,7 @@
         </table>
     </div>
 </form>
+
 {% if tab.show_add %}
     {{ form_modal(tab.add_modal_id, "Add", tab_action, tab_ctx.create_fields, tab_ctx.choices, {}, none, {"_op": "add"}) }}
 {% endif %}

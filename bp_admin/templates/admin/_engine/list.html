@@ -46,7 +46,7 @@
         </div>
         {% if view.searchable or view.filters %}
             <div class="col-12">
-                <div id="search" class="collapse {{ "show" if show_search }}">
+                <div id="search" class="collapse {{ 'show' if show_search }}">
                     <form action="{{ view.url() }}" method="get">
                         <div class="row g-2">
                             {% if view.searchable %}
@@ -103,7 +103,7 @@
                                 {% endif %}
                                 {% for column in view.columns %}
                                     {% if not (view.reorderable and column.name == view.order_field) %}
-                                        <th class="{{ "text-" ~ column.align if column.align }}">{{ column.label }}</th>
+                                        <th class="{{ 'text-'' ~ column.align if column.align }}">{{ column.label }}</th>
                                     {% endif %}
                                 {% endfor %}
                                 {% if view.has_detail %}
@@ -134,7 +134,7 @@
                                     {% endif %}
                                     {% for column in view.columns %}
                                         {% if not (view.reorderable and column.name == view.order_field) %}
-                                            <td class="{{ "text-" ~ column.align if column.align }}">
+                                            <td class="{{ 'text-'' ~ column.align if column.align }}">
                                                 {% if column.editable %}
                                                     {{ cell_input(column, obj, choices, form_values) }}
                                                 {% else %}
@@ -165,7 +165,7 @@
                 <nav>
                     <ul class="pagination mb-0">
                         {% for page in pagination %}
-                            <li class="page-item {{ page["classes"] }}">
+                            <li class="page-item {{ page['classes'] }}">
                                 <a class="page-link" href="{{ view.url(p=page['number'], s=search) }}">{{ page["name"] }}</a>
                             </li>
                         {% endfor %}

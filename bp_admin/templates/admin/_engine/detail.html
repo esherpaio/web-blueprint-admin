@@ -26,7 +26,7 @@
             <ul class="nav nav-tabs flex-wrap" role="tablist">
                 {% for item in tabs_ctx %}
                     <li class="nav-item" role="presentation">
-                        <a class="nav-link py-2 {{ "active" if item.tab.key == active_tab }}"
+                        <a class="nav-link py-2 {{ 'active' if item.tab.key == active_tab }}"
                            href="{{ view.url('detail', id_=obj.id, tab=item.tab.key) }}">
                             {{ item.tab.label }}
                         </a>
