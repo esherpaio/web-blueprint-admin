@@ -12,7 +12,6 @@ from .field import (
     DateTimeField,
     DecimalField,
     Field,
-    FileField,
     HiddenField,
     IntegerField,
     JsonAttributesField,

@@ -1,10 +1,6 @@
-// Progressive enhancement for the declarative admin engine. All persistence
-// happens through native form submits; this only adds small conveniences.
-
 (function () {
     "use strict";
 
-    // Select-all checkbox toggles every row checkbox within the same table.
     function initSelectAll() {
         document.querySelectorAll("[data-select-all]").forEach(function (master) {
             const table = master.closest("table");
@@ -19,7 +15,6 @@
         });
     }
 
-    // Confirmation prompts for destructive submit buttons.
     function initConfirm() {
         document.querySelectorAll("[data-confirm]").forEach(function (button) {
             button.addEventListener("click", function (event) {
@@ -30,14 +25,12 @@
         });
     }
 
-    // Re-open a modal that contains validation errors after a reload.
     function initShowModal() {
         document.querySelectorAll("[data-show-modal]").forEach(function (element) {
             new bootstrap.Modal(element).show();
         });
     }
 
-    // Add/remove rows in a JSONB attributes editor.
     function initAttributes() {
         document.querySelectorAll("[data-attributes]").forEach(function (editor) {
             const rows = editor.querySelector("[data-attributes-rows]");
@@ -58,9 +51,6 @@
         });
     }
 
-    // Native drag-and-drop reordering for tables that have an "order" column.
-    // Dragging only permutes the existing order values among the visible rows,
-    // so it is safe across paginated pages; the user persists via normal Save.
     function initSortable() {
         document.querySelectorAll("tbody[data-sortable]").forEach(function (body) {
             const field = body.dataset.sortField || "order";
@@ -70,8 +60,6 @@
                 const handle = row.querySelector("[data-drag-handle]");
                 if (!handle) return;
 
-                // Only start a drag when the handle is grabbed, so the row's
-                // inputs and checkboxes stay usable.
                 handle.addEventListener("mousedown", function () {
                     row.draggable = true;
                 });
@@ -107,8 +95,7 @@
         });
     }
 
-    // Reassign the existing order values to rows by their new position, leaving
-    // the set of numbers unchanged.
+    // Redistribute the existing order values over the new row positions.
     function renumber(body, field) {
         const inputs = [];
         body.querySelectorAll("tr").forEach(function (row) {
@@ -127,7 +114,6 @@
         });
     }
 
-    // Remove the whole alert column once its alert has been dismissed.
     function initAlertDismiss() {
         document
             .querySelectorAll("[data-alert-wrapper]")
@@ -140,7 +126,6 @@
             });
     }
 
-    // Drop the transient ?saved=... param so a reload won't re-show the message.
     function initCleanUrl() {
         const url = new URL(window.location.href);
         if (url.searchParams.has("saved")) {

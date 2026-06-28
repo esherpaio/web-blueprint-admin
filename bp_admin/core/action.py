@@ -25,7 +25,6 @@ class Action:
         icon: str | None = None,
         confirm: str | None = None,
         visible: Callable[[Any], bool] | None = None,
-        success_message: str | None = None,
     ) -> None:
         self.name = name
         self.label = label
@@ -35,7 +34,6 @@ class Action:
         self.icon = icon
         self.confirm = confirm
         self._visible = visible
-        self.success_message = success_message
 
     @property
     def modal_id(self) -> str:

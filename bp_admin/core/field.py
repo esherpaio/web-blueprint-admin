@@ -5,7 +5,7 @@ It knows three things:
 
 * how to read its current value from a model instance (:meth:`value_from_obj`),
 * how to coerce a raw submitted value into a Python value (:meth:`parse`),
-* enough metadata for ``_field.html`` to render the matching Bootstrap input.
+* enough metadata for the macros in ``_macros.html`` to render the input.
 
 Rendering itself lives in the templates; fields stay logic-only so they remain
 easy to test and reason about.
@@ -16,7 +16,6 @@ from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
 from typing import Any, Callable, Sequence
 
-from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlalchemy.orm.session import Session
 
 Choice = tuple[Any, str]
@@ -41,8 +40,6 @@ class Field:
         required: bool = False,
         readonly: bool = True,
         placeholder: str | None = None,
-        help_text: str | None = None,
-        default: Any = None,
         attrs: dict[str, Any] | None = None,
         suffix: str | None = None,
     ) -> None:
@@ -51,8 +48,6 @@ class Field:
         self.required = required
         self.readonly = readonly
         self.placeholder = placeholder
-        self.help_text = help_text
-        self.default = default
         self.attrs = attrs or {}
         self.suffix = suffix
 
@@ -62,6 +57,10 @@ class Field:
 
     def value_from_obj(self, obj: Any) -> Any:
         return getattr(obj, self.name, None)
+
+    def form_value(self, obj: Any, form_values: Any) -> Any:
+        submitted = form_values.get(self.name)
+        return submitted if submitted is not None else self.value_from_obj(obj)
 
     def choices(self, s: Session) -> list[Choice]:
         return []
@@ -82,30 +81,6 @@ class Field:
             return None
         raw = raw.strip() if isinstance(raw, str) else raw
         return raw if raw != "" else None
-
-    #
-    # Scaffolding
-    #
-
-    @classmethod
-    def scaffold(cls, column: InstrumentedAttribute) -> "Field":
-        name = column.key
-        try:
-            python_type = column.type.python_type
-        except (NotImplementedError, AttributeError):
-            python_type = str
-        nullable = getattr(column, "nullable", True)
-        required = not nullable
-
-        if python_type is bool:
-            return BoolField(name)
-        if python_type is int:
-            return IntegerField(name, required=required)
-        if python_type in (float, Decimal):
-            return DecimalField(name, required=required)
-        if python_type is datetime:
-            return DateTimeField(name, required=required)
-        return StringField(name, required=required)
 
 
 class StringField(Field):
@@ -234,22 +209,6 @@ class SelectField(Field):
             except (TypeError, ValueError):
                 return None
         return raw
-
-
-class FileField(Field):
-    input_type = "file"
-
-    def __init__(self, *args: Any, multiple: bool = False, **kwargs: Any) -> None:
-        super().__init__(*args, **kwargs)
-        self.multiple = multiple
-
-    def parse(self, form: Any, files: Any = None, name: str | None = None) -> Any:
-        if files is None:
-            return None
-        key = name or self.name
-        if self.multiple:
-            return files.getlist(key)
-        return files.get(key)
 
 
 class DateTimeField(Field):

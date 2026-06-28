@@ -46,9 +46,8 @@
         </div>
         {% if view.searchable or view.filters %}
             <div class="col-12">
-                <div id="search"
-                     class="collapse {{ "show" if search or filter_values.values() |select|list }}">
-                    <form action="{{ url_for('admin.' ~ view.endpoint) }}" method="get">
+                <div id="search" class="collapse {{ "show" if show_search }}">
+                    <form action="{{ view.url() }}" method="get">
                         <div class="row g-2">
                             {% if view.searchable %}
                                 <div class="col-12 col-lg">
@@ -84,9 +83,12 @@
             <div class="col-12" data-alert-wrapper>{% include "admin/_engine/_alerts.html" %}</div>
         {% endif %}
         <div class="col-12">
-            <form id="bulk-form"
-                  method="post"
-                  action="{{ url_for('admin.' ~ view.endpoint) }}">
+            <form id="bulk-form" method="post" action="{{ view.url() }}">
+                {% if view.has_bulk_edit %}
+                    {% for obj in rows %}
+                        <input type="hidden" name="row-id" value="{{ obj.id }}">
+                    {% endfor %}
+                {% endif %}
                 <div class="table-responsive">
                     <table class="table rounded-2 overflow-hidden align-middle mb-0">
                         <thead class="table-secondary">
@@ -112,26 +114,17 @@
                         <tbody class="table-light"
                                {% if view.reorderable %}data-sortable data-sort-field="{{ view.order_field }}"{% endif %}>
                             {% for obj in rows %}
-                                {% set ns = namespace(rowid=view.has_bulk_edit) %}
                                 <tr>
                                     {% if view.reorderable %}
                                         <td class="text-muted text-center" style="cursor:grab">
                                             <i class="bi bi-grip-vertical" data-drag-handle></i>
-                                            {% if ns.rowid %}
-                                                <input type="hidden" name="row-id" value="{{ obj.id }}">
-                                                {% set ns.rowid = false %}
-                                            {% endif %}
                                             <input type="hidden"
-                                                   name="rows-{{ obj.id }}-{{ view.order_field }}"
+                                                   name="{{ view.order_input_name(obj.id) }}"
                                                    value="{{ obj|attr(view.order_field) }}">
                                         </td>
                                     {% endif %}
                                     {% if view.can_delete %}
                                         <td>
-                                            {% if ns.rowid %}
-                                                <input type="hidden" name="row-id" value="{{ obj.id }}">
-                                                {% set ns.rowid = false %}
-                                            {% endif %}
                                             <input class="form-check-input"
                                                    type="checkbox"
                                                    name="select"
@@ -142,10 +135,6 @@
                                     {% for column in view.columns %}
                                         {% if not (view.reorderable and column.name == view.order_field) %}
                                             <td class="{{ "text-" ~ column.align if column.align }}">
-                                                {% if ns.rowid %}
-                                                    <input type="hidden" name="row-id" value="{{ obj.id }}">
-                                                    {% set ns.rowid = false %}
-                                                {% endif %}
                                                 {% if column.editable %}
                                                     {{ cell_input(column, obj, choices, form_values) }}
                                                 {% else %}
@@ -157,7 +146,7 @@
                                     {% if view.has_detail %}
                                         <td class="text-end">
                                             <a class="btn btn-sm btn-secondary"
-                                               href="{{ url_for('admin.' ~ view.endpoint ~ '_detail', id_=obj.id) }}">View</a>
+                                               href="{{ view.url('detail', id_=obj.id) }}">View</a>
                                         </td>
                                     {% endif %}
                                 </tr>
@@ -178,7 +167,7 @@
                         {% for page in pagination %}
                             <li class="page-item {{ page["classes"] }}">
                                 <a class="page-link"
-                                   href="{{ url_for('admin.' ~ view.endpoint, p=page['number'], s=search) }}">{{ page["name"] }}</a>
+                                   href="{{ view.url(p=page['number'], s=search) }}">{{ page["name"] }}</a>
                             </li>
                         {% endfor %}
                     </ul>
@@ -187,6 +176,6 @@
         {% endif %}
     </div>
     {% if view.can_create %}
-        {{ form_modal("modal-create", "Add " ~ view.name|lower, url_for("admin." ~ view.endpoint ~ "_create") , view.create_fields, choices, create_values, create_error) }}
+        {{ form_modal("modal-create", "Add " ~ view.name|lower, view.url("create") , view.create_fields, choices, create_values, create_error) }}
     {% endif %}
 {% endblock admin_body %}

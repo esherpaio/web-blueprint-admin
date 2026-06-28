@@ -1,14 +1,8 @@
 {% macro nav_items(items) %}
     {% for item in items %}
         {% if item.type == "group" %}
-            {% set ns = namespace(active=false) %}
-            {% for child in item["items"] %}
-                {% if request.endpoint and request.endpoint.startswith(child.match) %}
-                    {% set ns.active = true %}
-                {% endif %}
-            {% endfor %}
             <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle {{ "active" if ns.active }}"
+                <a class="nav-link dropdown-toggle {{ "active" if item.active }}"
                    href="#"
                    role="button"
                    data-bs-toggle="dropdown">
@@ -25,7 +19,7 @@
             </li>
         {% else %}
             <li class="nav-item">
-                <a class="nav-link {{ "active" if request.endpoint and request.endpoint.startswith(item.match) }}"
+                <a class="nav-link {{ "active" if item.active }}"
                    href="{{ url_for(item.endpoint) }}">
                     {% if item.icon %}
                         <i class="bi {{ item.icon }} me-1"></i>

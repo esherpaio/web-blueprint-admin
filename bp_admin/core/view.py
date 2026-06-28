@@ -9,10 +9,11 @@ from typing import Any
 
 from sqlalchemy import or_
 from sqlalchemy.orm.session import Session
+from web.app.urls import url_for
 
 from .action import Action
-from .column import Column
-from .field import Field
+from .column import Column, row_input_name
+from .field import Field, default_label
 from .tab import Tab
 from .util import apply_fields, supports_soft_delete
 
@@ -30,7 +31,7 @@ class Filter:
         empty_label: str = "All",
     ) -> None:
         self.name = name
-        self.label = label if label is not None else name.replace("_", " ").capitalize()
+        self.label = label if label is not None else default_label(name)
         self._choices = choices
         self.coerce = coerce
         self.empty_label = empty_label
@@ -92,6 +93,20 @@ class ModelView:
     def slug(self) -> str:
         assert self.endpoint is not None
         return self.endpoint
+
+    @property
+    def route(self) -> str:
+        return f"admin.{self.endpoint}"
+
+    def url(self, suffix: str = "", **values: Any) -> str:
+        endpoint = self.route if not suffix else f"{self.route}_{suffix}"
+        return url_for(endpoint, **values)
+
+    def order_input_name(self, row_id: Any) -> str:
+        return row_input_name(row_id, self.order_field)
+
+    def title(self, obj: Any) -> str:
+        return getattr(obj, "name", None) or f"{self.name} #{obj.id}"
 
     @property
     def soft_delete(self) -> bool:

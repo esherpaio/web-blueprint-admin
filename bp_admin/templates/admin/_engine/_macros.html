@@ -60,16 +60,15 @@
 
 {% macro cell_input(column, obj, choices={}, form_values={}) %}
     {% set field = column.field %}
-    {% set cell_name = "rows-" ~ obj.id ~ "-" ~ column.name %}
-    {% set submitted = form_values.get(cell_name) %}
-    {% set value = submitted if submitted is not none else field.value_from_obj(obj) %}
+    {% set name = column.input_name(obj.id) %}
+    {% set value = column.cell_value(obj, form_values) %}
     {% if field.input_type == "checkbox" %}
         <input class="form-check-input"
                type="checkbox"
-               name="{{ cell_name }}"
+               name="{{ name }}"
                {% if value %}checked{% endif %}>
     {% elif field.input_type == "select" %}
-        <select class="form-select form-select-sm" name="{{ cell_name }}">
+        <select class="form-select form-select-sm" name="{{ name }}">
             {% if not field.required %}<option value="">{{ field.empty_label or "None" }}</option>{% endif %}
             {% for option_value, option_label in choices.get(field.name, []) %}
                 <option value="{{ option_value }}"
@@ -82,7 +81,7 @@
         <div class="input-group input-group-sm">
             <input class="form-control"
                    type="{{ field.input_type }}"
-                   name="{{ cell_name }}"
+                   name="{{ name }}"
                    value="{{ value if value is not none else "" }}"
                    {% for key, attr_value in field.attrs.items() %}{{ key }}="{{ attr_value }}"{% endfor %}>
             <span class="input-group-text">{{ field.suffix }}</span>
@@ -90,7 +89,7 @@
     {% else %}
         <input class="form-control form-control-sm"
                type="{{ field.input_type }}"
-               name="{{ cell_name }}"
+               name="{{ name }}"
                value="{{ value if value is not none else "" }}"
                {% for key, attr_value in field.attrs.items() %}{{ key }}="{{ attr_value }}"{% endfor %}>
     {% endif %}

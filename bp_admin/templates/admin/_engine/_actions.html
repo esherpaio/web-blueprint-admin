@@ -10,7 +10,7 @@
             </button>
         {% else %}
             <form method="post"
-                  action="{{ url_for('admin.' ~ view.endpoint ~ '_action', id_=obj.id, name=action.name) }}">
+                  action="{{ view.url('action', id_=obj.id, name=action.name) }}">
                 <button class="btn btn-{{ action.style }}"
                         type="submit"
                         {% if action.confirm %}data-confirm="{{ action.confirm }}"{% endif %}>

@@ -1,21 +1,17 @@
 {% from "admin/_engine/_macros.html" import field_input %}
 
-{% set form_id = "form-" ~ tab.key %}
-{% set editable_fields = tab_ctx.fields | rejectattr("readonly") | list %}
-
-{% if editable_fields %}
+{% if tab.has_editable %}
     <div class="d-flex flex-wrap justify-content-end gap-2 mb-3">
-        <button class="btn btn-primary" type="submit" form="{{ form_id }}">Save</button>
+        <button class="btn btn-primary" type="submit" form="{{ tab.form_id }}">Save</button>
     </div>
 {% endif %}
-<form id="{{ form_id }}"
+<form id="{{ tab.form_id }}"
       method="post"
-      action="{{ url_for('admin.' ~ view.endpoint ~ '_tab', id_=obj.id, tab_key=tab.key) }}">
+      action="{{ view.url('tab', id_=obj.id, tab_key=tab.key) }}">
     <div class="row g-3">
         {% for field in tab_ctx.fields %}
-            {% set submitted = form_values.get(field.name) %}
             <div class="{{ "col-12" if field.input_type in ("textarea", "attributes") else "col-12 col-lg-6" }}">
-                {{ field_input(field, submitted if submitted is not none else field.value_from_obj(obj) , tab_ctx.choices) }}
+                {{ field_input(field, field.form_value(obj, form_values), tab_ctx.choices) }}
             </div>
         {% endfor %}
     </div>

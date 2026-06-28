@@ -18,12 +18,16 @@ def getattr_path(obj: Any, path: str) -> Any:
     return value
 
 
+def row_input_name(row_id: Any, name: str) -> str:
+    return f"rows-{row_id}-{name}"
+
+
 class Column:
     """A single list-table column.
 
-    ``format`` is either one of the known formatter names understood by
-    ``_table.html`` (``"price"``, ``"datetime"``, ``"badge"``) or a callable
-    that turns the raw value into a display string.
+    ``format`` is either one of the names understood by ``display_cell``
+    (``"price"``, ``"datetime"``, ``"bool"``) or a callable that turns the raw
+    value into a display value.
     """
 
     def __init__(
@@ -49,6 +53,13 @@ class Column:
 
     def value(self, obj: Any) -> Any:
         return getattr_path(obj, self.name)
+
+    def input_name(self, row_id: Any) -> str:
+        return row_input_name(row_id, self.name)
+
+    def cell_value(self, obj: Any, form_values: Any) -> Any:
+        submitted = form_values.get(self.input_name(obj.id))
+        return submitted if submitted is not None else self.field.value_from_obj(obj)
 
     def display(self, obj: Any) -> Any:
         value = self.value(obj)

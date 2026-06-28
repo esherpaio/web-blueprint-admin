@@ -60,10 +60,11 @@ def render_list(
     create_values: Any = None,
 ) -> str:
     search = request.args.get("s", type=str, default="")
-    page = request.args.get("p", type=int, default=1)
+    page = max(request.args.get("p", type=int, default=1) or 1, 1)
     limit = view.page_size
     offset = (limit * page) - limit
     filter_values = {f.name: request.args.get(f.name) for f in view.filters}
+    show_search = bool(search) or any(filter_values.values())
 
     with conn.begin() as s:
         query = view.get_query(s)
@@ -88,6 +89,7 @@ def render_list(
             search=search,
             filter_values=filter_values,
             filter_choices=filter_choices,
+            show_search=show_search,
             choices=choices,
             error=error,
             form_values=form_values or {},
@@ -151,6 +153,7 @@ def list_endpoint(view: ModelView) -> str | Response:
                         view.model,
                         request.form.getlist("select"),
                         soft_delete=view.soft_delete,
+                        base_query=view.get_query(s),
                     )
                 else:
                     apply_bulk_edits(
@@ -158,6 +161,7 @@ def list_endpoint(view: ModelView) -> str | Response:
                         view.model,
                         view.columns,
                         request.form,
+                        base_query=view.get_query(s),
                         order_field=view.order_field if view.reorderable else None,
                     )
                 view.after_write(s, None)

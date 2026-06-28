@@ -7,7 +7,7 @@ sidebar menu (including dropdown groups) exposed to templates.
 
 from typing import Any, Callable
 
-from flask import Blueprint
+from flask import Blueprint, request
 
 from . import handlers
 from .view import ModelView
@@ -145,17 +145,20 @@ class AdminSite:
     #
 
     def build_menu(self) -> dict[str, list[dict[str, Any]]]:
+        current = request.endpoint or ""
         sections: dict[str, dict[str, dict[str, Any]]] = {"main": {}, "bottom": {}}
         flat: dict[str, list[dict[str, Any]]] = {"main": [], "bottom": []}
 
         def item_for_view(view: ModelView) -> dict[str, Any]:
+            match = f"admin.{view.endpoint}"
             return {
                 "type": "link",
                 "label": view.name_plural,
                 "icon": view.icon,
-                "endpoint": f"admin.{view.endpoint}",
-                "match": f"admin.{view.endpoint}",
+                "endpoint": match,
+                "match": match,
                 "order": view.order,
+                "active": current.startswith(match),
             }
 
         def item_for_link(link: dict[str, Any]) -> dict[str, Any]:
@@ -166,6 +169,7 @@ class AdminSite:
                 "endpoint": link["endpoint"],
                 "match": link["match"],
                 "order": link["order"],
+                "active": current.startswith(link["match"]),
             }
 
         entries: list[tuple[str, str | None, int, str | None, dict[str, Any]]] = []
@@ -202,6 +206,7 @@ class AdminSite:
                         "label": group,
                         "icon": icon,
                         "order": order,
+                        "active": False,
                         "items": [],
                     }
                     groups[group] = group_item
@@ -212,5 +217,6 @@ class AdminSite:
             flat[section].sort(key=lambda i: (i["order"], i["label"]))
             for item in flat[section]:
                 if item["type"] == "group":
+                    item["active"] = any(c["active"] for c in item["items"])
                     item["items"].sort(key=lambda i: (i["order"], i["label"]))
         return flat

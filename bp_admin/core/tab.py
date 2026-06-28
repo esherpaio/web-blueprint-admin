@@ -12,7 +12,7 @@ from typing import Any, Callable
 
 from sqlalchemy.orm.session import Session
 
-from .column import Column
+from .column import Column, row_input_name
 from .field import Field
 from .util import (
     apply_bulk_edits,
@@ -33,6 +33,10 @@ class Tab:
     def __init__(self, label: str, key: str | None = None) -> None:
         self.label = label
         self.key = key or _slug(label)
+
+    @property
+    def form_id(self) -> str:
+        return f"form-{self.key}"
 
     def context(self, view: Any, s: Session, obj: Any) -> dict[str, Any]:
         return {}
@@ -57,6 +61,10 @@ class FormTab(Tab):
     ) -> None:
         super().__init__(label, key)
         self.fields = fields or []
+
+    @property
+    def has_editable(self) -> bool:
+        return any(not field.readonly for field in self.fields)
 
     def context(self, view: Any, s: Session, obj: Any) -> dict[str, Any]:
         return {"fields": self.fields, "choices": resolve_choices(s, self.fields)}
@@ -110,6 +118,29 @@ class InlineTableTab(Tab):
             return self._soft_delete
         return supports_soft_delete(self.model)
 
+    @property
+    def add_modal_id(self) -> str:
+        return f"modal-add-{self.key}"
+
+    @property
+    def has_editable(self) -> bool:
+        return any(column.editable for column in self.columns)
+
+    @property
+    def show_add(self) -> bool:
+        return self.can_create and bool(self.create_fields)
+
+    @property
+    def show_save(self) -> bool:
+        return self.reorderable or self.has_editable
+
+    @property
+    def show_toolbar(self) -> bool:
+        return self.show_add or self.show_save or self.can_delete
+
+    def order_input_name(self, row_id: Any) -> str:
+        return row_input_name(row_id, self.order_field)
+
     def base_query(self, s: Session, obj: Any) -> Any:
         if self._query is not None:
             return self._query(s, obj)
@@ -143,7 +174,11 @@ class InlineTableTab(Tab):
             s.flush()
         elif op == "delete" and self.can_delete:
             delete_objects(
-                s, self.model, form.getlist("select"), soft_delete=self.soft_delete
+                s,
+                self.model,
+                form.getlist("select"),
+                soft_delete=self.soft_delete,
+                base_query=self.base_query(s, obj),
             )
         else:
             apply_bulk_edits(
@@ -151,6 +186,7 @@ class InlineTableTab(Tab):
                 self.model,
                 self.columns,
                 form,
+                base_query=self.base_query(s, obj),
                 order_field=self.order_field if self.reorderable else None,
             )
         view.after_write(s, obj)

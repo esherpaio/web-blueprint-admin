@@ -6,7 +6,7 @@
             <div class="modal-dialog modal-dialog-centered">
                 <form class="modal-content"
                       method="post"
-                      action="{{ url_for('admin.' ~ view.endpoint ~ '_action', id_=obj.id, name=action.name) }}">
+                      action="{{ view.url('action', id_=obj.id, name=action.name) }}">
                     <div class="modal-header">
                         <h5 class="modal-title">{{ action.label }}</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>

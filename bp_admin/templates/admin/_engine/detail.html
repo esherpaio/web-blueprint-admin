@@ -6,12 +6,11 @@
     <div class="row g-3">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
-                <h2 class="mb-0">{{ obj.name if obj.name else view.name ~ " #" ~ obj.id }}</h2>
+                <h2 class="mb-0">{{ view.title(obj) }}</h2>
                 <div class="btn-toolbar flex-wrap gap-2">
                     {% include "admin/_engine/_actions.html" %}
                     {% if view.can_delete %}
-                        <form method="post"
-                              action="{{ url_for('admin.' ~ view.endpoint ~ '_delete', id_=obj.id) }}">
+                        <form method="post" action="{{ view.url('delete', id_=obj.id) }}">
                             <button class="btn btn-danger"
                                     type="submit"
                                     data-confirm="Delete this {{ view.name|lower }}?">Delete</button>
@@ -28,7 +27,7 @@
                 {% for item in tabs_ctx %}
                     <li class="nav-item" role="presentation">
                         <a class="nav-link py-2 {{ "active" if item.tab.key == active_tab }}"
-                           href="{{ url_for('admin.' ~ view.endpoint ~ '_detail', id_=obj.id, tab=item.tab.key) }}">
+                           href="{{ view.url('detail', id_=obj.id, tab=item.tab.key) }}">
                             {{ item.tab.label }}
                         </a>
                     </li>

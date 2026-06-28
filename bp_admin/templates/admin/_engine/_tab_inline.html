@@ -1,40 +1,41 @@
 {% from "admin/_engine/_macros.html" import cell_input, display_cell, form_modal %}
 
-{% set tab_action = url_for("admin." ~ view.endpoint ~ "_tab", id_=obj.id, tab_key=tab.key) %}
-{% set form_id = "inline-form-" ~ tab.key %}
-{% set editable_cols = tab_ctx.columns | selectattr("editable") | list %}
-{% set show_add = tab.can_create and tab_ctx.create_fields %}
-{% set show_save = tab.reorderable or editable_cols %}
+{% set tab_action = view.url('tab', id_=obj.id, tab_key=tab.key) %}
 
-{% if show_add or show_save or tab.can_delete %}
+{% if tab.show_toolbar %}
     <div class="d-flex flex-wrap justify-content-end gap-2 mb-3">
-        {% if show_add %}
+        {% if tab.show_add %}
             <button class="btn btn-success"
                     type="button"
                     data-bs-toggle="modal"
-                    data-bs-target="#modal-add-{{ tab.key }}">
+                    data-bs-target="#{{ tab.add_modal_id }}">
                 Add
                 <i class="bi bi-plus-square ms-1"></i>
             </button>
         {% endif %}
-        {% if show_save %}
+        {% if tab.show_save %}
             <button class="btn btn-primary"
                     type="submit"
-                    form="{{ form_id }}"
+                    form="{{ tab.form_id }}"
                     name="_op"
                     value="save">Save changes</button>
         {% endif %}
         {% if tab.can_delete %}
             <button class="btn btn-danger"
                     type="submit"
-                    form="{{ form_id }}"
+                    form="{{ tab.form_id }}"
                     name="_op"
                     value="delete"
                     data-confirm="Delete the selected records?">Delete selected</button>
         {% endif %}
     </div>
 {% endif %}
-<form id="{{ form_id }}" method="post" action="{{ tab_action }}">
+<form id="{{ tab.form_id }}" method="post" action="{{ tab_action }}">
+    {% if tab.show_save %}
+        {% for row in tab_ctx.rows %}
+            <input type="hidden" name="row-id" value="{{ row.id }}">
+        {% endfor %}
+    {% endif %}
     <div class="table-responsive">
         <table class="table align-middle mb-0">
             <thead class="table-secondary">
@@ -57,26 +58,17 @@
             <tbody class="table-light"
                    {% if tab.reorderable %}data-sortable data-sort-field="{{ tab.order_field }}"{% endif %}>
                 {% for row in tab_ctx.rows %}
-                    {% set ns = namespace(rowid=true) %}
                     <tr>
                         {% if tab.reorderable %}
                             <td class="text-muted text-center" style="cursor:grab">
                                 <i class="bi bi-grip-vertical" data-drag-handle></i>
-                                {% if ns.rowid %}
-                                    <input type="hidden" name="row-id" value="{{ row.id }}">
-                                    {% set ns.rowid = false %}
-                                {% endif %}
                                 <input type="hidden"
-                                       name="rows-{{ row.id }}-{{ tab.order_field }}"
+                                       name="{{ tab.order_input_name(row.id) }}"
                                        value="{{ row|attr(tab.order_field) }}">
                             </td>
                         {% endif %}
                         {% if tab.can_delete %}
                             <td>
-                                {% if ns.rowid %}
-                                    <input type="hidden" name="row-id" value="{{ row.id }}">
-                                    {% set ns.rowid = false %}
-                                {% endif %}
                                 <input class="form-check-input"
                                        type="checkbox"
                                        name="select"
@@ -87,10 +79,6 @@
                         {% for column in tab_ctx.columns %}
                             {% if not (tab.reorderable and column.name == tab.order_field) %}
                                 <td>
-                                    {% if ns.rowid %}
-                                        <input type="hidden" name="row-id" value="{{ row.id }}">
-                                        {% set ns.rowid = false %}
-                                    {% endif %}
                                     {% if column.editable %}
                                         {{ cell_input(column, row, tab_ctx.choices, form_values) }}
                                     {% else %}
@@ -109,6 +97,6 @@
         </table>
     </div>
 </form>
-{% if tab.can_create and tab_ctx.create_fields %}
-    {{ form_modal("modal-add-" ~ tab.key, "Add", tab_action, tab_ctx.create_fields, tab_ctx.choices, {}, none, {"_op": "add"}) }}
+{% if tab.show_add %}
+    {{ form_modal(tab.add_modal_id, "Add", tab_action, tab_ctx.create_fields, tab_ctx.choices, {}, none, {"_op": "add"}) }}
 {% endif %}
