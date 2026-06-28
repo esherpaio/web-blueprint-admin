@@ -5,8 +5,6 @@ fully-custom pages, generates the Flask URL rules for each view, and builds the
 sidebar menu (including dropdown groups) exposed to templates.
 """
 
-from __future__ import annotations
-
 from typing import Any, Callable
 
 from flask import Blueprint

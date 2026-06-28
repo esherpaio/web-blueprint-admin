@@ -127,11 +127,23 @@
         });
     }
 
+    // Remove the whole alert column once its alert has been dismissed.
+    function initAlertDismiss() {
+        document
+            .querySelectorAll("[data-alert-wrapper]")
+            .forEach(function (wrapper) {
+                wrapper.addEventListener("closed.bs.alert", function () {
+                    wrapper.remove();
+                });
+            });
+    }
+
     window.addEventListener("load", function () {
         initSelectAll();
         initConfirm();
         initShowModal();
         initAttributes();
         initSortable();
+        initAlertDismiss();
     });
 })();

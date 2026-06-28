@@ -6,8 +6,6 @@ never loses what they typed (no flash, no forced reload that drops form data).
 Templates are rendered inside the open session because models are loaded lazily.
 """
 
-from __future__ import annotations
-
 from typing import Any
 
 from flask import abort, render_template, request

@@ -7,8 +7,6 @@ plain column: setting one clears the other so the database constraint is always
 satisfied.
 """
 
-from __future__ import annotations
-
 from web.database.model import Coupon
 
 from bp_admin.core import Column, DecimalField, PercentageField, StringField
@@ -22,6 +20,9 @@ class CouponView(CachedModelView):
     endpoint = "coupons"
     icon = "bi-ticket-perforated"
     order = 50
+
+    can_create = True
+    can_delete = True
 
     columns = [
         Column("code", "Code"),

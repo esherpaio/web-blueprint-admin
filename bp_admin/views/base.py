@@ -5,8 +5,6 @@ so the public site's cache is rebuilt (previously done with a manual
 ``patchSettings({cached_at: null})`` API call).
 """
 
-from __future__ import annotations
-
 from typing import Any
 
 from sqlalchemy.orm.session import Session

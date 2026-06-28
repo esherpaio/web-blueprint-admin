@@ -52,6 +52,7 @@
                    {% for key, attr_value in field.attrs.items() %}{{ key }}="{{ attr_value }}"{% endfor %}
                    {% if field.required %}required{% endif %}
                    {% if field.readonly %}disabled{% endif %}>
+            {% if field.suffix %}<span class="input-group-text">{{ field.suffix }}</span>{% endif %}
         </div>
     {% endif %}
 {% endmacro %}
@@ -76,6 +77,15 @@
                 </option>
             {% endfor %}
         </select>
+    {% elif field.suffix %}
+        <div class="input-group input-group-sm">
+            <input class="form-control"
+                   type="{{ field.input_type }}"
+                   name="{{ cell_name }}"
+                   value="{{ value if value is not none else "" }}"
+                   {% for key, attr_value in field.attrs.items() %}{{ key }}="{{ attr_value }}"{% endfor %}>
+            <span class="input-group-text">{{ field.suffix }}</span>
+        </div>
     {% else %}
         <input class="form-control form-control-sm"
                type="{{ field.input_type }}"

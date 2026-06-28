@@ -8,8 +8,6 @@ forms, editable child tables and fully custom layouts (e.g. a media gallery):
 * :class:`TemplateTab` renders an author-supplied template for custom content.
 """
 
-from __future__ import annotations
-
 from typing import Any, Callable
 
 from sqlalchemy.orm.session import Session

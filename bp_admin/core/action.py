@@ -6,8 +6,6 @@ that runs server-side logic against a single object, e.g. "Update status",
 admin buttons but in a declarative, reusable way.
 """
 
-from __future__ import annotations
-
 from typing import Any, Callable
 
 from sqlalchemy.orm.session import Session

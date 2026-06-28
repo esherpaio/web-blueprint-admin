@@ -1,14 +1,12 @@
 """User admin view — demonstrates a searchable, bulk-editable list with no
 create/delete (users are managed through authentication flows)."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from sqlalchemy.orm.session import Session
 from web.database.model import User
 
-from bp_admin.core import BoolField, Column
+from bp_admin.core import BoolField, Column, FormTab, StringField
 
 from .base import CachedModelView
 
@@ -22,8 +20,7 @@ class UserView(CachedModelView):
 
     searchable = ["email", "display_name"]
     order_by = [User.id.desc()]
-    can_create = False
-    can_delete = False
+    can_edit = True
 
     columns = [
         Column("id", "ID"),
@@ -32,6 +29,18 @@ class UserView(CachedModelView):
         Column("display_name", "Name"),
         Column("role.name", "Role"),
         Column("is_active", "Active", editable=True, field=BoolField("is_active")),
+    ]
+
+    tabs = [
+        FormTab(
+            "General",
+            [
+                StringField("email", readonly=True),
+                StringField("display_name", readonly=True),
+                BoolField("is_active"),
+                BoolField("bulk_email"),
+            ],
+        ),
     ]
 
     def get_query(self, s: Session) -> Any:

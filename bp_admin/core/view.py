@@ -5,8 +5,6 @@ modal create form, a tabbed detail/edit page and custom actions. The engine
 turns that description into routes, queries and Bootstrap templates.
 """
 
-from __future__ import annotations
-
 from typing import Any
 
 from sqlalchemy import or_
@@ -73,9 +71,9 @@ class ModelView:
     actions: list[Action] = []
 
     # Capabilities
-    can_create: bool = True
-    can_delete: bool = True
-    can_edit: bool = True
+    can_create: bool = False
+    can_delete: bool = False
+    can_edit: bool = False
     _soft_delete: bool | None = None
 
     def __init__(self) -> None:

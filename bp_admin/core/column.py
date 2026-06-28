@@ -4,8 +4,6 @@ A :class:`Column` describes one cell in a list/inline table. It can be a plain
 read-only display cell or an inline-editable cell backed by a :class:`Field`.
 """
 
-from __future__ import annotations
-
 from typing import Any, Callable
 
 from .field import Field, StringField, default_label

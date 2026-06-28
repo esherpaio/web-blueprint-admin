@@ -1,8 +1,6 @@
 """Category admin view — demonstrates a bulk-editable list plus a tabbed detail
 page with a JSON attributes editor and an inline child table (category items)."""
 
-from __future__ import annotations
-
 from web.database.model import Category, CategoryItem, Sku
 
 from bp_admin.core import (
@@ -30,8 +28,6 @@ class CategoryView(CachedModelView):
     order_by = [Category.order, Category.id]
     reorderable = True
 
-    can_create = False
-    can_delete = False
     can_edit = True
 
     columns = [

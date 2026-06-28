@@ -1,8 +1,6 @@
 """Country admin view — demonstrates foreign-key selects and a detail form with
 checkboxes. Countries are reference data, so deletion is disabled."""
 
-from __future__ import annotations
-
 from web.database.model import Country, Currency, Region
 
 from bp_admin.core import BoolField, Column, FormTab, SelectField, StringField
@@ -20,8 +18,7 @@ class CountryView(CachedModelView):
 
     searchable = ["name", "code"]
     order_by = [Country.name]
-    can_create = False
-    can_delete = False
+    can_edit = True
 
     columns = [
         Column("code", "Code"),

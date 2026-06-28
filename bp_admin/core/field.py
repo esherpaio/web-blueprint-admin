@@ -11,8 +11,6 @@ Rendering itself lives in the templates; fields stay logic-only so they remain
 easy to test and reason about.
 """
 
-from __future__ import annotations
-
 import json
 from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
@@ -46,6 +44,7 @@ class Field:
         help_text: str | None = None,
         default: Any = None,
         attrs: dict[str, Any] | None = None,
+        suffix: str | None = None,
     ) -> None:
         self.name = name
         self.label = label if label is not None else default_label(name)
@@ -55,6 +54,7 @@ class Field:
         self.help_text = help_text
         self.default = default
         self.attrs = attrs or {}
+        self.suffix = suffix
 
     #
     # Reading
@@ -137,6 +137,10 @@ class IntegerField(Field):
 
 
 class PercentageField(IntegerField):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        kwargs.setdefault("suffix", "%")
+        super().__init__(*args, **kwargs)
+
     def value_from_obj(self, obj: Any) -> int | None:
         if obj.rate is None:
             return None
