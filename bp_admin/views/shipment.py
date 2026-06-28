@@ -47,7 +47,6 @@ class ShipmentZoneView(CachedModelView):
     order_by = [ShipmentZone.order, ShipmentZone.id]
     reorderable = True
     columns = [
-        Column("id", "ID"),
         Column("country.name", "Country"),
         Column("region.name", "Region"),
     ]

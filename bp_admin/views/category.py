@@ -35,7 +35,6 @@ class CategoryView(CachedModelView):
     can_edit = True
 
     columns = [
-        Column("id", "ID"),
         Column("name"),
     ]
 
@@ -56,7 +55,6 @@ class CategoryView(CachedModelView):
             CategoryItem,
             "category_id",
             columns=[
-                Column("id", "ID"),
                 Column("sku.name", "SKU"),
             ],
             create_fields=[
