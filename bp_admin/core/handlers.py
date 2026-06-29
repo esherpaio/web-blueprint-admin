@@ -16,9 +16,8 @@ from web.database import conn
 from web.error import WebError
 from werkzeug import Response
 
-from bp_admin.pagination import get_pages
-
 from .enums import Notice, Op
+from .pagination import get_pages
 from .util import apply_bulk_edits, delete_objects, resolve_choices
 from .view import ModelView
 

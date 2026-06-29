@@ -1,6 +1,35 @@
 {% extends "admin/_templates/main.html" %}
 {% block admin_body %}
     <script>
+        // API endpoints used only by this page.
+        function emptyStrToNull(dict) {
+            for (let key in dict) if (dict[key] === "") dict[key] = null;
+            return dict;
+        }
+        const getUsersId = (id) => callApi("GET", `/api/v1/users/${id}`);
+        const getCountries = () => callApi("GET", `/api/v1/countries`);
+        const postCarts = () => callApi("POST", `/api/v1/carts`);
+        const getCarts = () => callApi("GET", `/api/v1/carts`);
+        const getCartsId = (id) => callApi("GET", `/api/v1/carts/${id}`);
+        const patchCartsId = (id, d, s) => callApi("PATCH", `/api/v1/carts/${id}`, d, "application/json", s);
+        const deleteCartsId = (id) => callApi("DELETE", `/api/v1/carts/${id}`);
+        const getCartsIdItems = (id) => callApi("GET", `/api/v1/carts/${id}/items`);
+        const postCartsIdItems = (id, d) => callApi("POST", `/api/v1/carts/${id}/items`, d, "application/json");
+        const patchCartsIdItemsId = (id, iid, d) => callApi("PATCH", `/api/v1/carts/${id}/items/${iid}`, d, "application/json");
+        const deleteCartsIdItemsId = (id, iid) => callApi("DELETE", `/api/v1/carts/${id}/items/${iid}`);
+        const getShippingsId = (id) => callApi("GET", `/api/v1/shippings/${id}`);
+        const postShippings = (d, s) => callApi("POST", `/api/v1/shippings`, d, "application/json", s);
+        const patchShippingsId = (id, d, s) => callApi("PATCH", `/api/v1/shippings/${id}`, d, "application/json", s);
+        const getBillingsId = (id) => callApi("GET", `/api/v1/billings/${id}`);
+        const postBillings = (d, s) => callApi("POST", `/api/v1/billings`, d, "application/json", s);
+        const patchBillingsId = (id, d, s) => callApi("PATCH", `/api/v1/billings/${id}`, d, "application/json", s);
+        const getShipmentMethods = (d) => callApi("GET", `/api/v1/shipment-methods`, d);
+        const getShipmentMethodsId = (id) => callApi("GET", `/api/v1/shipment-methods/${id}`);
+        const getSkus = (d) => callApi("GET", `/api/v1/skus`, d);
+        const postOrders = (d) => callApi("POST", `/api/v1/orders`, d, "application/json");
+        const postOrdersIdPayments = (id, d) => callApi("POST", `/api/v1/orders/${id}/payments`, d, "application/json");
+    </script>
+    <script>
         // loading elements
         async function loadCart(cart) {
             document.getElementById("cart-coupon-code").innerHTML = cart.coupon_code ? cart.coupon_code : "None";
@@ -359,7 +388,7 @@
         <!-- button add order -->
         <div class="col-12">
             <div class="d-flex justify-content-between gap-2">
-                <h2 class="mb-0 d-flex align-items-center">Add order</h2>
+                <h2 class="mb-0 d-flex align-items-center">Create order</h2>
                 <div class="btn-toolbar justify-content-end gap-2">
                     <button class="btn btn-primary"
                             data-bs-toggle="modal"

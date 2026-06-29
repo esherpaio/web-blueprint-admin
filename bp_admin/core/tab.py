@@ -5,12 +5,19 @@ forms, editable child tables and fully custom layouts (e.g. a media gallery):
 
 * :class:`FormTab` edits fields on the object itself.
 * :class:`InlineTableTab` manages child rows related by a foreign key.
+* :class:`MediaTab` uploads files to the CDN and edits the resulting gallery.
 * :class:`TemplateTab` renders an author-supplied template for custom content.
 """
 
+import os
+import re
 from typing import Any, Callable
 
 from sqlalchemy.orm.session import Session
+from web import cdn
+from web.database.model import File, FileTypeId
+from web.setup import config
+from werkzeug.utils import secure_filename
 
 from .column import Column, row_input_name
 from .enums import Op
@@ -191,6 +198,143 @@ class InlineTableTab(Tab):
                 order_field=self.order_field if self.reorderable else None,
             )
         view.after_write(s, obj)
+
+
+class MediaTab(Tab):
+    """Upload files to the CDN and manage the resulting gallery.
+
+    Each row links a parent (via ``fk``) to a :class:`File` through ``file_rel``.
+    Uploaded files are stored under ``path_prefix(parent)`` and typed from their
+    extension; rows are reorderable and carry an editable file description.
+    """
+
+    template = "admin/_engine/_tab_media.html"
+
+    def __init__(
+        self,
+        label: str,
+        model: Any,
+        fk: str,
+        *,
+        path_prefix: Callable[[Any], tuple[str, ...]],
+        file_rel: str = "file_",
+        order_field: str = "order",
+        can_delete: bool = True,
+        key: str | None = None,
+    ) -> None:
+        super().__init__(label, key)
+        self.model = model
+        self.fk = fk
+        self.path_prefix = path_prefix
+        self.file_rel = file_rel
+        self.order_field = order_field
+        self.can_delete = can_delete
+
+    @property
+    def add_modal_id(self) -> str:
+        return f"modal-add-{self.key}"
+
+    def order_input_name(self, row_id: Any) -> str:
+        return row_input_name(row_id, self.order_field)
+
+    def description_input_name(self, row_id: Any) -> str:
+        return row_input_name(row_id, "description")
+
+    def base_query(self, s: Session, obj: Any) -> Any:
+        return (
+            s.query(self.model)
+            .filter(getattr(self.model, self.fk) == obj.id)
+            .order_by(getattr(self.model, self.order_field), self.model.id)
+        )
+
+    def context(self, view: Any, s: Session, obj: Any) -> dict[str, Any]:
+        return {"tab": self, "rows": self.base_query(s, obj).all()}
+
+    def handle_post(
+        self, view: Any, s: Session, obj: Any, form: Any, files: Any
+    ) -> None:
+        op = form.get("_op")
+        if op == Op.ADD:
+            self._upload(s, obj, files)
+        elif op == Op.DELETE and self.can_delete:
+            self._delete(s, obj, form.getlist("select"))
+        else:
+            self._save(s, obj, form)
+        view.after_write(s, obj)
+
+    def _upload(self, s: Session, obj: Any, files: Any) -> None:
+        prefix = self.path_prefix(obj)
+        sequence = self._last_sequence(s, obj)
+        for upload in files.getlist("file"):
+            if not upload.filename:
+                continue
+            extension = os.path.splitext(upload.filename)[1].lstrip(".").lower()
+            type_id = self._type_for(extension)
+            if type_id is None:
+                continue
+            sequence += 1
+            if config.CDN_AUTO_NAMING:
+                name = f"{prefix[-1]}-{sequence}"
+            else:
+                name = secure_filename(os.path.splitext(upload.filename)[0])
+            path = os.path.join(*prefix, f"{name}.{extension}")
+            cdn.upload(upload, path)
+            file_ = File(path=path, type_id=type_id)
+            s.add(file_)
+            s.flush()
+            child = self.model()
+            setattr(child, self.fk, obj.id)
+            setattr(child, f"{self.file_rel}_id", file_.id)
+            s.add(child)
+            s.flush()
+
+    def _save(self, s: Session, obj: Any, form: Any) -> None:
+        rows = {str(r.id): r for r in self.base_query(s, obj).all()}
+        for row_id in form.getlist("row-id"):
+            row = rows.get(str(row_id))
+            if row is None:
+                continue
+            order = form.get(self.order_input_name(row_id))
+            if order not in (None, ""):
+                try:
+                    setattr(row, self.order_field, int(order))
+                except (TypeError, ValueError):
+                    pass
+            file_ = getattr(row, self.file_rel)
+            if file_ is not None:
+                file_.description = (
+                    form.get(self.description_input_name(row_id)) or None
+                )
+
+    def _delete(self, s: Session, obj: Any, ids: list[Any]) -> None:
+        rows = self.base_query(s, obj).filter(self.model.id.in_(ids)).all()
+        for row in rows:
+            file_ = getattr(row, self.file_rel)
+            if file_ is not None:
+                cdn.delete(file_.path)
+                s.delete(file_)
+            s.delete(row)
+
+    def _last_sequence(self, s: Session, obj: Any) -> int:
+        if not config.CDN_AUTO_NAMING:
+            return 0
+        last = (
+            self.base_query(s, obj)
+            .order_by(None)
+            .order_by(self.model.id.desc())
+            .first()
+        )
+        file_ = getattr(last, self.file_rel, None) if last else None
+        match = re.search(r"(\d+)\.\w+$", file_.path) if file_ else None
+        return int(match.group(1)) if match else 0
+
+    @staticmethod
+    def _type_for(extension: str) -> int | None:
+        if extension in config.CDN_IMAGE_EXTS:
+            return FileTypeId.IMAGE
+        if extension in config.CDN_VIDEO_EXTS:
+            return FileTypeId.VIDEO
+        return None
 
 
 class TemplateTab(Tab):

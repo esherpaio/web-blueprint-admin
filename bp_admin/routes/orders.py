@@ -19,7 +19,7 @@ def admin_index() -> Response:
 @admin_bp.get("/admin/orders/add")
 def orders_add() -> str | Response:
     return render_template(
-        "admin/orders_add.html",
+        "admin/custom/order_create.html",
         active_menu="orders",
     )
 

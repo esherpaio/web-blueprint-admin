@@ -22,6 +22,7 @@ from .field import (
     StringField,
     TextAreaField,
 )
+from .pagination import get_pages
 from .site import AdminSite
-from .tab import FormTab, InlineTableTab, Tab, TemplateTab
+from .tab import FormTab, InlineTableTab, MediaTab, Tab, TemplateTab
 from .view import Filter, ModelView, SingletonView

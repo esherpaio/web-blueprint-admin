@@ -55,12 +55,3 @@ async function callApi(method, url, data = null, contentType = null, silent = fa
             }
         });
 }
-
-function emptyStrToNull(dict) {
-    for (let key in dict) {
-        if (dict[key] === "") {
-            dict[key] = null;
-        }
-    }
-    return dict;
-}
