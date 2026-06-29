@@ -50,7 +50,7 @@
                     {% endif %}
                     {% for column in tab_ctx.columns %}
                         {% if not (tab.reorderable and column.name == tab.order_field) %}
-                            <th>{{ column.label }}</th>
+                            <th class="{{ column.align_class }}">{{ column.label }}</th>
                         {% endif %}
                     {% endfor %}
                 </tr>
@@ -78,7 +78,7 @@
                         {% endif %}
                         {% for column in tab_ctx.columns %}
                             {% if not (tab.reorderable and column.name == tab.order_field) %}
-                                <td>
+                                <td class="{{ column.align_class }}">
                                     {% if column.editable %}
                                         {{ cell_input(column, row, tab_ctx.choices, form_values) }}
                                     {% else %}

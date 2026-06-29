@@ -24,12 +24,29 @@
 </div>
 
 <form id="{{ tab.form_id }}" method="post" action="{{ tab_action }}">
-    <div class="row g-3">
+    <div class="row g-3" data-sortable data-sort-field="{{ tab.order_field }}">
         {% for media in tab_ctx.rows %}
             {% set file = media[tab.file_rel] %}
-            <input type="hidden" name="row-id" value="{{ media.id }}">
             <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                <input type="hidden" name="row-id" value="{{ media.id }}">
+                <input type="hidden"
+                       name="{{ tab.order_input_name(media.id) }}"
+                       value="{{ media[tab.order_field] if media[tab.order_field] is not none }}">
                 <div class="card h-100">
+                    <div class="d-flex align-items-center justify-content-between border-bottom px-2 py-1">
+                        <i class="bi bi-grip-vertical text-muted"
+                           data-drag-handle
+                           style="cursor:grab"></i>
+                        {% if tab.can_delete %}
+                            <div class="form-check m-0">
+                                <input class="form-check-input"
+                                       type="checkbox"
+                                       name="select"
+                                       value="{{ media.id }}">
+                                <label class="form-check-label small">Select</label>
+                            </div>
+                        {% endif %}
+                    </div>
                     {% if file and file.is_image %}
                         <img class="card-img-top bg-light border-bottom"
                              src="{{ cdn_url(file.path) }}?class=medium"
@@ -41,32 +58,11 @@
                         </video>
                     {% endif %}
                     <div class="card-body">
-                        <div class="row g-2">
-                            <div class="col-12">
-                                <input class="form-control form-control-sm"
-                                       type="text"
-                                       name="{{ tab.description_input_name(media.id) }}"
-                                       placeholder="Description"
-                                       value="{{ file.description if file and file.description }}">
-                            </div>
-                            <div class="col-12">
-                                <input class="form-control form-control-sm"
-                                       type="number"
-                                       step="1"
-                                       name="{{ tab.order_input_name(media.id) }}"
-                                       placeholder="Order"
-                                       value="{{ media[tab.order_field] if media[tab.order_field] is not none }}">
-                            </div>
-                            {% if tab.can_delete %}
-                                <div class="col-12 form-check ms-2">
-                                    <input class="form-check-input"
-                                           type="checkbox"
-                                           name="select"
-                                           value="{{ media.id }}">
-                                    <label class="form-check-label small">Select</label>
-                                </div>
-                            {% endif %}
-                        </div>
+                        <input class="form-control form-control-sm"
+                               type="text"
+                               name="{{ tab.description_input_name(media.id) }}"
+                               placeholder="Description"
+                               value="{{ file.description if file and file.description }}">
                     </div>
                 </div>
             </div>

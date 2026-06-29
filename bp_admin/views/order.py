@@ -5,6 +5,7 @@ from decimal import Decimal
 from markupsafe import Markup
 from sqlalchemy.orm import Session, joinedload
 from web.api.utils.mollie import Mollie
+from web.app.urls import url_for
 from web.database.model import (
     Billing,
     Invoice,
@@ -15,8 +16,6 @@ from web.database.model import (
     Refund,
     Shipment,
     Shipping,
-    Sku,
-    SkuDetail,
 )
 from web.mail import mail
 from web.mail.enum import MailEvent
@@ -27,6 +26,7 @@ from bp_admin.core import (
     Column,
     DecimalField,
     Filter,
+    InlineTableTab,
     ModelView,
     SelectField,
     StringField,
@@ -49,29 +49,49 @@ def _status_badge(status: OrderStatus | None) -> Markup:
     return Markup(f'<span class="badge {color}">{status.name}</span>')
 
 
-def _detail_context(s: Session, order: Order) -> dict:
-    lines = (
-        s.query(OrderLine)
-        .options(
-            joinedload(OrderLine.sku),
-            joinedload(OrderLine.sku, Sku.product),
-            joinedload(OrderLine.sku, Sku.details),
-            joinedload(OrderLine.sku, Sku.details, SkuDetail.option),
-            joinedload(OrderLine.sku, Sku.details, SkuDetail.value),
-        )
-        .filter_by(order_id=order.id)
-        .order_by(OrderLine.id)
-        .all()
+def _sku_options(details: list) -> Markup:
+    return Markup("<br>".join(f"{d.option.name}: {d.value.name}" for d in details))
+
+
+def _line_open(line: OrderLine) -> Markup:
+    if not line.sku.product.file_url:
+        return Markup("")
+    return Markup(
+        f'<a class="btn btn-sm btn-outline-primary" href="{line.sku.product.file_url}"'
+        f' target="_blank" rel="noopener">Open</a>'
     )
-    invoices = s.query(Invoice).filter_by(order_id=order.id).order_by(Invoice.id).all()
-    refunds = s.query(Refund).filter_by(order_id=order.id).order_by(Refund.id).all()
-    return {
-        "order": order,
-        "order_lines": lines,
-        "invoices": invoices,
-        "refunds": refunds,
-        "order_status_color_map": _STATUS_COLOR,
-    }
+
+
+def _invoice_download(invoice: Invoice) -> Markup:
+    url = url_for(
+        "admin.orders_id_invoices_id_download",
+        order_id=invoice.order_id,
+        invoice_id=invoice.id,
+    )
+    return Markup(
+        f'<a class="btn btn-sm btn-outline-primary" href="{url}">Download</a>'
+    )
+
+
+def _refund_download(refund: Refund) -> Markup:
+    url = url_for(
+        "admin.orders_id_refunds_id_download",
+        order_id=refund.order_id,
+        refund_id=refund.id,
+    )
+    return Markup(
+        f'<a class="btn btn-sm btn-outline-primary" href="{url}">Download</a>'
+    )
+
+
+def _link(url: str | None) -> Markup:
+    if not url:
+        return Markup("")
+    return Markup(f'<a href="{url}" target="_blank" rel="noopener">{url}</a>')
+
+
+def _overview_context(s: Session, order: Order) -> dict:
+    return {"order": order, "order_status_color_map": _STATUS_COLOR}
 
 
 def _update_status(s: Session, order: Order, data: dict) -> None:
@@ -197,8 +217,67 @@ class OrderView(ModelView):
             "Details",
             "admin/custom/order_detail.html",
             key="details",
-            context=_detail_context,
-        )
+            context=_overview_context,
+        ),
+        InlineTableTab(
+            "Items",
+            OrderLine,
+            "order_id",
+            columns=[
+                Column("sku.product.name", "Name"),
+                Column("sku.details", "Options", format=_sku_options),
+                Column("quantity", "Quantity"),
+                Column("total_price", "Total", format=CellFormat.PRICE),
+                Column("id", "", row_format=_line_open, align="end"),
+            ],
+            order_by=OrderLine.id,
+            can_create=False,
+            can_delete=False,
+            key="items",
+        ),
+        InlineTableTab(
+            "Invoices",
+            Invoice,
+            "order_id",
+            columns=[
+                Column("number", "Number"),
+                Column("expires_at", "Expires at", format=CellFormat.DATETIME),
+                Column("paid_at", "Paid at", format=CellFormat.DATETIME),
+                Column("id", "", row_format=_invoice_download, align="end"),
+            ],
+            order_by=Invoice.id,
+            can_create=False,
+            can_delete=False,
+            key="invoices",
+        ),
+        InlineTableTab(
+            "Shipments",
+            Shipment,
+            "order_id",
+            columns=[
+                Column("carrier", "Carrier"),
+                Column("code", "Code"),
+                Column("url", "Tracking URL", row_format=lambda r: _link(r.url)),
+            ],
+            order_by=Shipment.id,
+            can_create=False,
+            can_delete=False,
+            key="shipments",
+        ),
+        InlineTableTab(
+            "Refunds",
+            Refund,
+            "order_id",
+            columns=[
+                Column("number", "Number"),
+                Column("total_price", "Total", format=CellFormat.PRICE),
+                Column("id", "", row_format=_refund_download, align="end"),
+            ],
+            order_by=Refund.id,
+            can_create=False,
+            can_delete=False,
+            key="refunds",
+        ),
     ]
 
     def get_object(self, s: Session, id_):

@@ -4,6 +4,7 @@ page with a JSON attributes editor and an inline child table (category items).""
 from web.database.model import Category, CategoryItem, Sku
 
 from bp_admin.core import (
+    CachedModelView,
     Column,
     FormTab,
     InlineTableTab,
@@ -11,8 +12,6 @@ from bp_admin.core import (
     SelectField,
     StringField,
 )
-
-from .base import CachedModelView
 
 
 class CategoryView(CachedModelView):

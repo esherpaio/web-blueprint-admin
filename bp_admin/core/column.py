@@ -38,6 +38,7 @@ class Column:
         editable: bool = False,
         field: Field | None = None,
         format: str | Callable[[Any], Any] | None = None,
+        row_format: Callable[[Any], Any] | None = None,
         align: str | None = None,
     ) -> None:
         self.name = name
@@ -45,6 +46,7 @@ class Column:
         self.editable = editable
         self.field = field if field is not None else StringField(name)
         self.format = format
+        self.row_format = row_format
         self.align = align
 
     @property
@@ -66,6 +68,8 @@ class Column:
         return submitted if submitted is not None else self.field.value_from_obj(obj)
 
     def display(self, obj: Any) -> Any:
+        if self.row_format is not None:
+            return self.row_format(obj)
         value = self.value(obj)
         if callable(self.format):
             return self.format(value)

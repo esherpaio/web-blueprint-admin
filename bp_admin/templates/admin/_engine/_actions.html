@@ -1,5 +1,5 @@
 {% for action in view.actions %}
-    {% if action.is_visible(obj) %}
+    {% if (action.tab is none or action.tab == active_tab) and action.is_visible(obj) %}
         {% if action.fields %}
             <button class="btn btn-{{ action.style }}"
                     type="button"

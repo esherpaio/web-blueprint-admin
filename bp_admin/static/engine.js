@@ -52,54 +52,55 @@
     }
 
     function initSortable() {
-        document.querySelectorAll("tbody[data-sortable]").forEach(function (body) {
+        document.querySelectorAll("[data-sortable]").forEach(function (body) {
             const field = body.dataset.sortField || "order";
-            let dragRow = null;
+            let dragItem = null;
 
-            body.querySelectorAll("tr").forEach(function (row) {
-                const handle = row.querySelector("[data-drag-handle]");
+            Array.prototype.forEach.call(body.children, function (item) {
+                const handle = item.querySelector("[data-drag-handle]");
                 if (!handle) return;
 
                 handle.addEventListener("mousedown", function () {
-                    row.draggable = true;
+                    item.draggable = true;
                 });
-                row.addEventListener("mouseup", function () {
-                    row.draggable = false;
+                item.addEventListener("mouseup", function () {
+                    item.draggable = false;
                 });
 
-                row.addEventListener("dragstart", function (event) {
-                    dragRow = row;
-                    row.classList.add("table-active");
+                item.addEventListener("dragstart", function (event) {
+                    dragItem = item;
+                    item.classList.add("opacity-50");
                     event.dataTransfer.effectAllowed = "move";
                     event.dataTransfer.setData("text/plain", "");
                 });
-                row.addEventListener("dragend", function () {
-                    row.draggable = false;
-                    row.classList.remove("table-active");
-                    dragRow = null;
+                item.addEventListener("dragend", function () {
+                    item.draggable = false;
+                    item.classList.remove("opacity-50");
+                    dragItem = null;
                     renumber(body, field);
                 });
             });
 
             body.addEventListener("dragover", function (event) {
-                if (!dragRow) return;
+                if (!dragItem) return;
                 event.preventDefault();
-                const target = event.target.closest("tr");
-                if (!target || target === dragRow || target.parentNode !== body) {
-                    return;
+                let target = event.target;
+                while (target && target.parentNode !== body) {
+                    target = target.parentNode;
                 }
+                if (!target || target === dragItem) return;
                 const rect = target.getBoundingClientRect();
                 const after = event.clientY > rect.top + rect.height / 2;
-                body.insertBefore(dragRow, after ? target.nextSibling : target);
+                body.insertBefore(dragItem, after ? target.nextSibling : target);
             });
         });
     }
 
-    // Redistribute the existing order values over the new row positions.
+    // Redistribute the existing order values over the new item positions.
     function renumber(body, field) {
         const inputs = [];
-        body.querySelectorAll("tr").forEach(function (row) {
-            const input = row.querySelector('input[name$="-' + field + '"]');
+        Array.prototype.forEach.call(body.children, function (item) {
+            const input = item.querySelector('input[name$="-' + field + '"]');
             if (input) inputs.push(input);
         });
         const values = inputs.map(function (input, index) {

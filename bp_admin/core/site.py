@@ -11,21 +11,27 @@ from flask import Blueprint, request
 
 from . import handlers
 from .enums import CellFormat, InputType, Op
-from .view import ModelView
+from .view import MarkdownView, ModelView
 
 
 class AdminSite:
     def __init__(self) -> None:
         self.views: list[ModelView] = []
+        self.markdown_views: list[MarkdownView] = []
         self.links: list[dict[str, Any]] = []
 
     #
     # Registration
     #
 
-    def register(self, view: ModelView | type[ModelView]) -> ModelView:
+    def register(
+        self, view: ModelView | type[ModelView] | MarkdownView | type[MarkdownView]
+    ) -> ModelView | MarkdownView:
         instance = view() if isinstance(view, type) else view
-        self.views.append(instance)
+        if isinstance(instance, MarkdownView):
+            self.markdown_views.append(instance)
+        else:
+            self.views.append(instance)
         return instance
 
     def add_link(
@@ -58,6 +64,8 @@ class AdminSite:
     def init_blueprint(self, bp: Blueprint) -> None:
         for view in self.views:
             self._register_view(bp, view)
+        for markdown_view in self.markdown_views:
+            markdown_view.register(bp, self)
         bp.add_app_template_global(Op, "Op")
         bp.add_app_template_global(InputType, "InputType")
         bp.add_app_template_global(CellFormat, "CellFormat")

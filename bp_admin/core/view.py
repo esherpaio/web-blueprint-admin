@@ -5,11 +5,15 @@ modal create form, a tabbed detail/edit page and custom actions. The engine
 turns that description into routes, queries and Bootstrap templates.
 """
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
+import requests
+from flask import Blueprint, render_template
 from sqlalchemy import or_
 from sqlalchemy.orm.session import Session
 from web.app.urls import url_for
+from web.database.model import AppSettings
+from web.utils.markdown import Markdown
 
 from .action import Action
 from .column import Column, row_input_name
@@ -17,6 +21,9 @@ from .enums import MenuSection
 from .field import Field, default_label
 from .tab import Tab
 from .util import apply_fields, supports_soft_delete
+
+if TYPE_CHECKING:
+    from .site import AdminSite
 
 
 class Filter:
@@ -200,8 +207,51 @@ class ModelView:
         pass
 
 
+class CachedModelView(ModelView):
+    def after_write(self, s: Session, obj: Any = None) -> None:
+        settings = s.query(AppSettings).first()
+        if settings is not None:
+            settings.cached_at = None
+
+
 class SingletonView(ModelView):
     """A view that edits a single row (e.g. app settings) — no list, no create."""
 
     singleton = True
     can_edit = True
+
+
+class MarkdownView:
+    endpoint: str = ""
+    label: str = ""
+    url: str = ""
+    icon: str | None = None
+    order: int = 100
+    section: str = "bottom"
+
+    def render(self) -> str:
+        response = requests.get(self.url)
+        response.raise_for_status()
+        lines = response.iter_lines(decode_unicode=True)
+        markdown_html = Markdown(*lines).html
+        return render_template(
+            "admin/markdown.html",
+            active_menu=self.endpoint,
+            page_title=self.label,
+            markdown_html=markdown_html,
+        )
+
+    def register(self, bp: Blueprint, site: "AdminSite") -> None:
+        bp.add_url_rule(
+            f"/admin/{self.endpoint}",
+            endpoint=self.endpoint,
+            view_func=self.render,
+            methods=["GET"],
+        )
+        site.add_link(
+            self.label,
+            f"admin.{self.endpoint}",
+            icon=self.icon,
+            order=self.order,
+            section=self.section,
+        )

@@ -25,4 +25,4 @@ from .field import (
 from .pagination import get_pages
 from .site import AdminSite
 from .tab import FormTab, InlineTableTab, MediaTab, Tab, TemplateTab
-from .view import Filter, ModelView, SingletonView
+from .view import CachedModelView, Filter, MarkdownView, ModelView, SingletonView

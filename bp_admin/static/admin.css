@@ -64,4 +64,9 @@ table td {
     border-bottom-left-radius: .375rem;
     border-bottom-right-radius: .375rem;
     min-height: 300px;
+    background: #fff;
+}
+
+[data-html-editor] {
+    min-height: 300px;
 }

@@ -111,7 +111,7 @@ class ProductView(CachedModelView):
         Column("unit_price", "Price", format=CellFormat.PRICE),
     ]
 
-    actions = [Action("generate_skus", "Generate SKUs", _generate_skus)]
+    actions = [Action("generate_skus", "Generate SKUs", _generate_skus, tab="skus")]
 
     tabs = [
         FormTab(
@@ -138,7 +138,7 @@ class ProductView(CachedModelView):
             "product_id",
             columns=[
                 Column("name"),
-                Column("id", "", format=_option_view, align="end"),
+                Column("id", "Actions", format=_option_view, align="end"),
             ],
             create_fields=[StringField("name", required=True)],
             order_by=ProductOption.order,
