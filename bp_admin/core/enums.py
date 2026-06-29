@@ -64,3 +64,4 @@ class MenuSection(StrEnum):
 
     MAIN = "main"
     BOTTOM = "bottom"
+    HIDDEN = "hidden"
