@@ -3,6 +3,12 @@
     {% set is_readonly = field.readonly if editable is none else not editable %}
     {% if field.input_type == InputType.ATTRIBUTES %}
         {{ attributes_editor(field, value) }}
+    {% elif field.input_type == InputType.HTML %}
+        <label class="form-label fw-semibold">{{ field.label }}</label>
+        <input type="hidden" name="{{ fname }}">
+        <div data-html-editor
+             data-target="{{ fname }}"
+             {% if is_readonly %}data-readonly{% endif %}>{{ value|safe if value is not none else "" }}</div>
     {% elif field.input_type == InputType.CHECKBOX %}
         <div class="input-group">
             <span class="input-group-text">{{ field.label }}</span>

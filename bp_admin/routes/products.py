@@ -17,23 +17,6 @@ from werkzeug import Response
 from bp_admin import admin_bp
 
 
-@admin_bp.get("/admin/products")
-def products() -> str:
-    with conn.begin() as s:
-        products_ = (
-            s.query(Product)
-            .options(joinedload(Product.shipment_class))
-            .filter_by(is_deleted=False)
-            .order_by(Product.name)
-            .all()
-        )
-    return render_template(
-        "admin/products.html",
-        active_menu="products",
-        products=products_,
-    )
-
-
 @admin_bp.get("/admin/products/<int:product_id>")
 def products_id(product_id: int) -> str | Response:
     with conn.begin() as s:

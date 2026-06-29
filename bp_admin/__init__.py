@@ -4,7 +4,6 @@ from .blueprint import (
 )
 from .routes import (
     changelog,
-    emails,
     orders,
     products,
 )

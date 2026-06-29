@@ -34,6 +34,7 @@ class InputType(StrEnum):
     SELECT = "select"
     TEXTAREA = "textarea"
     ATTRIBUTES = "attributes"
+    HTML = "html"
     DATETIME = "datetime"
     HIDDEN = "hidden"
 

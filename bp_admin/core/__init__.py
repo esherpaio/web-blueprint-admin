@@ -14,6 +14,7 @@ from .field import (
     DecimalField,
     Field,
     HiddenField,
+    HtmlField,
     IntegerField,
     JsonAttributesField,
     PercentageField,
