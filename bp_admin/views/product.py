@@ -23,6 +23,7 @@ from web.utils.generators import gen_slug
 from bp_admin.core import (
     Action,
     BoolField,
+    CachedModelView,
     CellFormat,
     Column,
     DecimalField,
@@ -34,8 +35,6 @@ from bp_admin.core import (
     SelectField,
     StringField,
 )
-
-from .base import CachedModelView
 
 
 class ProductHtmlField(HtmlField):

@@ -14,6 +14,7 @@ from web.database.model import (
 
 from bp_admin.core import (
     BoolField,
+    CachedModelView,
     Column,
     DecimalField,
     FormTab,
@@ -21,8 +22,6 @@ from bp_admin.core import (
     SelectField,
     StringField,
 )
-
-from .base import CachedModelView
 
 
 def _zone_label(zone: Any) -> str:

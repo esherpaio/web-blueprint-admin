@@ -8,14 +8,13 @@ from web.database.model import Email, Order, User, UserRoleId
 
 from bp_admin.core import (
     BoolField,
+    CachedModelView,
     CellFormat,
     Column,
     FormTab,
     InlineTableTab,
     StringField,
 )
-
-from .base import CachedModelView
 
 
 class UserView(CachedModelView):

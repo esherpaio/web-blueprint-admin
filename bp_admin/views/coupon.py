@@ -9,9 +9,13 @@ satisfied.
 
 from web.database.model import Coupon
 
-from bp_admin.core import Column, DecimalField, PercentageField, StringField
-
-from .base import CachedModelView
+from bp_admin.core import (
+    CachedModelView,
+    Column,
+    DecimalField,
+    PercentageField,
+    StringField,
+)
 
 
 class CouponView(CachedModelView):

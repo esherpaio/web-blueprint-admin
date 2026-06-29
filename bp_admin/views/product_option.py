@@ -3,6 +3,7 @@
 from web.database.model import ProductMedia, ProductOption, ProductValue
 
 from bp_admin.core import (
+    CachedModelView,
     Column,
     DecimalField,
     FormTab,
@@ -11,8 +12,6 @@ from bp_admin.core import (
     SelectField,
     StringField,
 )
-
-from .base import CachedModelView
 
 
 class ProductOptionView(CachedModelView):

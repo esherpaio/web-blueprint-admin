@@ -3,9 +3,14 @@ checkboxes. Countries are reference data, so deletion is disabled."""
 
 from web.database.model import Country, Currency, Region
 
-from bp_admin.core import BoolField, Column, FormTab, SelectField, StringField
-
-from .base import CachedModelView
+from bp_admin.core import (
+    BoolField,
+    CachedModelView,
+    Column,
+    FormTab,
+    SelectField,
+    StringField,
+)
 
 
 class CountryView(CachedModelView):
