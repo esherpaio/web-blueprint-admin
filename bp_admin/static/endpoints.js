@@ -143,11 +143,6 @@ function deleteCurrenciesId(currencyId, silent = false) {
     return callApi("DELETE", url, null, null, silent);
 }
 
-function postEmails(data, silent = false) {
-    const url = `/api/v1/emails`;
-    return callApi("POST", url, data, "application/json", silent);
-}
-
 function postLanguages(data, silent = false) {
     const url = `/api/v1/languages`;
     return callApi("POST", url, data, "application/json", silent);

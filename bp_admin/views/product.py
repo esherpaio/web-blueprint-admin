@@ -23,7 +23,7 @@ class ProductView(ModelView):
     can_create = True
     can_delete = True
     searchable = ["name"]
-    order_by = Product.name
+    order_by = [Product.name]
 
     create_fields = [StringField("name")]
 

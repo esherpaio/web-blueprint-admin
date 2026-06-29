@@ -26,7 +26,7 @@ _STATUS_COLOR = {
 }
 
 
-def _status_badge(status: OrderStatus) -> Markup:
+def _status_badge(status: OrderStatus | None) -> Markup:
     if status is None:
         return Markup("")
     color = _STATUS_COLOR.get(status.id, "text-bg-secondary")
