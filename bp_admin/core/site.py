@@ -67,6 +67,27 @@ class AdminSite:
         e = view.endpoint
         slug = view.slug
 
+        if view.singleton:
+            bp.add_url_rule(
+                f"/admin/{slug}",
+                endpoint=e,
+                view_func=self._bind(handlers.singleton_endpoint, view),
+                methods=["GET"],
+            )
+            bp.add_url_rule(
+                f"/admin/{slug}/<int:id_>",
+                endpoint=f"{e}_detail",
+                view_func=self._bind_id(handlers.detail_endpoint, view),
+                methods=["GET"],
+            )
+            bp.add_url_rule(
+                f"/admin/{slug}/<int:id_>/tab/<tab_key>",
+                endpoint=f"{e}_tab",
+                view_func=self._bind_tab(handlers.tab_endpoint, view),
+                methods=["POST"],
+            )
+            return
+
         bp.add_url_rule(
             f"/admin/{slug}",
             endpoint=e,

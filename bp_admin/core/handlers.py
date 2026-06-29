@@ -221,6 +221,15 @@ def detail_endpoint(view: ModelView, id_: Any) -> str | Response:
     return render_detail(view, id_)
 
 
+def singleton_endpoint(view: ModelView) -> Response:
+    with conn.begin() as s:
+        obj = view.get_query(s).first()
+        id_ = obj.id if obj else None
+    if id_ is None:
+        abort(404)
+    return _redirect(f"admin.{view.endpoint}_detail", id_=id_)
+
+
 def tab_endpoint(view: ModelView, id_: Any, tab_key: str) -> Response | str:
     tab = view.tab_by_key(tab_key)
     if tab is None:

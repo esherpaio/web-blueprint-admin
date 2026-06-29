@@ -76,6 +76,7 @@ class ModelView:
     can_create: bool = False
     can_delete: bool = False
     can_edit: bool = False
+    singleton: bool = False
     _soft_delete: bool | None = None
 
     def __init__(self) -> None:
@@ -197,3 +198,10 @@ class ModelView:
 
     def after_write(self, s: Session, obj: Any = None) -> None:
         pass
+
+
+class SingletonView(ModelView):
+    """A view that edits a single row (e.g. app settings) — no list, no create."""
+
+    singleton = True
+    can_edit = True

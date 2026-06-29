@@ -23,4 +23,4 @@ from .field import (
 )
 from .site import AdminSite
 from .tab import FormTab, InlineTableTab, Tab, TemplateTab
-from .view import Filter, ModelView
+from .view import Filter, ModelView, SingletonView

@@ -7,7 +7,6 @@ from .routes import (
     emails,
     orders,
     products,
-    settings,
 )
 from .views import register_views
 
