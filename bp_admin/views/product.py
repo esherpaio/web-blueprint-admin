@@ -38,8 +38,6 @@ from bp_admin.core import (
 
 
 class ProductHtmlField(HtmlField):
-    """Edit the rich-text body stored in ``Product.attributes['html']``."""
-
     def __init__(self) -> None:
         super().__init__("html", "Description", readonly=False)
 
@@ -118,13 +116,13 @@ class ProductView(CachedModelView):
             [
                 StringField("name"),
                 SelectField.from_model("type_id", ProductType, readonly=False),
+                DecimalField("unit_price", readonly=False),
                 SelectField.from_model(
                     "shipment_class_id",
                     ShipmentClass,
                     where=ShipmentClass.is_deleted.is_(False),
                     readonly=False,
                 ),
-                DecimalField("unit_price", readonly=False),
                 BoolField("consent_required", readonly=False),
                 StringField("file_url", "Download link", readonly=False),
                 StringField("summary", readonly=False),

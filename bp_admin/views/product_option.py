@@ -1,6 +1,7 @@
 """Product option detail — edit an option and its values (reached from product)."""
 
-from web.database.model import ProductMedia, ProductOption, ProductValue
+from sqlalchemy import and_
+from web.database.model import File, ProductMedia, ProductOption, ProductValue
 
 from bp_admin.core import (
     CachedModelView,
@@ -15,8 +16,7 @@ from bp_admin.core import (
 
 
 def _media_label(media: ProductMedia) -> str:
-    description = media.file_.description if media.file_ else None
-    return f"#{media.id} {description}".strip() if description else f"#{media.id}"
+    return media.file_.description
 
 
 class ProductOptionView(CachedModelView):
@@ -30,7 +30,7 @@ class ProductOptionView(CachedModelView):
     tabs = [
         FormTab(
             "General",
-            [StringField("name", readonly=False)],
+            [StringField("name")],
         ),
         InlineTableTab(
             "Values",
@@ -47,7 +47,13 @@ class ProductOptionView(CachedModelView):
                         "media_id",
                         ProductMedia,
                         label="Media",
-                        label_fn=_media_label,
+                        label_fn=lambda m: m.file_.description,
+                        where=ProductMedia.file_.has(
+                            and_(
+                                File.description.isnot(None),
+                                File.description != "",
+                            )
+                        ),
                     ),
                 ),
             ],

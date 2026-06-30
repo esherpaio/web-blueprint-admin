@@ -231,7 +231,7 @@ class OrderView(ModelView):
             [
                 DisplayField("Order ID", "id"),
                 DisplayField(
-                    "Timestamp",
+                    "Created at",
                     "created_at",
                     format=lambda d: current_locale.format_datetime(d),
                 ),
@@ -252,12 +252,16 @@ class OrderView(ModelView):
                     lambda o: _money(o.total_price, o.currency_code),
                 ),
                 DisplayField(
-                    "Shipping", lambda o: _address_lines(o.shipping), multiline=True
+                    "Shipping",
+                    lambda o: _address_lines(o.shipping),
+                    multiline=True,
+                    rows=6,
                 ),
                 DisplayField(
                     "Billing",
                     lambda o: _address_lines(o.billing, with_vat=True),
                     multiline=True,
+                    rows=6,
                 ),
             ],
             key="details",
