@@ -42,19 +42,21 @@
                                aria-label="Select media">
                     {% endif %}
                     {% if file and file.is_image %}
-                        <img class="card-img-top bg-light border-bottom"
+                        <img class="card-img-top bg-light border-bottom object-fit-contain"
                              src="{{ cdn_url(file.path) }}?class=medium"
                              alt="{{ file.description if file.description }}"
                              loading="lazy"
                              draggable="false"
                              data-drag-handle
-                             style="cursor:grab">
+                             style="cursor:grab;
+                                    height: 160px">
                     {% elif file and file.is_video %}
                         <video controls
                                muted
-                               class="card-img-top bg-light border-bottom"
+                               class="card-img-top bg-light border-bottom object-fit-contain"
                                data-drag-handle
-                               style="cursor:grab">
+                               style="cursor:grab;
+                                      height: 160px">
                             <source src="{{ cdn_url(file.path) }}">
                         </video>
                     {% endif %}

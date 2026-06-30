@@ -105,7 +105,7 @@ class ProductView(CachedModelView):
     columns = [
         Column("name", "Name"),
         Column("shipment_class.name", "Shipment class"),
-        Column("unit_price", "Price", format=CellFormat.PRICE),
+        Column("unit_price", "Unit Price", format=CellFormat.PRICE),
     ]
 
     actions = [Action("generate_skus", "Generate SKUs", _generate_skus, tab="skus")]
