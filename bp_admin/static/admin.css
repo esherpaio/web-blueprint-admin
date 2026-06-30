@@ -50,29 +50,20 @@ table td {
 /* quill */
 
 .ql-toolbar {
+    border: 1px solid #dee2e6 !important;
     border-top-left-radius: .375rem;
     border-top-right-radius: .375rem;
 }
 
 .ql-container {
+    height: auto !important;
+    background: #fff;
+    border: 1px solid #dee2e6 !important;
+    border-top: 0 !important;
     border-bottom-left-radius: .375rem;
     border-bottom-right-radius: .375rem;
-    min-height: 300px;
-    background: #fff;
-}
-
-[data-html-editor] {
-    min-height: 300px;
-    max-width: 100%;
 }
 
 .ql-editor {
-    overflow-wrap: anywhere;
-    word-break: break-word;
-}
-
-.ql-snow .ql-tooltip {
-    max-width: calc(100% - 1rem);
-    white-space: normal;
-    overflow-wrap: anywhere;
+    min-height: 300px;
 }
