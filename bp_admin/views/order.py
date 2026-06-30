@@ -60,7 +60,7 @@ def _line_open(line: OrderLine) -> Markup:
     if not line.sku.product.file_url:
         return Markup("")
     return Markup(
-        f'<a class="btn btn-sm btn-secondary" href="{line.sku.product.file_url}"'
+        f'<a class="btn btn-sm btn-primary" href="{line.sku.product.file_url}"'
         f' target="_blank" rel="noopener">Open</a>'
     )
 
@@ -71,7 +71,7 @@ def _invoice_download(invoice: Invoice) -> Markup:
         order_id=invoice.order_id,
         invoice_id=invoice.id,
     )
-    return Markup(f'<a class="btn btn-sm btn-secondary" href="{url}">Download</a>')
+    return Markup(f'<a class="btn btn-sm btn-primary" href="{url}">Download</a>')
 
 
 def _refund_download(refund: Refund) -> Markup:
@@ -80,7 +80,7 @@ def _refund_download(refund: Refund) -> Markup:
         order_id=refund.order_id,
         refund_id=refund.id,
     )
-    return Markup(f'<a class="btn btn-sm btn-secondary" href="{url}">Download</a>')
+    return Markup(f'<a class="btn btn-sm btn-primary" href="{url}">Download</a>')
 
 
 def _link(url: str | None) -> Markup:

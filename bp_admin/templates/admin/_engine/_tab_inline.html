@@ -8,7 +8,7 @@
             {{ action_button(view, obj, action) }}
         {% endfor %}
         {% if tab.show_add %}
-            <button class="btn btn-success"
+            <button class="btn btn-primary"
                     type="button"
                     data-bs-toggle="modal"
                     data-bs-target="#{{ tab.add_modal_id }}">
@@ -17,7 +17,7 @@
             </button>
         {% endif %}
         {% if tab.show_save %}
-            <button class="btn btn-primary"
+            <button class="btn btn-warning"
                     type="submit"
                     form="{{ tab.form_id }}"
                     name="_op"

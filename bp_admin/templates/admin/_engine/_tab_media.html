@@ -1,14 +1,14 @@
 {% set tab_action = view.url('tab', id_=obj.id, tab_key=tab.key) %}
 
 <div class="d-flex flex-wrap justify-content-end gap-2 mb-3">
-    <button class="btn btn-success"
+    <button class="btn btn-primary"
             type="button"
             data-bs-toggle="modal"
             data-bs-target="#{{ tab.add_modal_id }}">
         Add
         <i class="bi bi-plus-square ms-1"></i>
     </button>
-    <button class="btn btn-primary"
+    <button class="btn btn-warning"
             type="submit"
             form="{{ tab.form_id }}"
             name="_op"
@@ -89,7 +89,7 @@
                 <input required multiple class="form-control" type="file" name="file">
             </div>
             <div class="modal-footer">
-                <button class="btn btn-success" type="submit" name="_op" value="{{ Op.ADD }}">Add</button>
+                <button class="btn btn-primary" type="submit" name="_op" value="{{ Op.ADD }}">Add</button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
             </div>
         </form>

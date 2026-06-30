@@ -52,7 +52,7 @@ class ProductHtmlField(HtmlField):
 
 def _option_view(option_id: int) -> Markup:
     return Markup(
-        f'<a class="btn btn-sm btn-secondary" '
+        f'<a class="btn btn-sm btn-primary" '
         f'href="/admin/product_options/{option_id}">View</a>'
     )
 

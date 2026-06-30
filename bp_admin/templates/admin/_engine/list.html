@@ -9,7 +9,7 @@
                 <h2 class="mb-0">{{ view.name_plural }}</h2>
                 <div class="btn-toolbar flex-wrap gap-2">
                     {% if view.can_create %}
-                        <button class="btn btn-success"
+                        <button class="btn btn-primary"
                                 type="button"
                                 data-bs-toggle="modal"
                                 data-bs-target="#modal-create">
@@ -18,7 +18,7 @@
                         </button>
                     {% endif %}
                     {% if view.searchable or view.filters %}
-                        <button class="btn btn-secondary"
+                        <button class="btn btn-primary"
                                 type="button"
                                 data-bs-toggle="collapse"
                                 data-bs-target="#search">
@@ -27,7 +27,7 @@
                         </button>
                     {% endif %}
                     {% if view.has_bulk_edit %}
-                        <button class="btn btn-primary"
+                        <button class="btn btn-warning"
                                 type="submit"
                                 form="bulk-form"
                                 name="_op"
@@ -145,7 +145,7 @@
                                     {% endfor %}
                                     {% if view.has_detail %}
                                         <td class="text-end">
-                                            <a class="btn btn-sm btn-secondary"
+                                            <a class="btn btn-sm btn-primary"
                                                href="{{ view.url('detail', id_=obj.id) }}">View</a>
                                         </td>
                                     {% endif %}
