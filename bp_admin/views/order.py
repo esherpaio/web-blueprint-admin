@@ -3,6 +3,7 @@
 from decimal import Decimal
 
 from markupsafe import Markup
+from sqlalchemy import or_
 from sqlalchemy.orm import Session, joinedload
 from web.api.utils.mollie import Mollie
 from web.app.urls import url_for
@@ -17,18 +18,18 @@ from web.database.model import (
     Shipment,
     Shipping,
 )
+from web.locale import current_locale
 from web.mail import mail
 from web.mail.enum import MailEvent
+from web.utils.generators import format_decimal
 
 from bp_admin.core import (
     Action,
     CellFormat,
     Column,
     DecimalField,
-    DetailRow,
-    DetailSection,
-    DetailTab,
-    Filter,
+    DisplayField,
+    FormTab,
     InlineTableTab,
     ModelView,
     SelectField,
@@ -86,6 +87,28 @@ def _link(url: str | None) -> Markup:
     if not url:
         return Markup("")
     return Markup(f'<a href="{url}" target="_blank" rel="noopener">{url}</a>')
+
+
+def _money(value: Decimal | None, currency: str | None) -> str:
+    if value is None:
+        return ""
+    return f"{format_decimal(value)} {currency or ''}".strip()
+
+
+def _address_lines(address, *, with_vat: bool = False) -> str:
+    lines = [
+        f"{address.first_name} {address.last_name}".strip(),
+        address.address,
+        f"{address.zip_code} {address.city}".strip(),
+        address.state,
+        address.country.name if address.country else None,
+        address.email,
+        address.phone,
+        address.company,
+    ]
+    if with_vat:
+        lines.append(getattr(address, "vat", None))
+    return "\n".join(line for line in lines if line)
 
 
 def _update_status(s: Session, order: Order, data: dict) -> None:
@@ -156,13 +179,7 @@ class OrderView(ModelView):
     order_by = [Order.id.desc()]
     can_edit = True
 
-    filters = [
-        Filter(
-            "status_id",
-            "Status",
-            choices=lambda s: [(st.id, st.name) for st in s.query(OrderStatus).all()],
-        )
-    ]
+    searchable = ["billing.full_name", "shipment.url", "status.name"]
 
     columns = [
         Column("id", "ID"),
@@ -187,6 +204,7 @@ class OrderView(ModelView):
             fields=[StringField("url", "Tracking URL", readonly=False)],
             style="warning",
             visible=lambda o: not o.is_pending,
+            tab="shipments",
         ),
         Action(
             "cancel",
@@ -203,90 +221,43 @@ class OrderView(ModelView):
             fields=[DecimalField("total_price", readonly=False)],
             style="warning",
             visible=lambda o: o.is_refundable,
+            tab="refunds",
         ),
     ]
 
     tabs = [
-        DetailTab(
+        FormTab(
             "Details",
             [
-                DetailSection(
-                    "Details",
-                    [
-                        DetailRow("Order ID", "id"),
-                        DetailRow(
-                            "Timestamp",
-                            "created_at",
-                            format=CellFormat.DATETIME,
-                        ),
-                        DetailRow("Status", "status.name", spaced=True),
-                        DetailRow("Shipment", "shipment_name"),
-                        DetailRow(
-                            "Shipment price",
-                            "shipment_price",
-                            format=CellFormat.PRICE,
-                            suffix=lambda o: o.currency_code,
-                            spaced=True,
-                        ),
-                        DetailRow("Coupon", "coupon_code"),
-                        DetailRow(
-                            "Discount",
-                            "discount_price",
-                            format=CellFormat.PRICE,
-                            suffix=lambda o: o.currency_code,
-                            spaced=True,
-                        ),
-                        DetailRow("VAT rate", "vat_percentage", suffix="%"),
-                        DetailRow(
-                            "Total price",
-                            "total_price",
-                            format=CellFormat.PRICE,
-                            suffix=lambda o: o.currency_code,
-                        ),
-                    ],
+                DisplayField("Order ID", "id"),
+                DisplayField(
+                    "Timestamp",
+                    "created_at",
+                    format=lambda d: current_locale.format_datetime(d),
                 ),
-                DetailSection(
-                    "Shipping",
-                    [
-                        DetailRow(
-                            "",
-                            lambda o: f"{o.shipping.first_name} {o.shipping.last_name}",
-                        ),
-                        DetailRow("", "shipping.address"),
-                        DetailRow(
-                            "",
-                            lambda o: f"{o.shipping.zip_code} {o.shipping.city}",
-                        ),
-                        DetailRow("", "shipping.state", optional=True),
-                        DetailRow("", "shipping.country.name", spaced=True),
-                        DetailRow("", "shipping.email"),
-                        DetailRow("", "shipping.phone", optional=True),
-                        DetailRow("", "shipping.company", optional=True),
-                    ],
-                    width="col-12 col-lg-3",
-                    layout="lines",
+                DisplayField("Status", "status.name"),
+                DisplayField("Shipment", "shipment_name"),
+                DisplayField(
+                    "Shipment price",
+                    lambda o: _money(o.shipment_price, o.currency_code),
                 ),
-                DetailSection(
+                DisplayField("Coupon", "coupon_code"),
+                DisplayField(
+                    "Discount",
+                    lambda o: _money(o.discount_price, o.currency_code),
+                ),
+                DisplayField("VAT rate", "vat_percentage", suffix="%"),
+                DisplayField(
+                    "Total price",
+                    lambda o: _money(o.total_price, o.currency_code),
+                ),
+                DisplayField(
+                    "Shipping", lambda o: _address_lines(o.shipping), multiline=True
+                ),
+                DisplayField(
                     "Billing",
-                    [
-                        DetailRow(
-                            "",
-                            lambda o: f"{o.billing.first_name} {o.billing.last_name}",
-                        ),
-                        DetailRow("", "billing.address"),
-                        DetailRow(
-                            "",
-                            lambda o: f"{o.billing.zip_code} {o.billing.city}",
-                        ),
-                        DetailRow("", "billing.state", optional=True),
-                        DetailRow("", "billing.country.name", spaced=True),
-                        DetailRow("", "billing.email"),
-                        DetailRow("", "billing.phone", optional=True),
-                        DetailRow("", "billing.company", optional=True),
-                        DetailRow("", "billing.vat", optional=True),
-                    ],
-                    width="col-12 col-lg-3",
-                    layout="lines",
+                    lambda o: _address_lines(o.billing, with_vat=True),
+                    multiline=True,
                 ),
             ],
             key="details",
@@ -366,6 +337,25 @@ class OrderView(ModelView):
             )
             .filter(Order.id == id_)
             .first()
+        )
+
+    def apply_search(self, query, search):
+        if not search:
+            return query
+        like = f"%{search}%"
+        return (
+            query.outerjoin(Order.billing)
+            .outerjoin(Order.shipments)
+            .outerjoin(Order.status)
+            .filter(
+                or_(
+                    Billing.first_name.ilike(like),
+                    Billing.last_name.ilike(like),
+                    Shipment.url.ilike(like),
+                    OrderStatus.name.ilike(like),
+                )
+            )
+            .distinct()
         )
 
     def title(self, obj) -> str:

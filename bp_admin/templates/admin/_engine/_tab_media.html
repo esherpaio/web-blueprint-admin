@@ -32,28 +32,29 @@
                 <input type="hidden"
                        name="{{ tab.order_input_name(media.id) }}"
                        value="{{ media[tab.order_field] if media[tab.order_field] is not none }}">
-                <div class="card h-100">
-                    <div class="d-flex align-items-center justify-content-between border-bottom px-2 py-1">
-                        <i class="bi bi-grip-vertical text-muted"
-                           data-drag-handle
-                           style="cursor:grab"></i>
-                        {% if tab.can_delete %}
-                            <div class="form-check m-0">
-                                <input class="form-check-input"
-                                       type="checkbox"
-                                       name="select"
-                                       value="{{ media.id }}">
-                                <label class="form-check-label small">Select</label>
-                            </div>
-                        {% endif %}
-                    </div>
+                <div class="card h-100 position-relative">
+                    {% if tab.can_delete %}
+                        <input class="form-check-input position-absolute top-0 start-0 m-2 shadow-sm"
+                               style="z-index:2"
+                               type="checkbox"
+                               name="select"
+                               value="{{ media.id }}"
+                               aria-label="Select media">
+                    {% endif %}
                     {% if file and file.is_image %}
                         <img class="card-img-top bg-light border-bottom"
                              src="{{ cdn_url(file.path) }}?class=medium"
                              alt="{{ file.description if file.description }}"
-                             loading="lazy">
+                             loading="lazy"
+                             draggable="false"
+                             data-drag-handle
+                             style="cursor:grab">
                     {% elif file and file.is_video %}
-                        <video controls muted class="card-img-top bg-light border-bottom">
+                        <video controls
+                               muted
+                               class="card-img-top bg-light border-bottom"
+                               data-drag-handle
+                               style="cursor:grab">
                             <source src="{{ cdn_url(file.path) }}">
                         </video>
                     {% endif %}

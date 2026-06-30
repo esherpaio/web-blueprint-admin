@@ -198,6 +198,7 @@ class SelectField(Field):
         *,
         label_attr: str = "name",
         value_attr: str = "id",
+        label_fn: Callable[[Any], str] | None = None,
         order_by: Any = None,
         where: Any = None,
         coerce: Callable[[Any], Any] | None = int,
@@ -209,9 +210,12 @@ class SelectField(Field):
                 query = query.filter(where)
             if order_by is not None:
                 query = query.order_by(order_by)
+            rows = query.all()
+            if label_fn is not None:
+                return [(getattr(row, value_attr), label_fn(row)) for row in rows]
             return [
                 (getattr(row, value_attr), str(getattr(row, label_attr)))
-                for row in query.all()
+                for row in rows
             ]
 
         return cls(name, choices=provider, coerce=coerce, **kwargs)
@@ -250,6 +254,51 @@ class DateTimeField(Field):
 
 class HiddenField(Field):
     input_type = InputType.HIDDEN
+
+
+def resolve_path(obj: Any, path: str) -> Any:
+    value = obj
+    for part in path.split("."):
+        if value is None:
+            return None
+        value = getattr(value, part, None)
+    return value
+
+
+class DisplayField(Field):
+    """Read-only field that renders a computed or dotted-path value.
+
+    ``value`` is either a dotted attribute path (e.g. ``"status.name"``) or a
+    callable receiving the object. ``format`` optionally post-processes the
+    resolved value in Python, ``suffix`` appends a static unit, and
+    ``multiline`` renders a (read-only) textarea so long values wrap.
+    """
+
+    def __init__(
+        self,
+        label: str,
+        value: str | Callable[[Any], Any],
+        *,
+        suffix: str | None = None,
+        format: Callable[[Any], Any] | None = None,
+        multiline: bool = False,
+        rows: int = 8,
+    ) -> None:
+        name = value if isinstance(value, str) else label.lower().replace(" ", "_")
+        super().__init__(name, label, readonly=True, suffix=suffix)
+        self._value = value
+        self._format = format
+        self.input_type = InputType.TEXTAREA if multiline else InputType.TEXT
+        self.rows = rows
+
+    def value_from_obj(self, obj: Any) -> Any:
+        if callable(self._value):
+            raw = self._value(obj)
+        else:
+            raw = resolve_path(obj, self._value)
+        if self._format is not None and raw is not None:
+            return self._format(raw)
+        return raw
 
 
 class JsonAttributesField(Field):

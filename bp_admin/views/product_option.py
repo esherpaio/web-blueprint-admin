@@ -14,6 +14,11 @@ from bp_admin.core import (
 )
 
 
+def _media_label(media: ProductMedia) -> str:
+    description = media.file_.description if media.file_ else None
+    return f"#{media.id} {description}".strip() if description else f"#{media.id}"
+
+
 class ProductOptionView(CachedModelView):
     model = ProductOption
     name = "Option"
@@ -39,7 +44,10 @@ class ProductOptionView(CachedModelView):
                     "Media",
                     editable=True,
                     field=SelectField.from_model(
-                        "media_id", ProductMedia, label_attr="id", label="Media"
+                        "media_id",
+                        ProductMedia,
+                        label="Media",
+                        label_fn=_media_label,
                     ),
                 ),
             ],

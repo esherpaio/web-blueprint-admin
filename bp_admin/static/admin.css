@@ -63,4 +63,16 @@ table td {
 
 [data-html-editor] {
     min-height: 300px;
+    max-width: 100%;
+}
+
+.ql-editor {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.ql-snow .ql-tooltip {
+    max-width: calc(100% - 1rem);
+    white-space: normal;
+    overflow-wrap: anywhere;
 }

@@ -1,23 +1,7 @@
+{% from "admin/_engine/_macros.html" import action_button %}
+
 {% for action in view.actions %}
-    {% if (action.tab is none or action.tab == active_tab) and action.is_visible(obj) %}
-        {% if action.fields %}
-            <button class="btn btn-{{ action.style }}"
-                    type="button"
-                    data-bs-toggle="modal"
-                    data-bs-target="#{{ action.modal_id }}">
-                {% if action.icon %}<i class="bi {{ action.icon }} me-1"></i>{% endif %}
-                {{ action.label }}
-            </button>
-        {% else %}
-            <form method="post"
-                  action="{{ view.url('action', id_=obj.id, name=action.name) }}">
-                <button class="btn btn-{{ action.style }}"
-                        type="submit"
-                        {% if action.confirm %}data-confirm="{{ action.confirm }}"{% endif %}>
-                    {% if action.icon %}<i class="bi {{ action.icon }} me-1"></i>{% endif %}
-                    {{ action.label }}
-                </button>
-            </form>
-        {% endif %}
+    {% if action.tab is none and action.is_visible(obj) %}
+        {{ action_button(view, obj, action) }}
     {% endif %}
 {% endfor %}

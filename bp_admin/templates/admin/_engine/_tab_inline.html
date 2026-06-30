@@ -1,9 +1,12 @@
-{% from "admin/_engine/_macros.html" import cell_input, display_cell, form_modal %}
+{% from "admin/_engine/_macros.html" import cell_input, display_cell, form_modal, action_button %}
 
 {% set tab_action = view.url('tab', id_=obj.id, tab_key=tab.key) %}
 
-{% if tab.show_toolbar %}
+{% if tab.show_toolbar or tab_ctx.actions %}
     <div class="d-flex flex-wrap justify-content-end gap-2 mb-3">
+        {% for action in tab_ctx.actions %}
+            {{ action_button(view, obj, action) }}
+        {% endfor %}
         {% if tab.show_add %}
             <button class="btn btn-success"
                     type="button"
