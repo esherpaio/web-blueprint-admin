@@ -1,11 +1,3 @@
-"""Custom row actions for the declarative admin engine.
-
-An :class:`Action` is a button (optionally opening a modal with a small form)
-that runs server-side logic against a single object, e.g. "Update status",
-"Add shipment" or "Create refund" on an order. It mirrors the existing custom
-admin buttons but in a declarative, reusable way.
-"""
-
 from typing import Any, Callable
 
 from sqlalchemy.orm.session import Session

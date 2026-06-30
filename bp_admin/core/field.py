@@ -1,16 +1,3 @@
-"""Form fields for the declarative admin engine.
-
-A :class:`Field` is a small, declarative description of a single editable value.
-It knows three things:
-
-* how to read its current value from a model instance (:meth:`value_from_obj`),
-* how to coerce a raw submitted value into a Python value (:meth:`parse`),
-* enough metadata for the macros in ``_macros.html`` to render the input.
-
-Rendering itself lives in the templates; fields stay logic-only so they remain
-easy to test and reason about.
-"""
-
 import json
 from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
@@ -24,14 +11,21 @@ Choice = tuple[Any, str]
 ChoiceProvider = Sequence[Choice] | Callable[[Session], Sequence[Choice]]
 
 
+def resolve_path(obj: Any, path: str) -> Any:
+    value = obj
+    for part in path.split("."):
+        if value is None:
+            return None
+        value = getattr(value, part, None)
+    return value
+
+
 def default_label(name: str) -> str:
     base = name[:-3] if name.endswith("_id") else name
     return base.replace("_", " ").strip().capitalize()
 
 
 class Field:
-    """Base field. Renders as a single-line text input by default."""
-
     input_type = InputType.TEXT
 
     def __init__(
@@ -256,15 +250,6 @@ class HiddenField(Field):
     input_type = InputType.HIDDEN
 
 
-def resolve_path(obj: Any, path: str) -> Any:
-    value = obj
-    for part in path.split("."):
-        if value is None:
-            return None
-        value = getattr(value, part, None)
-    return value
-
-
 class DisplayField(Field):
     """Read-only field that renders a computed or dotted-path value.
 
@@ -302,13 +287,6 @@ class DisplayField(Field):
 
 
 class JsonAttributesField(Field):
-    """Editor for a JSONB ``attributes`` column.
-
-    Renders the dict as typed key/value rows. Supported value types: ``text``,
-    ``integer``, ``float``, ``boolean``, ``timestamp``, ``list`` and ``dict``.
-    Lists are entered one item per line; dicts as JSON.
-    """
-
     input_type = InputType.ATTRIBUTES
 
     VALUE_TYPES = (

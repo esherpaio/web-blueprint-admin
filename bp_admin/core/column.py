@@ -1,9 +1,3 @@
-"""List-table columns for the declarative admin engine.
-
-A :class:`Column` describes one cell in a list/inline table. It can be a plain
-read-only display cell or an inline-editable cell backed by a :class:`Field`.
-"""
-
 from typing import Any, Callable
 
 from .field import Field, StringField, default_label
@@ -23,13 +17,6 @@ def row_input_name(row_id: Any, name: str) -> str:
 
 
 class Column:
-    """A single list-table column.
-
-    ``format`` is either one of the names understood by ``display_cell``
-    (``"price"``, ``"datetime"``, ``"bool"``) or a callable that turns the raw
-    value into a display value.
-    """
-
     def __init__(
         self,
         name: str,

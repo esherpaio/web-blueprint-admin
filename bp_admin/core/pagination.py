@@ -1,10 +1,3 @@
-"""Pagination helper for engine list pages.
-
-Turns an offset/limit/total into a compact list of page descriptors the list
-template renders as Bootstrap pagination, with first/last shortcuts and an
-ellipsis when the current window is far from an edge.
-"""
-
 import math
 from typing import Any
 

@@ -15,10 +15,6 @@ from bp_admin.core import (
 )
 
 
-def _media_label(media: ProductMedia) -> str:
-    return media.file_.description
-
-
 class ProductOptionView(CachedModelView):
     model = ProductOption
     name = "Option"

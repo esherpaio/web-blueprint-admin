@@ -1,10 +1,3 @@
-"""The :class:`AdminSite` registry.
-
-Holds the registered :class:`ModelView` instances plus any manual links to
-fully-custom pages, generates the Flask URL rules for each view, and builds the
-sidebar menu (including dropdown groups) exposed to templates.
-"""
-
 from typing import Any, Callable
 
 from flask import Blueprint, request

@@ -1,14 +1,3 @@
-"""Detail-page tabs for the declarative admin engine.
-
-Detail/edit pages are composed from declarative tabs so a page can mix regular
-forms, editable child tables and fully custom layouts (e.g. a media gallery):
-
-* :class:`FormTab` edits fields on the object itself.
-* :class:`InlineTableTab` manages child rows related by a foreign key.
-* :class:`MediaTab` uploads files to the CDN and edits the resulting gallery.
-* :class:`TemplateTab` renders an author-supplied template for custom content.
-"""
-
 import os
 import re
 from typing import Any, Callable
@@ -50,14 +39,17 @@ class Tab:
         return {}
 
     def handle_post(
-        self, view: Any, s: Session, obj: Any, form: Any, files: Any
+        self,
+        view: Any,
+        s: Session,
+        obj: Any,
+        form: Any,
+        files: Any,
     ) -> None:
         pass
 
 
 class FormTab(Tab):
-    """Edit a set of fields directly on the object."""
-
     template = "admin/_engine/_tab_form.html"
 
     def __init__(
@@ -78,7 +70,12 @@ class FormTab(Tab):
         return {"fields": self.fields, "choices": resolve_choices(s, self.fields)}
 
     def handle_post(
-        self, view: Any, s: Session, obj: Any, form: Any, files: Any
+        self,
+        view: Any,
+        s: Session,
+        obj: Any,
+        form: Any,
+        files: Any,
     ) -> None:
         apply_fields(obj, self.fields, form, files)
         s.flush()
@@ -86,8 +83,6 @@ class FormTab(Tab):
 
 
 class InlineTableTab(Tab):
-    """A bulk-editable table of child rows related to the parent by ``fk``."""
-
     template = "admin/_engine/_tab_inline.html"
 
     def __init__(
@@ -173,7 +168,12 @@ class InlineTableTab(Tab):
         }
 
     def handle_post(
-        self, view: Any, s: Session, obj: Any, form: Any, files: Any
+        self,
+        view: Any,
+        s: Session,
+        obj: Any,
+        form: Any,
+        files: Any,
     ) -> None:
         op = form.get("_op")
         if op == Op.ADD and self.can_create:
@@ -203,13 +203,6 @@ class InlineTableTab(Tab):
 
 
 class MediaTab(Tab):
-    """Upload files to the CDN and manage the resulting gallery.
-
-    Each row links a parent (via ``fk``) to a :class:`File` through ``file_rel``.
-    Uploaded files are stored under ``path_prefix(parent)`` and typed from their
-    extension; rows are reorderable and carry an editable file description.
-    """
-
     template = "admin/_engine/_tab_media.html"
 
     def __init__(
@@ -253,7 +246,12 @@ class MediaTab(Tab):
         return {"tab": self, "rows": self.base_query(s, obj).all()}
 
     def handle_post(
-        self, view: Any, s: Session, obj: Any, form: Any, files: Any
+        self,
+        view: Any,
+        s: Session,
+        obj: Any,
+        form: Any,
+        files: Any,
     ) -> None:
         op = form.get("_op")
         if op == Op.ADD:
@@ -363,7 +361,12 @@ class TemplateTab(Tab):
         return {"user_template": self.user_template, **extra}
 
     def handle_post(
-        self, view: Any, s: Session, obj: Any, form: Any, files: Any
+        self,
+        view: Any,
+        s: Session,
+        obj: Any,
+        form: Any,
+        files: Any,
     ) -> None:
         if self._handler is not None:
             self._handler(s, obj, form, files)

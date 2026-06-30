@@ -1,5 +1,3 @@
-"""Shared persistence helpers for the declarative admin engine."""
-
 from typing import Any, Iterable
 
 from sqlalchemy.orm.session import Session

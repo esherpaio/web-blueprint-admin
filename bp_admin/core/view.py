@@ -1,10 +1,3 @@
-"""The declarative :class:`ModelView` — the heart of the admin engine.
-
-Subclass it per model to describe a list page (optionally bulk-editable), a
-modal create form, a tabbed detail/edit page and custom actions. The engine
-turns that description into routes, queries and Bootstrap templates.
-"""
-
 from typing import TYPE_CHECKING, Any
 
 import requests
@@ -60,7 +53,7 @@ class ModelView:
     # Menu placement
     icon: str | None = None
     menu_group: str | None = None
-    menu_section: MenuSection = MenuSection.MAIN
+    menu_section: MenuSection = MenuSection.TOP
     order: int = 100
 
     # List page
@@ -215,8 +208,6 @@ class CachedModelView(ModelView):
 
 
 class SingletonView(ModelView):
-    """A view that edits a single row (e.g. app settings) — no list, no create."""
-
     singleton = True
     can_edit = True
 

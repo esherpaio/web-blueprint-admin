@@ -1,19 +1,12 @@
-"""HTTP handlers for the declarative admin engine.
-
-Each function returns a Flask response. The pattern throughout is
-Post/Redirect/Get on success, and *re-render in place* on failure so the user
-never loses what they typed (no flash, no forced reload that drops form data).
-Templates are rendered inside the open session because models are loaded lazily.
-"""
-
 from typing import Any
 
-from flask import abort, render_template, request
+from flask import abort, redirect, render_template, request
 from psycopg2.errors import ForeignKeyViolation, NotNullViolation, UniqueViolation
 from sqlalchemy.exc import IntegrityError
 from web.app.urls import url_for
 from web.database import conn
 from web.error import WebError
+from web.i18n import _
 from werkzeug import Response
 
 from .enums import Notice, Op
@@ -24,12 +17,19 @@ from .view import ModelView
 WriteError = (WebError, IntegrityError)
 
 
+def _redirect(endpoint: str, **values: Any) -> Response:
+    return redirect(url_for(endpoint, **values))
+
+
+#
+# Notices
+#
+
+
 def error_message(error: Exception) -> str:
     if isinstance(error, WebError):
         if error.translation_key is not None:
             try:
-                from web.i18n import _
-
                 return _(error.translation_key, **error.translation_kwargs)
             except Exception:
                 pass
@@ -216,10 +216,6 @@ def create_endpoint(view: ModelView) -> Response | str:
 #
 
 
-def detail_endpoint(view: ModelView, id_: Any) -> str | Response:
-    return render_detail(view, id_)
-
-
 def singleton_endpoint(view: ModelView) -> Response:
     with conn.begin() as s:
         obj = view.get_query(s).first()
@@ -227,6 +223,10 @@ def singleton_endpoint(view: ModelView) -> Response:
     if id_ is None:
         abort(404)
     return _redirect(f"admin.{view.endpoint}_detail", id_=id_)
+
+
+def detail_endpoint(view: ModelView, id_: Any) -> str | Response:
+    return render_detail(view, id_)
 
 
 def tab_endpoint(view: ModelView, id_: Any, tab_key: str) -> Response | str:
@@ -277,9 +277,3 @@ def delete_endpoint(view: ModelView, id_: Any) -> Response:
     except WriteError:
         return _redirect(f"admin.{view.endpoint}_detail", id_=id_, saved=Notice.ERROR)
     return _redirect(f"admin.{view.endpoint}", saved=Notice.DELETED)
-
-
-def _redirect(endpoint: str, **values: Any) -> Response:
-    from flask import redirect
-
-    return redirect(url_for(endpoint, **values))
