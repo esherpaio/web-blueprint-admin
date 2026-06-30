@@ -25,12 +25,14 @@ from bp_admin.core import (
     CellFormat,
     Column,
     DecimalField,
+    DetailRow,
+    DetailSection,
+    DetailTab,
     Filter,
     InlineTableTab,
     ModelView,
     SelectField,
     StringField,
-    TemplateTab,
 )
 
 _STATUS_COLOR = {
@@ -88,10 +90,6 @@ def _link(url: str | None) -> Markup:
     if not url:
         return Markup("")
     return Markup(f'<a href="{url}" target="_blank" rel="noopener">{url}</a>')
-
-
-def _overview_context(s: Session, order: Order) -> dict:
-    return {"order": order, "order_status_color_map": _STATUS_COLOR}
 
 
 def _update_status(s: Session, order: Order, data: dict) -> None:
@@ -213,11 +211,91 @@ class OrderView(ModelView):
     ]
 
     tabs = [
-        TemplateTab(
+        DetailTab(
             "Details",
-            "admin/custom/order_detail.html",
+            [
+                DetailSection(
+                    "Details",
+                    [
+                        DetailRow("Order ID", "id"),
+                        DetailRow(
+                            "Created at", "created_at", format=CellFormat.DATETIME
+                        ),
+                        DetailRow(
+                            "Status",
+                            lambda o: _status_badge(o.status),
+                            spaced=True,
+                        ),
+                        DetailRow("Shipment", "shipment_name"),
+                        DetailRow(
+                            "Shipment price",
+                            "shipment_price",
+                            format=CellFormat.PRICE,
+                            suffix=lambda o: o.currency_code,
+                            spaced=True,
+                        ),
+                        DetailRow("Coupon", "coupon_code"),
+                        DetailRow(
+                            "Discount",
+                            "discount_price",
+                            format=CellFormat.PRICE,
+                            suffix=lambda o: o.currency_code,
+                            spaced=True,
+                        ),
+                        DetailRow("VAT rate", "vat_percentage", suffix="%"),
+                        DetailRow(
+                            "Total price",
+                            "total_price",
+                            format=CellFormat.PRICE,
+                            suffix=lambda o: o.currency_code,
+                        ),
+                    ],
+                ),
+                DetailSection(
+                    "Shipping",
+                    [
+                        DetailRow(
+                            "",
+                            lambda o: f"{o.shipping.first_name} {o.shipping.last_name}",
+                        ),
+                        DetailRow("", "shipping.address"),
+                        DetailRow(
+                            "",
+                            lambda o: f"{o.shipping.zip_code} {o.shipping.city}",
+                        ),
+                        DetailRow("", "shipping.state", optional=True),
+                        DetailRow("", "shipping.country.name", spaced=True),
+                        DetailRow("", "shipping.email"),
+                        DetailRow("", "shipping.phone", optional=True),
+                        DetailRow("", "shipping.company", optional=True),
+                    ],
+                    width="col-12 col-lg-3",
+                    layout="lines",
+                ),
+                DetailSection(
+                    "Billing",
+                    [
+                        DetailRow(
+                            "",
+                            lambda o: f"{o.billing.first_name} {o.billing.last_name}",
+                        ),
+                        DetailRow("", "billing.address"),
+                        DetailRow(
+                            "",
+                            lambda o: f"{o.billing.zip_code} {o.billing.city}",
+                        ),
+                        DetailRow("", "billing.state", optional=True),
+                        DetailRow("", "billing.country.name", spaced=True),
+                        DetailRow("", "billing.email"),
+                        DetailRow("", "billing.phone", optional=True),
+                        DetailRow("", "billing.company", optional=True),
+                        DetailRow("", "billing.vat", optional=True),
+                    ],
+                    width="col-12 col-lg-3",
+                    layout="lines",
+                ),
+            ],
             key="details",
-            context=_overview_context,
         ),
         InlineTableTab(
             "Items",

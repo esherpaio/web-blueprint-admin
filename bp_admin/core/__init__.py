@@ -24,5 +24,14 @@ from .field import (
 )
 from .pagination import get_pages
 from .site import AdminSite
-from .tab import FormTab, InlineTableTab, MediaTab, Tab, TemplateTab
+from .tab import (
+    DetailRow,
+    DetailSection,
+    DetailTab,
+    FormTab,
+    InlineTableTab,
+    MediaTab,
+    Tab,
+    TemplateTab,
+)
 from .view import CachedModelView, Filter, MarkdownView, ModelView, SingletonView

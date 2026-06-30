@@ -6,6 +6,7 @@ forms, editable child tables and fully custom layouts (e.g. a media gallery):
 * :class:`FormTab` edits fields on the object itself.
 * :class:`InlineTableTab` manages child rows related by a foreign key.
 * :class:`MediaTab` uploads files to the CDN and edits the resulting gallery.
+* :class:`DetailTab` shows read-only key/value sections in cards.
 * :class:`TemplateTab` renders an author-supplied template for custom content.
 """
 
@@ -19,7 +20,7 @@ from web.database.model import File, FileTypeId
 from web.setup import config
 from werkzeug.utils import secure_filename
 
-from .column import Column, row_input_name
+from .column import Column, getattr_path, row_input_name
 from .enums import Op
 from .field import Field
 from .util import (
@@ -366,3 +367,73 @@ class TemplateTab(Tab):
         if self._handler is not None:
             self._handler(s, obj, form, files)
         view.after_write(s, obj)
+
+
+class DetailRow:
+    """A single read-only value (optionally labelled) within a :class:`DetailSection`."""
+
+    def __init__(
+        self,
+        label: str,
+        value: str | Callable[[Any], Any],
+        *,
+        format: str | Callable[[Any], Any] | None = None,
+        suffix: str | Callable[[Any], Any] | None = None,
+        spaced: bool = False,
+        optional: bool = False,
+    ) -> None:
+        self.label = label
+        self.value = value
+        self.format = format
+        self.suffix = suffix
+        self.spaced = spaced
+        self.optional = optional
+
+    @property
+    def format_name(self) -> str | None:
+        return self.format if isinstance(self.format, str) else None
+
+    def display(self, obj: Any) -> Any:
+        raw = self.value(obj) if callable(self.value) else getattr_path(obj, self.value)
+        if callable(self.format):
+            return self.format(raw)
+        return raw
+
+    def suffix_for(self, obj: Any) -> Any:
+        return self.suffix(obj) if callable(self.suffix) else self.suffix
+
+
+class DetailSection:
+    """A titled card holding read-only rows on the object.
+
+    The ``layout`` is either ``"pairs"`` (two columns of labels and values) or
+    ``"lines"`` (a single column of stacked values without labels).
+    """
+
+    def __init__(
+        self,
+        title: str,
+        rows: list[DetailRow],
+        *,
+        width: str = "col-12 col-lg-6",
+        layout: str = "pairs",
+    ) -> None:
+        self.title = title
+        self.rows = rows
+        self.width = width
+        self.layout = layout
+
+
+class DetailTab(Tab):
+    """Read-only overview of an object rendered as titled key/value cards."""
+
+    template = "admin/_engine/_tab_detail.html"
+
+    def __init__(
+        self, label: str, sections: list[DetailSection], *, key: str | None = None
+    ) -> None:
+        super().__init__(label, key)
+        self.sections = sections
+
+    def context(self, view: Any, s: Session, obj: Any) -> dict[str, Any]:
+        return {"tab": self}

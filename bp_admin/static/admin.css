@@ -18,12 +18,6 @@ table td {
     display: none;
 }
 
-/* spacing */
-
-.w-fit {
-    width: fit-content;
-}
-
 /* offcanvas */
 
 .offcanvas {
