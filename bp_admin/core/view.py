@@ -1,7 +1,7 @@
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import requests
-from flask import Blueprint, render_template
+from flask import render_template
 from sqlalchemy import or_
 from sqlalchemy.orm.session import Session
 from web.app.urls import url_for
@@ -10,37 +10,11 @@ from web.utils.markdown import Markdown
 
 from .action import Action
 from .column import Column, row_input_name
+from .db import apply_fields, supports_soft_delete
 from .enums import MenuSection
-from .field import Field, default_label
+from .field import Field
+from .menu import NavSource
 from .tab import Tab
-from .util import apply_fields, supports_soft_delete
-
-if TYPE_CHECKING:
-    from .site import AdminSite
-
-
-class Filter:
-    """A simple equality filter rendered as a ``<select>`` on the list page."""
-
-    def __init__(
-        self,
-        name: str,
-        label: str | None = None,
-        *,
-        choices: Any = (),
-        coerce: Any = int,
-        empty_label: str = "All",
-    ) -> None:
-        self.name = name
-        self.label = label if label is not None else default_label(name)
-        self._choices = choices
-        self.coerce = coerce
-        self.empty_label = empty_label
-
-    def choices(self, s: Session) -> list:
-        if callable(self._choices):
-            return list(self._choices(s))
-        return list(self._choices)
 
 
 class ModelView:
@@ -53,13 +27,12 @@ class ModelView:
     # Menu placement
     icon: str | None = None
     menu_group: str | None = None
-    menu_section: MenuSection = MenuSection.TOP
+    menu_section: MenuSection = MenuSection.MAIN
     order: int = 100
 
     # List page
     columns: list[Column] = []
     searchable: list[str] = []
-    filters: list[Filter] = []
     page_size: int = 40
     order_by: Any = None
     reorderable: bool = False
@@ -99,6 +72,20 @@ class ModelView:
     @property
     def route(self) -> str:
         return f"admin.{self.endpoint}"
+
+    @property
+    def nav_source(self) -> NavSource | None:
+        if self.menu_section is MenuSection.HIDDEN:
+            return None
+        return NavSource(
+            section=self.menu_section,
+            label=self.name_plural or self.name,
+            endpoint=self.route,
+            match=self.route,
+            order=self.order,
+            icon=self.icon,
+            group=self.menu_group,
+        )
 
     def url(self, suffix: str = "", **values: Any) -> str:
         endpoint = self.route if not suffix else f"{self.route}_{suffix}"
@@ -158,18 +145,6 @@ class ModelView:
         ]
         return query.filter(or_(*conditions))
 
-    def apply_filters(self, query: Any, values: dict[str, Any]) -> Any:
-        for filter_ in self.filters:
-            raw = values.get(filter_.name)
-            if raw in (None, ""):
-                continue
-            try:
-                value = filter_.coerce(raw)
-            except (TypeError, ValueError):
-                continue
-            query = query.filter(getattr(self.model, filter_.name) == value)
-        return query
-
     def apply_order(self, query: Any) -> Any:
         if self.order_by is not None:
             if isinstance(self.order_by, (list, tuple)):
@@ -218,7 +193,26 @@ class MarkdownView:
     url: str = ""
     icon: str | None = None
     order: int = 100
-    section: str = "bottom"
+    menu_section: MenuSection = MenuSection.BOTTOM
+    menu_group: str | None = None
+
+    @property
+    def route(self) -> str:
+        return f"admin.{self.endpoint}"
+
+    @property
+    def nav_source(self) -> NavSource | None:
+        if self.menu_section is MenuSection.HIDDEN:
+            return None
+        return NavSource(
+            section=self.menu_section,
+            label=self.label,
+            endpoint=self.route,
+            match=self.route,
+            order=self.order,
+            icon=self.icon,
+            group=self.menu_group,
+        )
 
     def render(self) -> str:
         response = requests.get(self.url)
@@ -230,19 +224,4 @@ class MarkdownView:
             active_menu=self.endpoint,
             page_title=self.label,
             markdown_html=markdown_html,
-        )
-
-    def register(self, bp: Blueprint, site: "AdminSite") -> None:
-        bp.add_url_rule(
-            f"/admin/{self.endpoint}",
-            endpoint=self.endpoint,
-            view_func=self.render,
-            methods=["GET"],
-        )
-        site.add_link(
-            self.label,
-            f"admin.{self.endpoint}",
-            icon=self.icon,
-            order=self.order,
-            section=self.section,
         )

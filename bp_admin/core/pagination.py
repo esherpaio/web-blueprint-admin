@@ -1,10 +1,26 @@
 import math
-from typing import Any
+from dataclasses import dataclass
 
 WINDOW = 3
 
 
-def get_pages(offset: int, limit: int, total: int) -> list[dict[str, Any]]:
+@dataclass
+class Page:
+    number: int
+    label: str
+    active: bool = False
+    disabled: bool = False
+
+    @property
+    def css_class(self) -> str:
+        return " ".join(
+            cls
+            for cls, on in (("disabled", self.disabled), ("active", self.active))
+            if on
+        )
+
+
+def get_pages(offset: int, limit: int, total: int) -> list[Page]:
     if total < 1 or limit < 1:
         return []
 
@@ -12,15 +28,17 @@ def get_pages(offset: int, limit: int, total: int) -> list[dict[str, Any]]:
     last = math.ceil(total / limit)
     window = range(max(current - WINDOW, 1), min(current + WINDOW, last) + 1)
 
-    pages: list[dict[str, Any]] = []
+    pages: list[Page] = []
 
-    def add(number: int, name: str, disabled: bool = False) -> None:
-        classes = " ".join(
-            cls
-            for cls, on in (("disabled", disabled), ("active", number == current))
-            if on
+    def add(number: int, label: str, disabled: bool = False) -> None:
+        pages.append(
+            Page(
+                number=number,
+                label=label,
+                active=number == current,
+                disabled=disabled,
+            )
         )
-        pages.append({"number": number, "name": name, "classes": classes})
 
     if current > 1:
         add(1, "«")

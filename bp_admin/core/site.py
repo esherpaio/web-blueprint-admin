@@ -4,6 +4,7 @@ from flask import Blueprint, request
 
 from . import handlers
 from .enums import CellFormat, InputType, Op
+from .menu import AdminMenu, build_menu
 from .view import MarkdownView, ModelView
 
 
@@ -11,7 +12,6 @@ class AdminSite:
     def __init__(self) -> None:
         self.views: list[ModelView] = []
         self.markdown_views: list[MarkdownView] = []
-        self.links: list[dict[str, Any]] = []
 
     #
     # Registration
@@ -23,32 +23,11 @@ class AdminSite:
         instance = view() if isinstance(view, type) else view
         if isinstance(instance, MarkdownView):
             self.markdown_views.append(instance)
-        else:
+        elif isinstance(instance, ModelView):
             self.views.append(instance)
+        else:
+            raise TypeError(f"Cannot register {type(instance).__name__} on AdminSite")
         return instance
-
-    def add_link(
-        self,
-        label: str,
-        endpoint: str,
-        *,
-        icon: str | None = None,
-        order: int = 100,
-        group: str | None = None,
-        section: str = "main",
-        match: str | None = None,
-    ) -> None:
-        self.links.append(
-            {
-                "label": label,
-                "endpoint": endpoint,
-                "icon": icon,
-                "order": order,
-                "group": group,
-                "section": section,
-                "match": match or endpoint,
-            }
-        )
 
     #
     # Flask wiring
@@ -58,11 +37,19 @@ class AdminSite:
         for view in self.views:
             self._register_view(bp, view)
         for markdown_view in self.markdown_views:
-            markdown_view.register(bp, self)
+            self._register_markdown_view(bp, markdown_view)
         bp.add_app_template_global(Op, "Op")
         bp.add_app_template_global(InputType, "InputType")
         bp.add_app_template_global(CellFormat, "CellFormat")
         bp.context_processor(lambda: {"admin_menu": self.build_menu()})
+
+    def _register_markdown_view(self, bp: Blueprint, view: MarkdownView) -> None:
+        bp.add_url_rule(
+            f"/admin/{view.endpoint}",
+            endpoint=view.endpoint,
+            view_func=view.render,
+            methods=["GET"],
+        )
 
     def _register_view(self, bp: Blueprint, view: ModelView) -> None:
         e = view.endpoint
@@ -170,79 +157,15 @@ class AdminSite:
     # Menu
     #
 
-    def build_menu(self) -> dict[str, list[dict[str, Any]]]:
+    def build_menu(self) -> AdminMenu:
         current = request.endpoint or ""
-        sections: dict[str, dict[str, dict[str, Any]]] = {"main": {}, "bottom": {}}
-        flat: dict[str, list[dict[str, Any]]] = {"main": [], "bottom": []}
-
-        def item_for_view(view: ModelView) -> dict[str, Any]:
-            match = f"admin.{view.endpoint}"
-            return {
-                "type": "link",
-                "label": view.name_plural,
-                "icon": view.icon,
-                "endpoint": match,
-                "match": match,
-                "order": view.order,
-                "active": current.startswith(match),
-            }
-
-        def item_for_link(link: dict[str, Any]) -> dict[str, Any]:
-            return {
-                "type": "link",
-                "label": link["label"],
-                "icon": link["icon"],
-                "endpoint": link["endpoint"],
-                "match": link["match"],
-                "order": link["order"],
-                "active": current.startswith(link["match"]),
-            }
-
-        entries: list[tuple[str, str | None, int, str | None, dict[str, Any]]] = []
+        sources = []
         for view in self.views:
-            entries.append(
-                (
-                    view.menu_section,
-                    view.menu_group,
-                    view.order,
-                    view.icon,
-                    item_for_view(view),
-                )
-            )
-        for link in self.links:
-            entries.append(
-                (
-                    link["section"],
-                    link["group"],
-                    link["order"],
-                    link["icon"],
-                    item_for_link(link),
-                )
-            )
-
-        for section, group, order, icon, item in entries:
-            bucket = flat.setdefault(section, [])
-            if group is None:
-                bucket.append(item)
-            else:
-                groups = sections.setdefault(section, {})
-                if group not in groups:
-                    group_item: dict[str, Any] = {
-                        "type": "group",
-                        "label": group,
-                        "icon": icon,
-                        "order": order,
-                        "active": False,
-                        "items": [],
-                    }
-                    groups[group] = group_item
-                    bucket.append(group_item)
-                groups[group]["items"].append(item)
-
-        for section in flat:
-            flat[section].sort(key=lambda i: (i["order"], i["label"]))
-            for item in flat[section]:
-                if item["type"] == "group":
-                    item["active"] = any(c["active"] for c in item["items"])
-                    item["items"].sort(key=lambda i: (i["order"], i["label"]))
-        return flat
+            source = view.nav_source
+            if source is not None:
+                sources.append(source)
+        for markdown_view in self.markdown_views:
+            source = markdown_view.nav_source
+            if source is not None:
+                sources.append(source)
+        return build_menu(sources, current)

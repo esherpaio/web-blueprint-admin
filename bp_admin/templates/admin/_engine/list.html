@@ -17,7 +17,7 @@
                             <i class="bi bi-plus-square ms-1"></i>
                         </button>
                     {% endif %}
-                    {% if view.searchable or view.filters %}
+                    {% if view.searchable %}
                         <button class="btn btn-primary"
                                 type="button"
                                 data-bs-toggle="collapse"
@@ -44,7 +44,7 @@
                 </div>
             </div>
         </div>
-        {% if view.searchable or view.filters %}
+        {% if view.searchable %}
             <div class="col-12">
                 <div id="search" class="collapse {{ 'show' if show_search }}">
                     <form action="{{ view.url() }}" method="get">
@@ -58,19 +58,6 @@
                                            value="{{ search if search }}">
                                 </div>
                             {% endif %}
-                            {% for filter in view.filters %}
-                                <div class="col-12 col-lg-auto">
-                                    <select class="form-select" name="{{ filter.name }}">
-                                        <option value="">{{ filter.empty_label }}</option>
-                                        {% for option_value, option_label in filter_choices.get(filter.name, []) %}
-                                            <option value="{{ option_value }}"
-                                                    {% if filter_values.get(filter.name)|string == option_value|string %}selected{% endif %}>
-                                                {{ option_label }}
-                                            </option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                            {% endfor %}
                             <div class="col-12 col-lg-auto">
                                 <button class="btn btn-primary w-100" type="submit">Search</button>
                             </div>
@@ -165,8 +152,8 @@
                 <nav>
                     <ul class="pagination mb-0">
                         {% for page in pagination %}
-                            <li class="page-item {{ page['classes'] }}">
-                                <a class="page-link" href="{{ view.url(p=page['number'], s=search) }}">{{ page["name"] }}</a>
+                            <li class="page-item {{ page.css_class }}">
+                                <a class="page-link" href="{{ view.url(p=page.number, s=search) }}">{{ page.label }}</a>
                             </li>
                         {% endfor %}
                     </ul>

@@ -34,6 +34,7 @@ class CellFormat(StrEnum):
 
 
 class AttrType(StrEnum):
+    NONE = "none"
     TEXT = "text"
     INTEGER = "integer"
     FLOAT = "float"
@@ -44,6 +45,6 @@ class AttrType(StrEnum):
 
 
 class MenuSection(StrEnum):
-    TOP = "top"
+    MAIN = "main"
     BOTTOM = "bottom"
     HIDDEN = "hidden"

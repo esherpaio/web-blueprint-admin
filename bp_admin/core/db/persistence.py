@@ -2,20 +2,8 @@ from typing import Any, Iterable
 
 from sqlalchemy.orm.session import Session
 
-from .column import Column, row_input_name
-from .field import Field
-
-
-def supports_soft_delete(model: Any) -> bool:
-    return hasattr(model, "is_deleted")
-
-
-def resolve_choices(s: Session, fields: Iterable[Field]) -> dict[str, list]:
-    choices: dict[str, list] = {}
-    for field in fields:
-        if field.input_type == "select":
-            choices[field.name] = field.choices(s)
-    return choices
+from ..column import Column, row_input_name
+from ..field import Field
 
 
 def apply_fields(

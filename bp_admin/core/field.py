@@ -38,6 +38,8 @@ class Field:
         placeholder: str | None = None,
         attrs: dict[str, Any] | None = None,
         suffix: str | None = None,
+        value: str | Callable[[Any], Any] | None = None,
+        format: Callable[[Any], Any] | None = None,
     ) -> None:
         self.name = name
         self.label = label if label is not None else default_label(name)
@@ -46,6 +48,8 @@ class Field:
         self.placeholder = placeholder
         self.attrs = attrs or {}
         self.suffix = suffix
+        self._value = value
+        self._format = format
 
     @property
     def col_class(self) -> str:
@@ -59,7 +63,7 @@ class Field:
 
     @property
     def html_input_type(self) -> str:
-        if self.input_type == InputType.DATETIME:
+        if self.input_type is InputType.DATETIME:
             return "datetime-local"
         return self.input_type
 
@@ -68,7 +72,15 @@ class Field:
     #
 
     def value_from_obj(self, obj: Any) -> Any:
-        return getattr(obj, self.name, None)
+        if callable(self._value):
+            raw = self._value(obj)
+        elif isinstance(self._value, str):
+            raw = resolve_path(obj, self._value)
+        else:
+            raw = resolve_path(obj, self.name)
+        if self._format is not None and raw is not None:
+            return self._format(raw)
+        return raw
 
     def form_value(self, obj: Any, form_values: Any) -> Any:
         submitted = form_values.get(self.name)
@@ -250,46 +262,11 @@ class HiddenField(Field):
     input_type = InputType.HIDDEN
 
 
-class DisplayField(Field):
-    """Read-only field that renders a computed or dotted-path value.
-
-    ``value`` is either a dotted attribute path (e.g. ``"status.name"``) or a
-    callable receiving the object. ``format`` optionally post-processes the
-    resolved value in Python, ``suffix`` appends a static unit, and
-    ``multiline`` renders a (read-only) textarea so long values wrap.
-    """
-
-    def __init__(
-        self,
-        label: str,
-        value: str | Callable[[Any], Any],
-        *,
-        suffix: str | None = None,
-        format: Callable[[Any], Any] | None = None,
-        multiline: bool = False,
-        rows: int = 8,
-    ) -> None:
-        name = value if isinstance(value, str) else label.lower().replace(" ", "_")
-        super().__init__(name, label, readonly=True, suffix=suffix)
-        self._value = value
-        self._format = format
-        self.input_type = InputType.TEXTAREA if multiline else InputType.TEXT
-        self.rows = rows
-
-    def value_from_obj(self, obj: Any) -> Any:
-        if callable(self._value):
-            raw = self._value(obj)
-        else:
-            raw = resolve_path(obj, self._value)
-        if self._format is not None and raw is not None:
-            return self._format(raw)
-        return raw
-
-
 class JsonAttributesField(Field):
     input_type = InputType.ATTRIBUTES
 
     VALUE_TYPES = (
+        (AttrType.NONE, "None"),
         (AttrType.TEXT, "Text"),
         (AttrType.INTEGER, "Integer"),
         (AttrType.FLOAT, "Float"),
@@ -310,6 +287,8 @@ class JsonAttributesField(Field):
 
     @staticmethod
     def type_of(value: Any) -> AttrType:
+        if value is None:
+            return AttrType.NONE
         if isinstance(value, bool):
             return AttrType.BOOLEAN
         if isinstance(value, int):
@@ -332,6 +311,8 @@ class JsonAttributesField(Field):
 
     @staticmethod
     def _display(value: Any) -> str:
+        if value is None:
+            return ""
         if isinstance(value, bool):
             return "true" if value else "false"
         if isinstance(value, list):
@@ -354,24 +335,30 @@ class JsonAttributesField(Field):
 
     @staticmethod
     def _coerce_value(type_: str, raw: str) -> Any:
+        try:
+            attr_type = AttrType(type_)
+        except ValueError:
+            attr_type = AttrType.TEXT
+        if attr_type is AttrType.NONE:
+            return None
         raw = raw if raw is not None else ""
-        if type_ == AttrType.BOOLEAN:
+        if attr_type is AttrType.BOOLEAN:
             return raw.strip().lower() in ("1", "true", "yes", "on")
-        if type_ == AttrType.INTEGER:
+        if attr_type is AttrType.INTEGER:
             try:
                 return int(raw)
             except (TypeError, ValueError):
                 return 0
-        if type_ == AttrType.FLOAT:
+        if attr_type is AttrType.FLOAT:
             try:
                 return float(raw)
             except (TypeError, ValueError):
                 return 0.0
-        if type_ == AttrType.TIMESTAMP:
+        if attr_type is AttrType.TIMESTAMP:
             return raw.strip()
-        if type_ == AttrType.LIST:
+        if attr_type is AttrType.LIST:
             return [line.strip() for line in raw.splitlines() if line.strip()]
-        if type_ == AttrType.DICT:
+        if attr_type is AttrType.DICT:
             try:
                 parsed = json.loads(raw) if raw.strip() else {}
             except (TypeError, ValueError):

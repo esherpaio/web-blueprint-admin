@@ -1,6 +1,6 @@
 {% macro nav_items(items) %}
     {% for item in items %}
-        {% if item.type == "group" %}
+        {% if item.is_group %}
             <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle {{ 'active' if item.active }}"
                    href="#"
@@ -10,7 +10,7 @@
                     {{ item.label }}
                 </a>
                 <ul class="dropdown-menu ms-auto">
-                    {% for child in item["items"] %}
+                    {% for child in item.items %}
                         <li>
                             <a class="dropdown-item" href="{{ url_for(child.endpoint) }}">{{ child.label }}</a>
                         </li>

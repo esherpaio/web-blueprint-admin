@@ -9,9 +9,9 @@ from web.error import WebError
 from web.i18n import _
 from werkzeug import Response
 
+from .db import apply_bulk_edits, delete_objects, resolve_choices
 from .enums import Notice, Op
 from .pagination import get_pages
-from .util import apply_bulk_edits, delete_objects, resolve_choices
 from .view import ModelView
 
 WriteError = (WebError, IntegrityError)
@@ -47,13 +47,13 @@ def error_message(error: Exception) -> str:
 
 
 def notice_text(notice: Notice, view: ModelView) -> str:
-    if notice == Notice.CREATED:
+    if notice is Notice.CREATED:
         return f"{view.name} created."
-    if notice == Notice.DELETED:
+    if notice is Notice.DELETED:
         return f"{view.name} deleted."
-    if notice == Notice.SAVED:
+    if notice is Notice.SAVED:
         return "Changes saved."
-    if notice == Notice.DONE:
+    if notice is Notice.DONE:
         return "Action completed."
     return "Something went wrong."
 
@@ -66,7 +66,7 @@ def build_notice(view: ModelView) -> dict[str, str] | None:
         notice = Notice(code)
     except ValueError:
         return None
-    level = "danger" if notice == Notice.ERROR else "success"
+    level = "danger" if notice is Notice.ERROR else "success"
     return {"text": notice_text(notice, view), "level": level}
 
 
@@ -87,13 +87,11 @@ def render_list(
     page = max(request.args.get("p", type=int, default=1) or 1, 1)
     limit = view.page_size
     offset = (limit * page) - limit
-    filter_values = {f.name: request.args.get(f.name) for f in view.filters}
-    show_search = bool(search) or any(filter_values.values())
+    show_search = bool(search)
 
     with conn.begin() as s:
         query = view.get_query(s)
         query = view.apply_search(query, search)
-        query = view.apply_filters(query, filter_values)
         total = query.count()
         query = view.apply_order(query)
         rows = query.limit(limit).offset(offset).all()
@@ -101,7 +99,6 @@ def render_list(
         choices = resolve_choices(
             s, [c.field for c in view.columns] + list(view.create_fields)
         )
-        filter_choices = {f.name: f.choices(s) for f in view.filters}
         pagination = get_pages(offset, limit, total)
 
         return render_template(
@@ -111,8 +108,6 @@ def render_list(
             total=total,
             pagination=pagination,
             search=search,
-            filter_values=filter_values,
-            filter_choices=filter_choices,
             show_search=show_search,
             choices=choices,
             error=error,
@@ -168,10 +163,13 @@ def render_detail(
 
 def list_endpoint(view: ModelView) -> str | Response:
     if request.method == "POST":
-        op = request.form.get("_op")
+        try:
+            op = Op(request.form.get("_op", ""))
+        except ValueError:
+            abort(400)
         try:
             with conn.begin() as s:
-                if op == Op.DELETE and view.can_delete:
+                if op is Op.DELETE and view.can_delete:
                     delete_objects(
                         s,
                         view.model,
@@ -179,7 +177,7 @@ def list_endpoint(view: ModelView) -> str | Response:
                         soft_delete=view.soft_delete,
                         base_query=view.get_query(s),
                     )
-                else:
+                elif op is Op.SAVE:
                     apply_bulk_edits(
                         s,
                         view.model,
@@ -188,12 +186,14 @@ def list_endpoint(view: ModelView) -> str | Response:
                         base_query=view.get_query(s),
                         order_field=view.order_field if view.reorderable else None,
                     )
+                else:
+                    abort(400)
                 view.after_write(s, None)
         except WriteError as error:
             return render_list(
                 view, error=error_message(error), form_values=request.form
             )
-        saved = Notice.DELETED if op == Op.DELETE else Notice.SAVED
+        saved = Notice.DELETED if op is Op.DELETE else Notice.SAVED
         return _redirect(f"admin.{view.endpoint}", saved=saved)
     return render_list(view)
 

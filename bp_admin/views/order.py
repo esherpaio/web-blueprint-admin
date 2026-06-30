@@ -28,12 +28,12 @@ from bp_admin.core import (
     CellFormat,
     Column,
     DecimalField,
-    DisplayField,
     FormTab,
     InlineTableTab,
     ModelView,
     SelectField,
     StringField,
+    TextAreaField,
 )
 
 _STATUS_COLOR = {
@@ -229,38 +229,41 @@ class OrderView(ModelView):
         FormTab(
             "Details",
             [
-                DisplayField("Order ID", "id"),
-                DisplayField(
-                    "Created at",
+                StringField("id", "Order ID"),
+                StringField(
                     "created_at",
+                    "Created at",
                     format=lambda d: current_locale.format_datetime(d),
                 ),
-                DisplayField("Status", "status.name"),
-                DisplayField("Shipment", "shipment_name"),
-                DisplayField(
+                StringField("status", "Status", value="status.name"),
+                StringField("shipment_name", "Shipment"),
+                StringField(
+                    "shipment_price",
                     "Shipment price",
-                    lambda o: _money(o.shipment_price, o.currency_code),
+                    value=lambda o: _money(o.shipment_price, o.currency_code),
                 ),
-                DisplayField("Coupon", "coupon_code"),
-                DisplayField(
+                StringField("coupon_code", "Coupon"),
+                StringField(
+                    "discount",
                     "Discount",
-                    lambda o: _money(o.discount_price, o.currency_code),
+                    value=lambda o: _money(o.discount_price, o.currency_code),
                 ),
-                DisplayField("VAT rate", "vat_percentage", suffix="%"),
-                DisplayField(
+                StringField("vat_percentage", "VAT rate", suffix="%"),
+                StringField(
+                    "total_price",
                     "Total price",
-                    lambda o: _money(o.total_price, o.currency_code),
+                    value=lambda o: _money(o.total_price, o.currency_code),
                 ),
-                DisplayField(
+                TextAreaField(
+                    "shipping",
                     "Shipping",
-                    lambda o: _address_lines(o.shipping),
-                    multiline=True,
+                    value=lambda o: _address_lines(o.shipping),
                     rows=6,
                 ),
-                DisplayField(
+                TextAreaField(
+                    "billing",
                     "Billing",
-                    lambda o: _address_lines(o.billing, with_vat=True),
-                    multiline=True,
+                    value=lambda o: _address_lines(o.billing, with_vat=True),
                     rows=6,
                 ),
             ],

@@ -2,6 +2,7 @@ import os
 import re
 from typing import Any, Callable
 
+from flask import abort
 from sqlalchemy.orm.session import Session
 from web import cdn
 from web.database.model import File, FileTypeId
@@ -9,15 +10,15 @@ from web.setup import config
 from werkzeug.utils import secure_filename
 
 from .column import Column, row_input_name
-from .enums import Op
-from .field import Field
-from .util import (
+from .db import (
     apply_bulk_edits,
     apply_fields,
     delete_objects,
     resolve_choices,
     supports_soft_delete,
 )
+from .enums import Op
+from .field import Field
 
 
 def _slug(label: str) -> str:
@@ -175,14 +176,17 @@ class InlineTableTab(Tab):
         form: Any,
         files: Any,
     ) -> None:
-        op = form.get("_op")
-        if op == Op.ADD and self.can_create:
+        try:
+            op = Op(form.get("_op", ""))
+        except ValueError:
+            abort(400)
+        if op is Op.ADD and self.can_create:
             child = self.model()
             setattr(child, self.fk, obj.id)
             apply_fields(child, self.create_fields, form, files, respect_readonly=False)
             s.add(child)
             s.flush()
-        elif op == Op.DELETE and self.can_delete:
+        elif op is Op.DELETE and self.can_delete:
             delete_objects(
                 s,
                 self.model,
@@ -190,7 +194,7 @@ class InlineTableTab(Tab):
                 soft_delete=self.soft_delete,
                 base_query=self.base_query(s, obj),
             )
-        else:
+        elif op is Op.SAVE:
             apply_bulk_edits(
                 s,
                 self.model,
@@ -199,6 +203,8 @@ class InlineTableTab(Tab):
                 base_query=self.base_query(s, obj),
                 order_field=self.order_field if self.reorderable else None,
             )
+        else:
+            abort(400)
         view.after_write(s, obj)
 
 
@@ -253,13 +259,18 @@ class MediaTab(Tab):
         form: Any,
         files: Any,
     ) -> None:
-        op = form.get("_op")
-        if op == Op.ADD:
+        try:
+            op = Op(form.get("_op", ""))
+        except ValueError:
+            abort(400)
+        if op is Op.ADD:
             self._upload(s, obj, files)
-        elif op == Op.DELETE and self.can_delete:
+        elif op is Op.DELETE and self.can_delete:
             self._delete(s, obj, form.getlist("select"))
-        else:
+        elif op is Op.SAVE:
             self._save(s, obj, form)
+        else:
+            abort(400)
         view.after_write(s, obj)
 
     def _upload(self, s: Session, obj: Any, files: Any) -> None:
@@ -338,8 +349,6 @@ class MediaTab(Tab):
 
 
 class TemplateTab(Tab):
-    """Render an author-supplied template for fully custom tab content."""
-
     template = "admin/_engine/_tab_template.html"
 
     def __init__(
