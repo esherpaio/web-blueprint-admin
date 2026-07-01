@@ -1,12 +1,3 @@
-"""Coupon admin view.
-
-A coupon is either a fixed-amount discount or a percentage discount (the model
-stores those as mutually exclusive ``amount`` / ``rate`` columns). The
-``PercentageField`` and ``AmountField`` below let the admin edit either one as a
-plain column: setting one clears the other so the database constraint is always
-satisfied.
-"""
-
 from web.database.model import Coupon
 
 from bp_admin.core import (
@@ -29,13 +20,9 @@ class CouponView(CachedModelView):
     can_delete = True
 
     columns = [
-        Column("code", "Code"),
-        Column(
-            "percentage",
-            "Percentage",
-            field=PercentageField("percentage"),
-        ),
-        Column("amount", "Amount", field=DecimalField("amount")),
+        Column("code"),
+        Column("percentage", field=PercentageField("percentage")),
+        Column("amount", field=DecimalField("amount")),
     ]
 
     create_fields = [

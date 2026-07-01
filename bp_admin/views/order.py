@@ -1,5 +1,3 @@
-"""Orders list + detail — engine view with server-side actions."""
-
 from decimal import Decimal
 
 from markupsafe import Markup
@@ -17,6 +15,7 @@ from web.database.model import (
     Refund,
     Shipment,
     Shipping,
+    SkuDetail,
 )
 from web.locale import current_locale
 from web.mail import mail
@@ -45,57 +44,28 @@ _STATUS_COLOR = {
 }
 
 
-def _status_badge(status: OrderStatus | None) -> Markup:
+def _price_label(value: Decimal | None, currency: str | None) -> str:
+    if value is None:
+        return ""
+    return f"{format_decimal(value)} {currency or ''}".strip()
+
+
+def _order_status_label(status: OrderStatus | None) -> Markup:
     if status is None:
         return Markup("")
     color = _STATUS_COLOR.get(status.id, "text-bg-secondary")
     return Markup(f'<span class="badge {color}">{status.name}</span>')
 
 
-def _sku_options(details: list) -> Markup:
-    return Markup("<br>".join(f"{d.option.name}: {d.value.name}" for d in details))
-
-
-def _line_open(line: OrderLine) -> Markup:
-    if not line.sku.product.file_url:
-        return Markup("")
+def _sku_details_label(sku_details: list[SkuDetail]) -> Markup:
     return Markup(
-        f'<a class="btn btn-sm btn-primary" href="{line.sku.product.file_url}"'
-        f' target="_blank" rel="noopener">Open</a>'
+        "<small>"
+        + "<br>".join(f"{d.option.name}: {d.value.name}" for d in sku_details)
+        + "</small>"
     )
 
 
-def _invoice_download(invoice: Invoice) -> Markup:
-    url = url_for(
-        "admin.orders_id_invoices_id_download",
-        order_id=invoice.order_id,
-        invoice_id=invoice.id,
-    )
-    return Markup(f'<a class="btn btn-sm btn-primary" href="{url}">Download</a>')
-
-
-def _refund_download(refund: Refund) -> Markup:
-    url = url_for(
-        "admin.orders_id_refunds_id_download",
-        order_id=refund.order_id,
-        refund_id=refund.id,
-    )
-    return Markup(f'<a class="btn btn-sm btn-primary" href="{url}">Download</a>')
-
-
-def _link(url: str | None) -> Markup:
-    if not url:
-        return Markup("")
-    return Markup(f'<a href="{url}" target="_blank" rel="noopener">{url}</a>')
-
-
-def _money(value: Decimal | None, currency: str | None) -> str:
-    if value is None:
-        return ""
-    return f"{format_decimal(value)} {currency or ''}".strip()
-
-
-def _address_lines(address, *, with_vat: bool = False) -> str:
+def _address_label(address, *, with_vat: bool = False) -> str:
     lines = [
         f"{address.first_name} {address.last_name}".strip(),
         address.address,
@@ -109,6 +79,41 @@ def _address_lines(address, *, with_vat: bool = False) -> str:
     if with_vat:
         lines.append(getattr(address, "vat", None))
     return "\n".join(line for line in lines if line)
+
+
+def _open_order_line_file_url(line: OrderLine) -> Markup:
+    if not line.sku.product.file_url:
+        return Markup("")
+    return Markup(
+        f'<a class="btn btn-sm btn-primary" href="{line.sku.product.file_url} "'
+        f'target="_blank" rel="noopener">Open URL</a>'
+    )
+
+
+def _open_shipment_url(shipment: Shipment) -> Markup:
+    if not shipment.url:
+        return Markup("")
+    return Markup(
+        f'<a href="{shipment.url}" target="_blank" rel="noopener">{shipment.url}</a>'
+    )
+
+
+def _downloads_invoice(invoice: Invoice) -> Markup:
+    url = url_for(
+        "admin.orders_id_invoices_id_download",
+        order_id=invoice.order_id,
+        invoice_id=invoice.id,
+    )
+    return Markup(f'<a class="btn btn-sm btn-primary" href="{url}">Download</a>')
+
+
+def _download_refund(refund: Refund) -> Markup:
+    url = url_for(
+        "admin.orders_id_refunds_id_download",
+        order_id=refund.order_id,
+        refund_id=refund.id,
+    )
+    return Markup(f'<a class="btn btn-sm btn-primary" href="{url}">Download</a>')
 
 
 def _update_status(s: Session, order: Order, data: dict) -> None:
@@ -185,8 +190,8 @@ class OrderView(ModelView):
         Column("id", "ID"),
         Column("created_at", "Date", format=CellFormat.DATETIME),
         Column("billing.full_name", "Customer"),
-        Column("status", "Status", format=_status_badge),
-        Column("total_price", "Total", format=CellFormat.PRICE),
+        Column("status", format=_order_status_label),
+        Column("total_price", format=CellFormat.PRICE),
     ]
 
     actions = [
@@ -229,41 +234,35 @@ class OrderView(ModelView):
         FormTab(
             "Details",
             [
-                StringField("id", "Order ID"),
+                StringField("id"),
                 StringField(
                     "created_at",
-                    "Created at",
                     format=lambda d: current_locale.format_datetime(d),
                 ),
-                StringField("status", "Status", value="status.name"),
+                StringField("status", value="status.name"),
                 StringField("shipment_name", "Shipment"),
                 StringField(
                     "shipment_price",
-                    "Shipment price",
-                    value=lambda o: _money(o.shipment_price, o.currency_code),
+                    value=lambda o: _price_label(o.shipment_price, o.currency_code),
                 ),
-                StringField("coupon_code", "Coupon"),
+                StringField("coupon_code"),
                 StringField(
                     "discount",
-                    "Discount",
-                    value=lambda o: _money(o.discount_price, o.currency_code),
+                    value=lambda o: _price_label(o.discount_price, o.currency_code),
                 ),
-                StringField("vat_percentage", "VAT rate", suffix="%"),
+                StringField("vat_percentage", "VAT", suffix="%"),
                 StringField(
                     "total_price",
-                    "Total price",
-                    value=lambda o: _money(o.total_price, o.currency_code),
+                    value=lambda o: _price_label(o.total_price, o.currency_code),
                 ),
                 TextAreaField(
                     "shipping",
-                    "Shipping",
-                    value=lambda o: _address_lines(o.shipping),
+                    value=lambda o: _address_label(o.shipping),
                     rows=6,
                 ),
                 TextAreaField(
                     "billing",
-                    "Billing",
-                    value=lambda o: _address_lines(o.billing, with_vat=True),
+                    value=lambda o: _address_label(o.billing, with_vat=True),
                     rows=6,
                 ),
             ],
@@ -275,10 +274,10 @@ class OrderView(ModelView):
             "order_id",
             columns=[
                 Column("sku.product.name", "Name"),
-                Column("sku.details", "Options", format=_sku_options),
-                Column("quantity", "Quantity"),
-                Column("total_price", "Total", format=CellFormat.PRICE),
-                Column("id", "", row_format=_line_open, align="end"),
+                Column("sku.details", "Options", format=_sku_details_label),
+                Column("quantity"),
+                Column("total_price", format=CellFormat.PRICE),
+                Column("id", "", row_format=_open_order_line_file_url, align="end"),
             ],
             order_by=OrderLine.id,
             can_create=False,
@@ -290,10 +289,10 @@ class OrderView(ModelView):
             Invoice,
             "order_id",
             columns=[
-                Column("number", "Number"),
-                Column("expires_at", "Expires at", format=CellFormat.DATETIME),
-                Column("paid_at", "Paid at", format=CellFormat.DATETIME),
-                Column("id", "", row_format=_invoice_download, align="end"),
+                Column("number"),
+                Column("expires_at", format=CellFormat.DATETIME),
+                Column("paid_at", format=CellFormat.DATETIME),
+                Column("id", "", row_format=_downloads_invoice, align="end"),
             ],
             order_by=Invoice.id,
             can_create=False,
@@ -305,9 +304,9 @@ class OrderView(ModelView):
             Shipment,
             "order_id",
             columns=[
-                Column("carrier", "Carrier"),
-                Column("code", "Code"),
-                Column("url", "Tracking URL", row_format=lambda r: _link(r.url)),
+                Column("carrier"),
+                Column("code"),
+                Column("url", row_format=lambda r: _open_shipment_url(r.url)),
             ],
             order_by=Shipment.id,
             can_create=False,
@@ -319,9 +318,9 @@ class OrderView(ModelView):
             Refund,
             "order_id",
             columns=[
-                Column("number", "Number"),
-                Column("total_price", "Total", format=CellFormat.PRICE),
-                Column("id", "", row_format=_refund_download, align="end"),
+                Column("number"),
+                Column("total_price", format=CellFormat.PRICE),
+                Column("id", "", row_format=_download_refund, align="end"),
             ],
             order_by=Refund.id,
             can_create=False,

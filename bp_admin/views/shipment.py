@@ -1,8 +1,3 @@
-"""Shipment admin views: shipment classes (each with its per-zone pricing) and
-shipment zones."""
-
-from typing import Any
-
 from sqlalchemy.orm.session import Session
 from web.database.model import (
     Country,
@@ -24,9 +19,7 @@ from bp_admin.core import (
 )
 
 
-def _zone_label(zone: Any) -> str:
-    if zone is None:
-        return ""
+def _shipment_zone_label(zone: ShipmentZone) -> str:
     if zone.country is not None:
         return zone.country.name
     if zone.region is not None:
@@ -34,14 +27,14 @@ def _zone_label(zone: Any) -> str:
     return f"Zone {zone.id}"
 
 
-def _zone_choices(s: Session) -> list:
+def _shipment_zone_choices(s: Session) -> list:
     zones = (
         s.query(ShipmentZone)
         .filter(ShipmentZone.is_deleted.is_(False))
         .order_by(ShipmentZone.order, ShipmentZone.id)
         .all()
     )
-    return [(zone.id, _zone_label(zone)) for zone in zones]
+    return [(zone.id, _shipment_zone_label(zone)) for zone in zones]
 
 
 class ShipmentClassView(CachedModelView):
@@ -56,11 +49,12 @@ class ShipmentClassView(CachedModelView):
     can_create = True
     can_delete = True
     can_edit = True
-
     order_by = [ShipmentClass.order, ShipmentClass.id]
+
     columns = [
         Column("name"),
     ]
+
     create_fields = [
         StringField("name", required=True),
     ]
@@ -77,11 +71,10 @@ class ShipmentClassView(CachedModelView):
             ShipmentMethod,
             "class_id",
             columns=[
-                Column("name", "Name"),
-                Column("zone", "Zone", format=_zone_label),
+                Column("name"),
+                Column("zone", format=_shipment_zone_label),
                 Column(
                     "unit_price",
-                    "Unit price",
                     editable=True,
                     field=DecimalField("unit_price"),
                 ),
@@ -94,7 +87,12 @@ class ShipmentClassView(CachedModelView):
             ],
             create_fields=[
                 StringField("name", required=True),
-                SelectField("zone_id", "Zone", choices=_zone_choices, coerce=int),
+                SelectField(
+                    "zone_id",
+                    "Zone",
+                    choices=_shipment_zone_choices,
+                    coerce=int,
+                ),
                 DecimalField("unit_price"),
                 BoolField("requires_billing_phone"),
             ],
@@ -114,15 +112,23 @@ class ShipmentZoneView(CachedModelView):
     reorderable = True
     can_create = True
     can_delete = True
-
     order_by = [ShipmentZone.order, ShipmentZone.id]
+
     columns = [
         Column("country.name", "Country"),
         Column("region.name", "Region"),
     ]
+
     create_fields = [
         SelectField.from_model(
-            "country_id", Country, label_attr="name", order_by=Country.name
+            "country_id",
+            Country,
+            label_attr="name",
+            order_by=Country.name,
         ),
-        SelectField.from_model("region_id", Region, label_attr="name"),
+        SelectField.from_model(
+            "region_id",
+            Region,
+            label_attr="name",
+        ),
     ]

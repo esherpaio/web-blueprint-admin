@@ -1,5 +1,3 @@
-"""Product option detail — edit an option and its values (reached from product)."""
-
 from sqlalchemy import and_
 from web.database.model import File, ProductMedia, ProductOption, ProductValue
 
@@ -21,6 +19,7 @@ class ProductOptionView(CachedModelView):
     name_plural = "Product options"
     endpoint = "product_options"
     menu_section = MenuSection.HIDDEN
+
     can_edit = True
 
     tabs = [

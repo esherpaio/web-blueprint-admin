@@ -9,7 +9,7 @@ from web.error import WebError
 from web.i18n import _
 from werkzeug import Response
 
-from .db import apply_bulk_edits, delete_objects, resolve_choices
+from .db import apply_bulk_fields, delete_objects, resolve_choices
 from .enums import Notice, Op
 from .pagination import get_pages
 from .view import ModelView
@@ -178,7 +178,7 @@ def list_endpoint(view: ModelView) -> str | Response:
                         base_query=view.get_query(s),
                     )
                 elif op is Op.SAVE:
-                    apply_bulk_edits(
+                    apply_bulk_fields(
                         s,
                         view.model,
                         view.columns,
@@ -265,8 +265,18 @@ def action_endpoint(view: ModelView, id_: Any, name: str) -> Response | str:
             action.run(s, obj, data)
             view.after_write(s, obj)
     except WriteError as error:
-        return render_detail(view, id_, error=error_message(error))
-    return _redirect(f"admin.{view.endpoint}_detail", id_=id_, saved=Notice.DONE)
+        return render_detail(
+            view,
+            id_,
+            active_tab=action.tab,
+            error=error_message(error),
+        )
+    return _redirect(
+        f"admin.{view.endpoint}_detail",
+        id_=id_,
+        tab=action.tab,
+        saved=Notice.DONE,
+    )
 
 
 def delete_endpoint(view: ModelView, id_: Any) -> Response:

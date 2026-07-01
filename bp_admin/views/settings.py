@@ -1,5 +1,3 @@
-"""App settings — a single-record admin view."""
-
 from typing import Any
 
 from sqlalchemy.orm.session import Session

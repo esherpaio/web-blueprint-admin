@@ -20,7 +20,7 @@ def apply_fields(
         field.apply(obj, field.parse(form, files))
 
 
-def apply_bulk_edits(
+def apply_bulk_fields(
     s: Session,
     model: Any,
     columns: Iterable[Column],

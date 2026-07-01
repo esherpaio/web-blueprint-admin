@@ -1,6 +1,3 @@
-"""Category admin view — demonstrates a bulk-editable list plus a tabbed detail
-page with a JSON attributes editor and an inline child table (category items)."""
-
 from web.database.model import Category, CategoryItem, Sku
 
 from bp_admin.core import (
@@ -26,7 +23,6 @@ class CategoryView(CachedModelView):
     searchable = ["name"]
     order_by = [Category.order, Category.id]
     reorderable = True
-
     can_edit = True
 
     columns = [

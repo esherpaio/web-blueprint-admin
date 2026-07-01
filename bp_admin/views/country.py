@@ -1,6 +1,3 @@
-"""Country admin view — demonstrates foreign-key selects and a detail form with
-checkboxes. Countries are reference data, so deletion is disabled."""
-
 from web.database.model import Country, Currency, Region
 
 from bp_admin.core import (
@@ -26,7 +23,7 @@ class CountryView(CachedModelView):
     can_edit = True
 
     columns = [
-        Column("code", "Code"),
+        Column("code"),
         Column("name"),
         Column(
             "allows_shipping",
@@ -51,9 +48,9 @@ class CountryView(CachedModelView):
                 StringField("code", required=True),
                 SelectField.from_model("currency_id", Currency, label_attr="code"),
                 SelectField.from_model("region_id", Region, label_attr="name"),
-                BoolField("requires_billing_state", readonly=False),
-                BoolField("requires_billing_vat", readonly=False),
-                BoolField("allows_shipping", readonly=False),
+                BoolField("requires_billing_state", "State required", readonly=False),
+                BoolField("requires_billing_vat", "VAT required", readonly=False),
+                BoolField("allows_shipping", "Shipping", readonly=False),
             ],
         ),
     ]

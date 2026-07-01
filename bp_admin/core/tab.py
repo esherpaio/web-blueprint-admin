@@ -11,7 +11,7 @@ from werkzeug.utils import secure_filename
 
 from .column import Column, row_input_name
 from .db import (
-    apply_bulk_edits,
+    apply_bulk_fields,
     apply_fields,
     delete_objects,
     resolve_choices,
@@ -195,7 +195,7 @@ class InlineTableTab(Tab):
                 base_query=self.base_query(s, obj),
             )
         elif op is Op.SAVE:
-            apply_bulk_edits(
+            apply_bulk_fields(
                 s,
                 self.model,
                 self.columns,

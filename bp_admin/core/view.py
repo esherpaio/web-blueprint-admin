@@ -38,11 +38,13 @@ class ModelView:
     reorderable: bool = False
     order_field: str = "order"
 
-    # Create (modal)
+    # Create modal
     create_fields: list[Field] = []
 
-    # Detail/edit page
+    # Detail page
     tabs: list[Tab] = []
+
+    # Action buttons
     actions: list[Action] = []
 
     # Capabilities
@@ -175,16 +177,16 @@ class ModelView:
         pass
 
 
+class SingletonView(ModelView):
+    singleton = True
+    can_edit = True
+
+
 class CachedModelView(ModelView):
     def after_write(self, s: Session, obj: Any = None) -> None:
         settings = s.query(AppSettings).first()
         if settings is not None:
             settings.cached_at = None
-
-
-class SingletonView(ModelView):
-    singleton = True
-    can_edit = True
 
 
 class MarkdownView:

@@ -1,5 +1,3 @@
-"""Products list + detail — general, options, media, links and SKUs tabs."""
-
 import itertools
 from typing import Any
 
@@ -50,15 +48,11 @@ class ProductHtmlField(HtmlField):
         obj.attributes = attributes
 
 
-def _option_view(option_id: int) -> Markup:
+def _product_option_view(option_id: int) -> Markup:
     return Markup(
         f'<a class="btn btn-sm btn-primary" '
         f'href="/admin/product_options/{option_id}">View</a>'
     )
-
-
-def _sku_options(details: list) -> Markup:
-    return Markup("<br>".join(f"{d.option.name}: {d.value.name}" for d in details))
 
 
 def _generate_skus(s: Session, product: Product, data: dict) -> None:
@@ -100,15 +94,19 @@ class ProductView(CachedModelView):
     searchable = ["name"]
     order_by = [Product.name]
 
-    create_fields = [StringField("name", required=True)]
-
-    columns = [
-        Column("name", "Name"),
-        Column("shipment_class.name", "Shipment class"),
-        Column("unit_price", "Unit Price", format=CellFormat.PRICE),
+    create_fields = [
+        StringField("name", required=True),
     ]
 
-    actions = [Action("generate_skus", "Generate SKUs", _generate_skus, tab="skus")]
+    columns = [
+        Column("name"),
+        Column("shipment_class.name", "Shipment class"),
+        Column("unit_price", format=CellFormat.PRICE),
+    ]
+
+    actions = [
+        Action("generate_skus", "Generate SKUs", _generate_skus, tab="skus"),
+    ]
 
     tabs = [
         FormTab(
@@ -124,7 +122,7 @@ class ProductView(CachedModelView):
                     readonly=False,
                 ),
                 BoolField("consent_required", readonly=False),
-                StringField("file_url", "Download link", readonly=False),
+                StringField("file_url", readonly=False),
                 StringField("summary", readonly=False),
                 ProductHtmlField(),
             ],
@@ -135,7 +133,7 @@ class ProductView(CachedModelView):
             "product_id",
             columns=[
                 Column("name"),
-                Column("id", "Actions", format=_option_view, align="end"),
+                Column("id", "Actions", format=_product_option_view, align="end"),
             ],
             create_fields=[StringField("name", required=True)],
             order_by=ProductOption.order,
@@ -172,7 +170,13 @@ class ProductView(CachedModelView):
             "product_id",
             columns=[
                 Column("number", editable=True, field=StringField("number")),
-                Column("details", "Options", format=_sku_options),
+                Column(
+                    "details",
+                    "Options",
+                    format=lambda sds: "<br>".join(
+                        f"{sd.option.name}: {sd.value.name}" for sd in sds
+                    ),
+                ),
                 Column("stock", editable=True, field=IntegerField("stock")),
                 Column(
                     "is_visible",

@@ -6,7 +6,9 @@
     <div class="row g-3">
         <div class="col-12">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-                <h2 class="mb-0">{{ view.name_plural }}</h2>
+                <h2 class="mb-0">
+                    <span class="badge text-bg-primary rounded-pill fs-5 fw-semibold px-3 py-2">{{ view.name_plural }}</span>
+                </h2>
                 <div class="btn-toolbar flex-wrap gap-2">
                     {% if view.can_create %}
                         <button class="btn btn-primary"
@@ -45,25 +47,21 @@
             </div>
         </div>
         {% if view.searchable %}
-            <div class="col-12">
-                <div id="search" class="collapse {{ 'show' if show_search }}">
-                    <form action="{{ view.url() }}" method="get">
-                        <div class="row g-2">
-                            {% if view.searchable %}
-                                <div class="col-12 col-lg">
-                                    <input class="form-control"
-                                           name="s"
-                                           type="text"
-                                           placeholder="Search"
-                                           value="{{ search if search }}">
-                                </div>
-                            {% endif %}
-                            <div class="col-12 col-lg-auto">
-                                <button class="btn btn-primary w-100" type="submit">Search</button>
-                            </div>
+            <div id="search" class="col-12 collapse {{ 'show' if show_search }}">
+                <form action="{{ view.url() }}" method="get">
+                    <div class="row g-2">
+                        <div class="col-12 col-lg">
+                            <input class="form-control"
+                                   name="s"
+                                   type="text"
+                                   placeholder="Search"
+                                   value="{{ search if search }}">
                         </div>
-                    </form>
-                </div>
+                        <div class="col-12 col-lg-auto">
+                            <button class="btn btn-primary w-100" type="submit">Search</button>
+                        </div>
+                    </div>
+                </form>
             </div>
         {% endif %}
         {% if error or notice %}
