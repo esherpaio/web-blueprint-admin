@@ -6,14 +6,15 @@
     <div class="row g-3">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
-                <h2 class="mb-0">
+                <div class="d-flex align-items-center gap-2">
                     <a href="{{ view.url() }}"
-                       class="badge text-bg-primary rounded-pill fs-5 fw-semibold px-3 py-2 text-decoration-none d-inline-flex align-items-center gap-2"
-                       title="Back to {{ view.name_plural|lower }}">
+                       class="btn btn-outline-secondary d-inline-flex align-items-center"
+                       data-back
+                       title="Back">
                         <i class="bi bi-arrow-left"></i>
-                        <span>{{ view.title(obj) }}</span>
                     </a>
-                </h2>
+                    <h2 class="mb-0">{{ view.title(obj) }}</h2>
+                </div>
                 <div class="btn-toolbar flex-wrap gap-2">
                     {% include "admin/_engine/_actions.html" %}
                     {% if view.can_delete %}

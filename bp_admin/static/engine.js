@@ -25,6 +25,17 @@
         });
     }
 
+    function initBack() {
+        document.querySelectorAll("[data-back]").forEach(function (element) {
+            element.addEventListener("click", function (event) {
+                if (document.referrer.startsWith(window.location.origin)) {
+                    event.preventDefault();
+                    window.history.back();
+                }
+            });
+        });
+    }
+
     function initShowModal() {
         document.querySelectorAll("[data-show-modal]").forEach(function (element) {
             new bootstrap.Modal(element).show();
@@ -173,5 +184,6 @@
         initAlertDismiss();
         initCleanUrl();
         initHtmlEditors();
+        initBack();
     });
 })();
