@@ -9,7 +9,7 @@ from web.database.model import AppSettings
 from web.utils.markdown import Markdown
 
 from .action import Action
-from .column import Column, row_input_name
+from .column import Column, Link, row_input_name
 from .db import apply_fields, supports_soft_delete
 from .enums import MenuSection
 from .field import Field
@@ -29,9 +29,11 @@ class ModelView:
     menu_group: str | None = None
     menu_section: MenuSection = MenuSection.MAIN
     order: int = 100
+    is_home: bool = False
 
     # List page
     columns: list[Column] = []
+    header_links: list[Link] = []
     searchable: list[str] = []
     page_size: int = 40
     order_by: Any = None
@@ -226,4 +228,48 @@ class MarkdownView:
             active_menu=self.endpoint,
             page_title=self.label,
             markdown_html=markdown_html,
+        )
+
+
+class PageView:
+    endpoint: str = ""
+    label: str = ""
+    template: str = ""
+    path: str | None = None
+    icon: str | None = None
+    order: int = 100
+    menu_section: MenuSection = MenuSection.HIDDEN
+    menu_group: str | None = None
+
+    @property
+    def route(self) -> str:
+        return f"admin.{self.endpoint}"
+
+    @property
+    def rule(self) -> str:
+        return self.path or f"/admin/{self.endpoint}"
+
+    @property
+    def nav_source(self) -> NavSource | None:
+        if self.menu_section is MenuSection.HIDDEN:
+            return None
+        return NavSource(
+            section=self.menu_section,
+            label=self.label,
+            endpoint=self.route,
+            match=self.route,
+            order=self.order,
+            icon=self.icon,
+            group=self.menu_group,
+        )
+
+    def context(self) -> dict[str, Any]:
+        return {}
+
+    def render(self) -> str:
+        return render_template(
+            self.template,
+            active_menu=self.endpoint,
+            page_title=self.label,
+            **self.context(),
         )

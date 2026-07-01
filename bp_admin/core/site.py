@@ -1,28 +1,39 @@
 from typing import Any, Callable
 
-from flask import Blueprint, request
+from flask import Blueprint, redirect, request, url_for
 
 from . import handlers
 from .enums import CellFormat, InputType, Op
 from .menu import AdminMenu, build_menu
-from .view import MarkdownView, ModelView
+from .view import MarkdownView, ModelView, PageView
 
 
 class AdminSite:
     def __init__(self) -> None:
         self.views: list[ModelView] = []
         self.markdown_views: list[MarkdownView] = []
+        self.page_views: list[PageView] = []
 
     #
     # Registration
     #
 
     def register(
-        self, view: ModelView | type[ModelView] | MarkdownView | type[MarkdownView]
-    ) -> ModelView | MarkdownView:
+        self,
+        view: (
+            ModelView
+            | type[ModelView]
+            | MarkdownView
+            | type[MarkdownView]
+            | PageView
+            | type[PageView]
+        ),
+    ) -> ModelView | MarkdownView | PageView:
         instance = view() if isinstance(view, type) else view
         if isinstance(instance, MarkdownView):
             self.markdown_views.append(instance)
+        elif isinstance(instance, PageView):
+            self.page_views.append(instance)
         elif isinstance(instance, ModelView):
             self.views.append(instance)
         else:
@@ -38,14 +49,38 @@ class AdminSite:
             self._register_view(bp, view)
         for markdown_view in self.markdown_views:
             self._register_markdown_view(bp, markdown_view)
+        for page_view in self.page_views:
+            self._register_page_view(bp, page_view)
+        self._register_home(bp)
         bp.add_app_template_global(Op, "Op")
         bp.add_app_template_global(InputType, "InputType")
         bp.add_app_template_global(CellFormat, "CellFormat")
         bp.context_processor(lambda: {"admin_menu": self.build_menu()})
 
+    def _register_home(self, bp: Blueprint) -> None:
+        home = next((v for v in self.views if v.is_home), None)
+        if home is None:
+            home = self.views[0] if self.views else None
+        if home is None:
+            return
+        target = home.route
+
+        def index() -> Any:
+            return redirect(url_for(target))
+
+        bp.add_url_rule("/admin", endpoint="index", view_func=index, methods=["GET"])
+
     def _register_markdown_view(self, bp: Blueprint, view: MarkdownView) -> None:
         bp.add_url_rule(
             f"/admin/{view.endpoint}",
+            endpoint=view.endpoint,
+            view_func=view.render,
+            methods=["GET"],
+        )
+
+    def _register_page_view(self, bp: Blueprint, view: PageView) -> None:
+        bp.add_url_rule(
+            view.rule,
             endpoint=view.endpoint,
             view_func=view.render,
             methods=["GET"],
@@ -166,6 +201,10 @@ class AdminSite:
                 sources.append(source)
         for markdown_view in self.markdown_views:
             source = markdown_view.nav_source
+            if source is not None:
+                sources.append(source)
+        for page_view in self.page_views:
+            source = page_view.nav_source
             if source is not None:
                 sources.append(source)
         return build_menu(sources, current)

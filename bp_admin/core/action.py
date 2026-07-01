@@ -33,6 +33,10 @@ class Action:
     def modal_id(self) -> str:
         return f"modal-action-{self.name}"
 
+    @property
+    def is_api(self) -> bool:
+        return False
+
     def is_visible(self, obj: Any) -> bool:
         return self._visible(obj) if self._visible is not None else True
 
@@ -41,3 +45,44 @@ class Action:
 
     def run(self, s: Session, obj: Any, data: dict[str, Any]) -> None:
         self.handler(s, obj, data)
+
+
+class ApiAction(Action):
+    def __init__(
+        self,
+        name: str,
+        label: str,
+        *,
+        method: str,
+        endpoint: Callable[[Any], str] | str,
+        fields: list[Field] | None = None,
+        style: str = "primary",
+        icon: str | None = None,
+        confirm: str | None = None,
+        visible: Callable[[Any], bool] | None = None,
+        tab: str | None = None,
+    ) -> None:
+        super().__init__(
+            name,
+            label,
+            _noop_handler,
+            fields=fields,
+            style=style,
+            icon=icon,
+            confirm=confirm,
+            visible=visible,
+            tab=tab,
+        )
+        self.method = method
+        self._endpoint = endpoint
+
+    @property
+    def is_api(self) -> bool:
+        return True
+
+    def api_url(self, obj: Any) -> str:
+        return self._endpoint(obj) if callable(self._endpoint) else self._endpoint
+
+
+def _noop_handler(s: Session, obj: Any, data: dict[str, Any]) -> None:
+    pass

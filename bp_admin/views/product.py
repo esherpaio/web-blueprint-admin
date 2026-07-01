@@ -1,9 +1,5 @@
-import itertools
 from typing import Any
 
-from markupsafe import Markup
-from sqlalchemy.orm.session import Session
-from web.api.utils.sku import get_sku_unit_price
 from web.database.model import (
     Product,
     ProductLink,
@@ -11,15 +7,12 @@ from web.database.model import (
     ProductMedia,
     ProductOption,
     ProductType,
-    ProductValue,
     ShipmentClass,
     Sku,
-    SkuDetail,
 )
-from web.utils.generators import gen_slug
 
 from bp_admin.core import (
-    Action,
+    ApiAction,
     BoolField,
     CachedModelView,
     CellFormat,
@@ -29,6 +22,8 @@ from bp_admin.core import (
     HtmlField,
     InlineTableTab,
     IntegerField,
+    Link,
+    LinkColumn,
     MediaTab,
     SelectField,
     StringField,
@@ -46,39 +41,6 @@ class ProductHtmlField(HtmlField):
         attributes = dict(obj.attributes or {})
         attributes["html"] = value or ""
         obj.attributes = attributes
-
-
-def _product_option_view(option_id: int) -> Markup:
-    return Markup(
-        f'<a class="btn btn-sm btn-primary" '
-        f'href="/admin/product_options/{option_id}">View</a>'
-    )
-
-
-def _generate_skus(s: Session, product: Product, data: dict) -> None:
-    existing = s.query(Sku).filter_by(product_id=product.id).all()
-    options = [o for o in product.options if not o.is_deleted]
-    value_id_sets = [[v.id for v in o.values if not v.is_deleted] for o in options]
-    for value_ids in itertools.product(*value_id_sets):
-        sku = next((x for x in existing if x.value_ids == sorted(value_ids)), None)
-        if sku is not None:
-            sku.is_deleted = False
-            continue
-        values = s.query(ProductValue).filter(ProductValue.id.in_(value_ids)).all()
-        slug = gen_slug("-".join([product.name, *(v.name for v in values)]))
-        sku = Sku(
-            product_id=product.id,
-            slug=slug,
-            stock=1,
-            is_visible=True,
-            unit_price=get_sku_unit_price(product, values),
-        )
-        s.add(sku)
-        s.flush()
-        s.add_all(
-            SkuDetail(sku_id=sku.id, option_id=v.option_id, value_id=v.id)
-            for v in values
-        )
 
 
 class ProductView(CachedModelView):
@@ -105,7 +67,13 @@ class ProductView(CachedModelView):
     ]
 
     actions = [
-        Action("generate_skus", "Generate SKUs", _generate_skus, tab="skus"),
+        ApiAction(
+            "generate_skus",
+            "Generate SKUs",
+            method="POST",
+            endpoint=lambda o: f"/api/v1/products/{o.id}/skus",
+            tab="skus",
+        ),
     ]
 
     tabs = [
@@ -133,7 +101,16 @@ class ProductView(CachedModelView):
             "product_id",
             columns=[
                 Column("name"),
-                Column("id", "Actions", format=_product_option_view, align="end"),
+                LinkColumn(
+                    "id",
+                    "Actions",
+                    link=Link(
+                        "View",
+                        endpoint="admin.product_options_detail",
+                        values=lambda o: {"id_": o.id},
+                    ),
+                    align="end",
+                ),
             ],
             create_fields=[StringField("name", required=True)],
             order_by=ProductOption.order,

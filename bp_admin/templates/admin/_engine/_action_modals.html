@@ -5,8 +5,13 @@
         <div id="{{ action.modal_id }}" class="modal modal-lg fade" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered">
                 <form class="modal-content"
-                      method="post"
-                      action="{{ view.url('action', id_=obj.id, name=action.name) }}">
+                      {% if action.is_api %}
+                          data-api-method="{{ action.method }}"
+                          data-api-url="{{ action.api_url(obj) }}"
+                      {% else %}
+                          method="post"
+                          action="{{ view.url('action', id_=obj.id, name=action.name) }}"
+                      {% endif %}>
                     <div class="modal-header">
                         <h5 class="modal-title">{{ action.label }}</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>

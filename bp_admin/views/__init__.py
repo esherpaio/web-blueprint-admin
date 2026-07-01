@@ -7,7 +7,7 @@ from .category import CategoryView
 from .changelog import ChangelogView
 from .country import CountryView
 from .coupon import CouponView
-from .order import OrderView
+from .order import OrderCreateView, OrderView
 from .product import ProductView
 from .product_option import ProductOptionView
 from .settings import SettingsView
@@ -21,6 +21,7 @@ def register_views() -> AdminSite:
     admin_site.register(CategoryView)
     admin_site.register(CouponView)
     admin_site.register(OrderView)
+    admin_site.register(OrderCreateView)
     admin_site.register(ProductView)
     admin_site.register(ProductOptionView)
     admin_site.register(UserView)

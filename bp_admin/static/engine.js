@@ -25,6 +25,33 @@
         });
     }
 
+    function initApiActions() {
+        document.querySelectorAll("form[data-api-url]").forEach(function (form) {
+            form.addEventListener("submit", function (event) {
+                event.preventDefault();
+                const method = form.dataset.apiMethod;
+                const url = form.dataset.apiUrl;
+                const body = {};
+                let hasBody = false;
+                form.querySelectorAll("[name]").forEach(function (input) {
+                    if (input.disabled) return;
+                    hasBody = true;
+                    let value = input.value;
+                    if (input.type === "checkbox") value = input.checked;
+                    else if (value === "") value = null;
+                    body[input.name] = value;
+                });
+                const data = hasBody ? body : null;
+                const contentType = hasBody ? "application/json" : null;
+                callApi(method, url, data, contentType)
+                    .then(function () {
+                        window.location.reload();
+                    })
+                    .catch(function () {});
+            });
+        });
+    }
+
     function initBack() {
         document.querySelectorAll("[data-back]").forEach(function (element) {
             element.addEventListener("click", function (event) {
@@ -185,5 +212,6 @@
         initCleanUrl();
         initHtmlEditors();
         initBack();
+        initApiActions();
     });
 })();

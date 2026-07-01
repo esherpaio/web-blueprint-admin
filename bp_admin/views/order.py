@@ -3,8 +3,6 @@ from decimal import Decimal
 from markupsafe import Markup
 from sqlalchemy import or_
 from sqlalchemy.orm import Session, joinedload
-from web.api.utils.mollie import Mollie
-from web.app.urls import url_for
 from web.database.model import (
     Billing,
     Invoice,
@@ -18,18 +16,19 @@ from web.database.model import (
     SkuDetail,
 )
 from web.locale import current_locale
-from web.mail import mail
-from web.mail.enum import MailEvent
 from web.utils.generators import format_decimal
 
 from bp_admin.core import (
-    Action,
+    ApiAction,
     CellFormat,
     Column,
     DecimalField,
     FormTab,
     InlineTableTab,
+    Link,
+    LinkColumn,
     ModelView,
+    PageView,
     SelectField,
     StringField,
     TextAreaField,
@@ -81,100 +80,6 @@ def _address_label(address, *, with_vat: bool = False) -> str:
     return "\n".join(line for line in lines if line)
 
 
-def _open_order_line_file_url(line: OrderLine) -> Markup:
-    if not line.sku.product.file_url:
-        return Markup("")
-    return Markup(
-        f'<a class="btn btn-sm btn-primary" href="{line.sku.product.file_url} "'
-        f'target="_blank" rel="noopener">Open URL</a>'
-    )
-
-
-def _open_shipment_url(shipment: Shipment) -> Markup:
-    if not shipment.url:
-        return Markup("")
-    return Markup(
-        f'<a href="{shipment.url}" target="_blank" rel="noopener">{shipment.url}</a>'
-    )
-
-
-def _downloads_invoice(invoice: Invoice) -> Markup:
-    url = url_for(
-        "admin.orders_id_invoices_id_download",
-        order_id=invoice.order_id,
-        invoice_id=invoice.id,
-    )
-    return Markup(f'<a class="btn btn-sm btn-primary" href="{url}">Download</a>')
-
-
-def _download_refund(refund: Refund) -> Markup:
-    url = url_for(
-        "admin.orders_id_refunds_id_download",
-        order_id=refund.order_id,
-        refund_id=refund.id,
-    )
-    return Markup(f'<a class="btn btn-sm btn-primary" href="{url}">Download</a>')
-
-
-def _update_status(s: Session, order: Order, data: dict) -> None:
-    if data.get("status_id"):
-        order.status_id = data["status_id"]
-
-
-def _add_shipment(s: Session, order: Order, data: dict) -> None:
-    url = data.get("url")
-    shipment = Shipment(order_id=order.id, url=url)
-    s.add(shipment)
-    order.status_id = OrderStatusId.COMPLETED
-    s.flush()
-    mail.trigger_events(
-        s,
-        MailEvent.ORDER_SHIPPED,
-        order.user_id,
-        order_id=order.id,
-        shipment_url=url,
-        billing_email=order.billing.email,
-        shipping_email=order.shipping.email,
-        shipping_address=order.shipping.full_address,
-    )
-
-
-def _cancel_order(s: Session, order: Order, data: dict) -> None:
-    if not order.mollie_id:
-        return
-    mollie = Mollie()
-    payment = mollie.payments.get(order.mollie_id)
-    if payment.is_canceled() or not payment.is_cancelable:
-        return
-    mollie.payments.delete(order.mollie_id)
-    order.status_id = OrderStatusId.COMPLETED
-
-
-def _refund_order(s: Session, order: Order, data: dict) -> None:
-    price = data.get("total_price") or Decimal("0.00")
-    if price > order.remaining_refund_amount:
-        price = order.remaining_refund_amount
-    price_vat = round(price * order.vat_rate, 2)
-    refund = Refund(order_id=order.id, total_price=abs(price) * -1)
-    s.add(refund)
-    s.flush()
-    mollie = Mollie()
-    payment = mollie.payments.get(order.mollie_id)
-    mollie_refund = payment.refunds.create(
-        {"amount": mollie.gen_amount(price_vat, order.currency_code)}
-    )
-    refund.mollie_id = mollie_refund.id
-    s.flush()
-    mail.trigger_events(
-        s,
-        MailEvent.ORDER_REFUNDED,
-        order.user_id,
-        order_id=order.id,
-        refund_id=refund.id,
-        billing_email=order.billing.email,
-    )
-
-
 class OrderView(ModelView):
     model = Order
     name = "Order"
@@ -183,8 +88,18 @@ class OrderView(ModelView):
     order = 10
     order_by = [Order.id.desc()]
     can_edit = True
+    is_home = True
 
     searchable = ["billing.full_name", "shipment.url", "status.name"]
+
+    header_links = [
+        Link(
+            "Add order",
+            endpoint="admin.order_create",
+            icon="bi-plus-square",
+            size=None,
+        ),
+    ]
 
     columns = [
         Column("id", "ID"),
@@ -195,34 +110,38 @@ class OrderView(ModelView):
     ]
 
     actions = [
-        Action(
+        ApiAction(
             "status",
             "Update status",
-            _update_status,
+            method="PATCH",
+            endpoint=lambda o: f"/api/v1/orders/{o.id}",
             fields=[SelectField.from_model("status_id", OrderStatus)],
             visible=lambda o: o.is_paid or o.is_in_progress,
         ),
-        Action(
+        ApiAction(
             "shipment",
             "Add shipment",
-            _add_shipment,
+            method="POST",
+            endpoint=lambda o: f"/api/v1/orders/{o.id}/shipments",
             fields=[StringField("url", "Tracking URL", readonly=False)],
             style="warning",
             visible=lambda o: not o.is_pending,
             tab="shipments",
         ),
-        Action(
+        ApiAction(
             "cancel",
             "Cancel order",
-            _cancel_order,
+            method="DELETE",
+            endpoint=lambda o: f"/api/v1/orders/{o.id}",
             style="warning",
             confirm="Cancel this order?",
             visible=lambda o: o.is_pending,
         ),
-        Action(
+        ApiAction(
             "refund",
             "Create refund",
-            _refund_order,
+            method="POST",
+            endpoint=lambda o: f"/api/v1/orders/{o.id}/refunds",
             fields=[DecimalField("total_price", readonly=False)],
             style="warning",
             visible=lambda o: o.is_refundable,
@@ -277,7 +196,15 @@ class OrderView(ModelView):
                 Column("sku.details", "Options", format=_sku_details_label),
                 Column("quantity"),
                 Column("total_price", format=CellFormat.PRICE),
-                Column("id", "", row_format=_open_order_line_file_url, align="end"),
+                LinkColumn(
+                    "id",
+                    link=Link(
+                        "Open URL",
+                        url=lambda o: o.sku.product.file_url,
+                        target="_blank",
+                    ),
+                    align="end",
+                ),
             ],
             order_by=OrderLine.id,
             can_create=False,
@@ -292,7 +219,16 @@ class OrderView(ModelView):
                 Column("number"),
                 Column("expires_at", format=CellFormat.DATETIME),
                 Column("paid_at", format=CellFormat.DATETIME),
-                Column("id", "", row_format=_downloads_invoice, align="end"),
+                LinkColumn(
+                    "id",
+                    link=Link(
+                        "Download",
+                        url=lambda o: (
+                            f"/api/v1/orders/{o.order_id}/invoices/{o.id}/pdf"
+                        ),
+                    ),
+                    align="end",
+                ),
             ],
             order_by=Invoice.id,
             can_create=False,
@@ -306,7 +242,16 @@ class OrderView(ModelView):
             columns=[
                 Column("carrier"),
                 Column("code"),
-                Column("url", row_format=lambda r: _open_shipment_url(r.url)),
+                LinkColumn(
+                    "url",
+                    "Url",
+                    link=Link(
+                        lambda o: o.url,
+                        url=lambda o: o.url,
+                        target="_blank",
+                        mode="text",
+                    ),
+                ),
             ],
             order_by=Shipment.id,
             can_create=False,
@@ -320,7 +265,14 @@ class OrderView(ModelView):
             columns=[
                 Column("number"),
                 Column("total_price", format=CellFormat.PRICE),
-                Column("id", "", row_format=_download_refund, align="end"),
+                LinkColumn(
+                    "id",
+                    link=Link(
+                        "Download",
+                        url=lambda o: f"/api/v1/orders/{o.order_id}/refunds/{o.id}/pdf",
+                    ),
+                    align="end",
+                ),
             ],
             order_by=Refund.id,
             can_create=False,
@@ -366,3 +318,10 @@ class OrderView(ModelView):
 
     def title(self, obj) -> str:
         return f"Order #{obj.id}"
+
+
+class OrderCreateView(PageView):
+    endpoint = "order_create"
+    label = "Add order"
+    template = "admin/custom/order_create.html"
+    path = "/admin/orders/add"
