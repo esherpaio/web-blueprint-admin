@@ -191,7 +191,9 @@ def list_endpoint(view: ModelView) -> str | Response:
                 view.after_write(s, None)
         except WriteError as error:
             return render_list(
-                view, error=error_message(error), form_values=request.form
+                view,
+                error=error_message(error),
+                form_values=request.form,
             )
         saved = Notice.DELETED if op is Op.DELETE else Notice.SAVED
         return _redirect(f"admin.{view.endpoint}", saved=saved)
@@ -208,7 +210,10 @@ def create_endpoint(view: ModelView) -> Response | str:
             create_error=error_message(error),
             create_values=request.form.to_dict(),
         )
-    return _redirect(f"admin.{view.endpoint}", saved=Notice.CREATED)
+    return _redirect(
+        f"admin.{view.endpoint}",
+        saved=Notice.CREATED,
+    )
 
 
 #
@@ -248,7 +253,10 @@ def tab_endpoint(view: ModelView, id_: Any, tab_key: str) -> Response | str:
             form_values=request.form,
         )
     return _redirect(
-        f"admin.{view.endpoint}_detail", id_=id_, tab=tab_key, saved=Notice.SAVED
+        f"admin.{view.endpoint}_detail",
+        id_=id_,
+        tab=tab_key,
+        saved=Notice.SAVED,
     )
 
 

@@ -20,14 +20,7 @@ class AdminSite:
 
     def register(
         self,
-        view: (
-            ModelView
-            | type[ModelView]
-            | MarkdownView
-            | type[MarkdownView]
-            | PageView
-            | type[PageView]
-        ),
+        view: (type[ModelView] | type[MarkdownView] | type[PageView]),
     ) -> ModelView | MarkdownView | PageView:
         instance = view() if isinstance(view, type) else view
         if isinstance(instance, MarkdownView):
@@ -60,15 +53,13 @@ class AdminSite:
     def _register_home(self, bp: Blueprint) -> None:
         home = next((v for v in self.views if v.is_home), None)
         if home is None:
-            home = self.views[0] if self.views else None
-        if home is None:
             return
-        target = home.route
-
-        def index() -> Any:
-            return redirect(url_for(target))
-
-        bp.add_url_rule("/admin", endpoint="index", view_func=index, methods=["GET"])
+        bp.add_url_rule(
+            "/admin",
+            endpoint="index",
+            view_func=lambda r: redirect(url_for(r.route)),
+            methods=["GET"],
+        )
 
     def _register_markdown_view(self, bp: Blueprint, view: MarkdownView) -> None:
         bp.add_url_rule(

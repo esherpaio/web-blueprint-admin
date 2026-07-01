@@ -17,5 +17,5 @@ from .field import (
 )
 from .pagination import get_pages
 from .site import AdminSite
-from .tab import FormTab, InlineTableTab, MediaTab, Tab, TemplateTab
+from .tab import FormTab, InlineTableTab, MediaTab, Tab
 from .view import CachedModelView, MarkdownView, ModelView, PageView, SingletonView

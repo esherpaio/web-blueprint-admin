@@ -346,37 +346,3 @@ class MediaTab(Tab):
         if extension in config.CDN_VIDEO_EXTS:
             return FileTypeId.VIDEO
         return None
-
-
-class TemplateTab(Tab):
-    template = "admin/_engine/_tab_template.html"
-
-    def __init__(
-        self,
-        label: str,
-        template: str,
-        *,
-        key: str | None = None,
-        context: Callable[[Session, Any], dict[str, Any]] | None = None,
-        handler: Callable[[Session, Any, Any, Any], None] | None = None,
-    ) -> None:
-        super().__init__(label, key)
-        self.user_template = template
-        self._context = context
-        self._handler = handler
-
-    def context(self, view: Any, s: Session, obj: Any) -> dict[str, Any]:
-        extra = self._context(s, obj) if self._context is not None else {}
-        return {"user_template": self.user_template, **extra}
-
-    def handle_post(
-        self,
-        view: Any,
-        s: Session,
-        obj: Any,
-        form: Any,
-        files: Any,
-    ) -> None:
-        if self._handler is not None:
-            self._handler(s, obj, form, files)
-        view.after_write(s, obj)
