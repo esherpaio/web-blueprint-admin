@@ -22,7 +22,6 @@ from bp_admin.core import (
     HtmlField,
     InlineTableTab,
     IntegerField,
-    Link,
     LinkColumn,
     MediaTab,
     SelectField,
@@ -104,11 +103,9 @@ class ProductView(CachedModelView):
                 LinkColumn(
                     "id",
                     "Actions",
-                    link=Link(
-                        "View",
-                        endpoint="admin.product_options_detail",
-                        values=lambda o: {"id_": o.id},
-                    ),
+                    text="View",
+                    endpoint="admin.product_options_detail",
+                    values=lambda o: {"id_": o.id},
                     align="end",
                 ),
             ],

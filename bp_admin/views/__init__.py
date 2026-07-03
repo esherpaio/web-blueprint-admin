@@ -1,7 +1,7 @@
 """Declarative admin views and their registration on the admin blueprint."""
 
 from bp_admin import admin_bp
-from bp_admin.core import AdminSite, MarkdownView
+from bp_admin.core import AdminSite
 
 from .category import CategoryView
 from .changelog import ChangelogView

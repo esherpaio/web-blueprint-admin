@@ -25,12 +25,12 @@ from bp_admin.core import (
     DecimalField,
     FormTab,
     InlineTableTab,
-    Link,
+    LinkAction,
     LinkColumn,
     ModelView,
-    PageView,
     SelectField,
     StringField,
+    TemplateView,
     TextAreaField,
 )
 
@@ -92,15 +92,6 @@ class OrderView(ModelView):
 
     searchable = ["billing.full_name", "shipment.url", "status.name"]
 
-    header_links = [
-        Link(
-            "Add order",
-            endpoint="admin.order_create",
-            icon="bi-plus-square",
-            size=None,
-        ),
-    ]
-
     columns = [
         Column("id", "ID"),
         Column("created_at", "Date", format=CellFormat.DATETIME),
@@ -110,6 +101,12 @@ class OrderView(ModelView):
     ]
 
     actions = [
+        LinkAction(
+            "add",
+            "Add order",
+            endpoint="admin.order_create",
+            icon="bi-plus-square",
+        ),
         ApiAction(
             "status",
             "Update status",
@@ -198,11 +195,9 @@ class OrderView(ModelView):
                 Column("total_price", format=CellFormat.PRICE),
                 LinkColumn(
                     "id",
-                    link=Link(
-                        "Open URL",
-                        url=lambda o: o.sku.product.file_url,
-                        target="_blank",
-                    ),
+                    text="Open URL",
+                    url=lambda o: o.sku.product.file_url,
+                    target="_blank",
                     align="end",
                 ),
             ],
@@ -221,12 +216,8 @@ class OrderView(ModelView):
                 Column("paid_at", format=CellFormat.DATETIME),
                 LinkColumn(
                     "id",
-                    link=Link(
-                        "Download",
-                        url=lambda o: (
-                            f"/api/v1/orders/{o.order_id}/invoices/{o.id}/pdf"
-                        ),
-                    ),
+                    text="Download",
+                    url=lambda o: f"/api/v1/orders/{o.order_id}/invoices/{o.id}/pdf",
                     align="end",
                 ),
             ],
@@ -245,12 +236,10 @@ class OrderView(ModelView):
                 LinkColumn(
                     "url",
                     "Url",
-                    link=Link(
-                        lambda o: o.url,
-                        url=lambda o: o.url,
-                        target="_blank",
-                        mode="text",
-                    ),
+                    text=lambda o: o.url,
+                    url=lambda o: o.url,
+                    target="_blank",
+                    mode="text",
                 ),
             ],
             order_by=Shipment.id,
@@ -267,10 +256,8 @@ class OrderView(ModelView):
                 Column("total_price", format=CellFormat.PRICE),
                 LinkColumn(
                     "id",
-                    link=Link(
-                        "Download",
-                        url=lambda o: f"/api/v1/orders/{o.order_id}/refunds/{o.id}/pdf",
-                    ),
+                    text="Download",
+                    url=lambda o: f"/api/v1/orders/{o.order_id}/refunds/{o.id}/pdf",
                     align="end",
                 ),
             ],
@@ -320,7 +307,7 @@ class OrderView(ModelView):
         return f"Order #{obj.id}"
 
 
-class OrderCreateView(PageView):
+class OrderCreateView(TemplateView):
     endpoint = "order_create"
     label = "Add order"
     template = "admin/custom/order_create.html"

@@ -6,23 +6,10 @@ from typing import Any, Callable, Sequence
 from sqlalchemy.orm.session import Session
 
 from .enums import AttrType, InputType
+from .utils import default_label, resolve_path
 
 Choice = tuple[Any, str]
 ChoiceProvider = Sequence[Choice] | Callable[[Session], Sequence[Choice]]
-
-
-def resolve_path(obj: Any, path: str) -> Any:
-    value = obj
-    for part in path.split("."):
-        if value is None:
-            return None
-        value = getattr(value, part, None)
-    return value
-
-
-def default_label(name: str) -> str:
-    base = name[:-3] if name.endswith("_id") else name
-    return base.replace("_", " ").strip().capitalize()
 
 
 class Field:
@@ -84,7 +71,9 @@ class Field:
 
     def form_value(self, obj: Any, form_values: Any) -> Any:
         submitted = form_values.get(self.name)
-        return submitted if submitted is not None else self.value_from_obj(obj)
+        if submitted is not None:
+            return submitted
+        return self.value_from_obj(obj)
 
     def choices(self, s: Session) -> list[Choice]:
         return []
@@ -104,7 +93,9 @@ class Field:
         if raw is None:
             return None
         raw = raw.strip() if isinstance(raw, str) else raw
-        return raw if raw != "" else None
+        if raw != "":
+            return raw
+        return None
 
 
 class StringField(Field):

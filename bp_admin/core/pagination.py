@@ -1,54 +1,47 @@
 import math
+from collections.abc import Iterator
 from dataclasses import dataclass
 
 WINDOW = 3
 
 
-@dataclass
-class Page:
-    number: int
-    label: str
-    active: bool = False
-    disabled: bool = False
+@dataclass(frozen=True)
+class Pagination:
+    page: int
+    per_page: int
+    total: int
 
     @property
-    def css_class(self) -> str:
-        return " ".join(
-            cls
-            for cls, on in (("disabled", self.disabled), ("active", self.active))
-            if on
-        )
+    def pages(self) -> int:
+        if self.per_page < 1 or self.total < 1:
+            return 0
+        return math.ceil(self.total / self.per_page)
 
+    @property
+    def has_prev(self) -> bool:
+        return self.page > 1
 
-def get_pages(offset: int, limit: int, total: int) -> list[Page]:
-    if total < 1 or limit < 1:
-        return []
+    @property
+    def has_next(self) -> bool:
+        return self.page < self.pages
 
-    current = offset // limit + 1
-    last = math.ceil(total / limit)
-    window = range(max(current - WINDOW, 1), min(current + WINDOW, last) + 1)
+    @property
+    def prev_page(self) -> int:
+        return max(self.page - 1, 1)
 
-    pages: list[Page] = []
+    @property
+    def next_page(self) -> int:
+        return min(self.page + 1, self.pages)
 
-    def add(number: int, label: str, disabled: bool = False) -> None:
-        pages.append(
-            Page(
-                number=number,
-                label=label,
-                active=number == current,
-                disabled=disabled,
-            )
-        )
-
-    if current > 1:
-        add(1, "«")
-    if 1 not in window:
-        add(1, "…", disabled=True)
-    for number in window:
-        add(number, str(number))
-    if last not in window:
-        add(last, "…", disabled=True)
-    if current < last:
-        add(last, "»")
-
-    return pages
+    def numbers(self, window: int = WINDOW) -> Iterator[int | None]:
+        last = self.pages
+        previous = 0
+        for number in range(1, last + 1):
+            near = abs(number - self.page) <= window
+            edge = number in (1, last)
+            if not (near or edge):
+                continue
+            if previous and number - previous > 1:
+                yield None
+            yield number
+            previous = number

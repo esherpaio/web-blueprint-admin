@@ -3,6 +3,7 @@ from typing import Any, Callable
 from sqlalchemy.orm.session import Session
 
 from .field import Field
+from .utils import resolve_href
 
 
 class Action:
@@ -10,10 +11,11 @@ class Action:
         self,
         name: str,
         label: str,
-        handler: Callable[[Session, Any, dict[str, Any]], None],
+        handler: Callable[[Session, Any, dict[str, Any]], None] | None = None,
         *,
         fields: list[Field] | None = None,
         style: str = "primary",
+        size: str | None = None,
         icon: str | None = None,
         confirm: str | None = None,
         visible: Callable[[Any], bool] | None = None,
@@ -24,6 +26,7 @@ class Action:
         self.handler = handler
         self.fields = fields or []
         self.style = style
+        self.size = size
         self.icon = icon
         self.confirm = confirm
         self._visible = visible
@@ -37,6 +40,10 @@ class Action:
     def is_api(self) -> bool:
         return False
 
+    @property
+    def is_link(self) -> bool:
+        return False
+
     def is_visible(self, obj: Any) -> bool:
         return self._visible(obj) if self._visible is not None else True
 
@@ -44,7 +51,8 @@ class Action:
         return {field.name: field.parse(form, files) for field in self.fields}
 
     def run(self, s: Session, obj: Any, data: dict[str, Any]) -> None:
-        self.handler(s, obj, data)
+        if self.handler is not None:
+            self.handler(s, obj, data)
 
 
 class ApiAction(Action):
@@ -65,7 +73,6 @@ class ApiAction(Action):
         super().__init__(
             name,
             label,
-            _noop_handler,
             fields=fields,
             style=style,
             icon=icon,
@@ -81,8 +88,53 @@ class ApiAction(Action):
         return True
 
     def api_url(self, obj: Any) -> str:
-        return self._endpoint(obj) if callable(self._endpoint) else self._endpoint
+        if callable(self._endpoint):
+            return self._endpoint(obj)
+        return self._endpoint
 
 
-def _noop_handler(s: Session, obj: Any, data: dict[str, Any]) -> None:
-    pass
+class LinkAction(Action):
+    def __init__(
+        self,
+        name: str,
+        label: str,
+        *,
+        endpoint: str | None = None,
+        url: str | Callable[[Any], str] | None = None,
+        values: dict[str, Any] | Callable[[Any], dict[str, Any]] | None = None,
+        target: str | None = None,
+        download: bool = False,
+        style: str = "primary",
+        size: str | None = None,
+        icon: str | None = None,
+        mode: str = "button",
+        visible: Callable[[Any], bool] | None = None,
+        tab: str | None = None,
+    ) -> None:
+        super().__init__(
+            name,
+            label,
+            style=style,
+            size=size,
+            icon=icon,
+            visible=visible,
+            tab=tab,
+        )
+        self.endpoint = endpoint
+        self.url = url
+        self.values = values
+        self.target = target
+        self.download = download
+        self.mode = mode
+
+    @property
+    def is_link(self) -> bool:
+        return True
+
+    def href(self, obj: Any = None) -> str | None:
+        return resolve_href(
+            obj,
+            endpoint=self.endpoint,
+            url=self.url,
+            values=self.values,
+        )

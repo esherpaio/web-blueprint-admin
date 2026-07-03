@@ -101,16 +101,41 @@
     {% endif %}
 {% endmacro %}
 
+{% macro anchor(href, text, mode="button", style="primary", size="sm", icon=none, target=none, download=false) %}
+    {% if href %}
+        {% if mode == "text" %}
+            <a href="{{ href }}"
+               {% if target %}target="{{ target }}" rel="noopener"{% endif %}
+               {% if download %}download{% endif %}>
+                {% if icon %}<i class="bi {{ icon }} me-1"></i>{% endif %}
+            {{ text }}</a>
+        {% else %}
+            <a class="btn {% if size %}btn-{{ size }}{% endif %}btn-{{ style }}"
+               href="{{ href }}"
+               {% if target %}target="{{ target }}" rel="noopener"{% endif %}
+               {% if download %}download{% endif %}>
+                {% if icon %}<i class="bi {{ icon }} me-1"></i>{% endif %}
+            {{ text }}</a>
+        {% endif %}
+    {% endif %}
+{% endmacro %}
+
 {% macro display_cell(column, obj) %}
-    {% set value = column.value(obj) %}
-    {% if column.format_name == CellFormat.PRICE %}
-        {{ value|price if value is not none }}
-    {% elif column.format_name == CellFormat.DATETIME %}
-        {{ value|datetime if value is not none }}
-    {% elif column.format_name == CellFormat.BOOL %}
-        <i class="bi {{ 'bi-check-circle-fill text-success' if value else 'bi-dash-circle text-muted' }}"></i>
+    {% if column.is_link %}
+        {% if column.is_visible(obj) %}
+            {{ anchor(column.href(obj) , column.text(obj), column.mode, column.style, column.size, column.icon, column.target, column.download) }}
+        {% endif %}
     {% else %}
-        {{ column.display(obj) if column.display(obj) is not none }}
+        {% set value = column.value(obj) %}
+        {% if column.format_name == CellFormat.PRICE %}
+            {{ value|price if value is not none }}
+        {% elif column.format_name == CellFormat.DATETIME %}
+            {{ value|datetime if value is not none }}
+        {% elif column.format_name == CellFormat.BOOL %}
+            <i class="bi {{ 'bi-check-circle-fill text-success' if value else 'bi-dash-circle text-muted' }}"></i>
+        {% else %}
+            {{ column.display(obj) if column.display(obj) is not none }}
+        {% endif %}
     {% endif %}
 {% endmacro %}
 
@@ -198,7 +223,9 @@
 {% endmacro %}
 
 {% macro action_button(view, obj, action) %}
-    {% if action.fields %}
+    {% if action.is_link %}
+        {{ anchor(action.href(obj) , action.label, action.mode, action.style, action.size, action.icon, action.target, action.download) }}
+    {% elif action.fields %}
         <button class="btn btn-{{ action.style }}"
                 type="button"
                 data-bs-toggle="modal"

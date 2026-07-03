@@ -1,6 +1,6 @@
 {% extends "admin/_templates/main.html" %}
 
-{% from "admin/_engine/_macros.html" import cell_input, display_cell, form_modal %}
+{% from "admin/_engine/_macros.html" import action_button, cell_input, display_cell, form_modal %}
 
 {% block admin_body %}
     <div class="row g-3">
@@ -8,8 +8,8 @@
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
                 <h2 class="mb-0">{{ view.name_plural }}</h2>
                 <div class="btn-toolbar flex-wrap gap-2">
-                    {% for link in view.header_links %}
-                        {{ link.render() }}
+                    {% for action in view.actions if action.is_link %}
+                        {{ action_button(view, none, action) }}
                     {% endfor %}
                     {% if view.can_create %}
                         <button class="btn btn-primary"
@@ -146,15 +146,31 @@
                 </div>
             </form>
         </div>
-        {% if pagination|length > 1 %}
+        {% if pagination.pages > 1 %}
             <div class="col-12">
                 <nav>
                     <ul class="pagination mb-0">
-                        {% for page in pagination %}
-                            <li class="page-item {{ page.css_class }}">
-                                <a class="page-link" href="{{ view.url(p=page.number, s=search) }}">{{ page.label }}</a>
-                            </li>
+                        <li class="page-item {{ 'disabled' if not pagination.has_prev }}">
+                            <a class="page-link"
+                               href="{{ view.url(p=pagination.prev_page, s=search) }}"
+                               aria-label="Previous">&laquo;</a>
+                        </li>
+                        {% for number in pagination.numbers() %}
+                            {% if number is none %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">&hellip;</span>
+                                </li>
+                            {% else %}
+                                <li class="page-item {{ 'active' if number == pagination.page }}">
+                                    <a class="page-link" href="{{ view.url(p=number, s=search) }}">{{ number }}</a>
+                                </li>
+                            {% endif %}
                         {% endfor %}
+                        <li class="page-item {{ 'disabled' if not pagination.has_next }}">
+                            <a class="page-link"
+                               href="{{ view.url(p=pagination.next_page, s=search) }}"
+                               aria-label="Next">&raquo;</a>
+                        </li>
                     </ul>
                 </nav>
             </div>

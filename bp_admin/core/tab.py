@@ -21,16 +21,16 @@ from .enums import Op
 from .field import Field
 
 
-def _slug(label: str) -> str:
-    return label.strip().lower().replace(" ", "-")
-
-
 class Tab:
     template = "admin/_engine/_tab_form.html"
 
     def __init__(self, label: str, key: str | None = None) -> None:
         self.label = label
-        self.key = key or _slug(label)
+        self.key = key or self.slugify(label)
+
+    @staticmethod
+    def slugify(label: str) -> str:
+        return label.strip().lower().replace(" ", "-")
 
     @property
     def form_id(self) -> str:

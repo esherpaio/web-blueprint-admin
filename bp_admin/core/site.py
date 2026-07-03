@@ -5,14 +5,14 @@ from flask import Blueprint, redirect, request, url_for
 from . import handlers
 from .enums import CellFormat, InputType, Op
 from .menu import AdminMenu, build_menu
-from .view import MarkdownView, ModelView, PageView
+from .view import ModelView, TemplateView, UrlView
 
 
 class AdminSite:
     def __init__(self) -> None:
         self.views: list[ModelView] = []
-        self.markdown_views: list[MarkdownView] = []
-        self.page_views: list[PageView] = []
+        self.url_views: list[UrlView] = []
+        self.template_views: list[TemplateView] = []
 
     #
     # Registration
@@ -20,13 +20,13 @@ class AdminSite:
 
     def register(
         self,
-        view: (type[ModelView] | type[MarkdownView] | type[PageView]),
-    ) -> ModelView | MarkdownView | PageView:
-        instance = view() if isinstance(view, type) else view
-        if isinstance(instance, MarkdownView):
-            self.markdown_views.append(instance)
-        elif isinstance(instance, PageView):
-            self.page_views.append(instance)
+        view: (type[ModelView] | type[UrlView] | type[TemplateView]),
+    ) -> ModelView | UrlView | TemplateView:
+        instance = view()
+        if isinstance(instance, UrlView):
+            self.url_views.append(instance)
+        elif isinstance(instance, TemplateView):
+            self.template_views.append(instance)
         elif isinstance(instance, ModelView):
             self.views.append(instance)
         else:
@@ -40,10 +40,10 @@ class AdminSite:
     def init_blueprint(self, bp: Blueprint) -> None:
         for view in self.views:
             self._register_view(bp, view)
-        for markdown_view in self.markdown_views:
-            self._register_markdown_view(bp, markdown_view)
-        for page_view in self.page_views:
-            self._register_page_view(bp, page_view)
+        for url_view in self.url_views:
+            self._register_url_view(bp, url_view)
+        for template_view in self.template_views:
+            self._register_template_view(bp, template_view)
         self._register_home(bp)
         bp.add_app_template_global(Op, "Op")
         bp.add_app_template_global(InputType, "InputType")
@@ -61,7 +61,7 @@ class AdminSite:
             methods=["GET"],
         )
 
-    def _register_markdown_view(self, bp: Blueprint, view: MarkdownView) -> None:
+    def _register_url_view(self, bp: Blueprint, view: UrlView) -> None:
         bp.add_url_rule(
             f"/admin/{view.endpoint}",
             endpoint=view.endpoint,
@@ -69,7 +69,7 @@ class AdminSite:
             methods=["GET"],
         )
 
-    def _register_page_view(self, bp: Blueprint, view: PageView) -> None:
+    def _register_template_view(self, bp: Blueprint, view: TemplateView) -> None:
         bp.add_url_rule(
             view.rule,
             endpoint=view.endpoint,
@@ -190,12 +190,12 @@ class AdminSite:
             source = view.nav_source
             if source is not None:
                 sources.append(source)
-        for markdown_view in self.markdown_views:
-            source = markdown_view.nav_source
+        for url_view in self.url_views:
+            source = url_view.nav_source
             if source is not None:
                 sources.append(source)
-        for page_view in self.page_views:
-            source = page_view.nav_source
+        for template_view in self.template_views:
+            source = template_view.nav_source
             if source is not None:
                 sources.append(source)
         return build_menu(sources, current)

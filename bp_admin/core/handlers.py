@@ -11,7 +11,7 @@ from werkzeug import Response
 
 from .db import apply_bulk_fields, delete_objects, resolve_choices
 from .enums import Notice, Op
-from .pagination import get_pages
+from .pagination import Pagination
 from .view import ModelView
 
 WriteError = (WebError, IntegrityError)
@@ -99,7 +99,7 @@ def render_list(
         choices = resolve_choices(
             s, [c.field for c in view.columns] + list(view.create_fields)
         )
-        pagination = get_pages(offset, limit, total)
+        pagination = Pagination(page=page, per_page=limit, total=total)
 
         return render_template(
             "admin/_engine/list.html",
@@ -293,5 +293,12 @@ def delete_endpoint(view: ModelView, id_: Any) -> Response:
             delete_objects(s, view.model, [id_], soft_delete=view.soft_delete)
             view.after_write(s, None)
     except WriteError:
-        return _redirect(f"admin.{view.endpoint}_detail", id_=id_, saved=Notice.ERROR)
-    return _redirect(f"admin.{view.endpoint}", saved=Notice.DELETED)
+        return _redirect(
+            f"admin.{view.endpoint}_detail",
+            id_=id_,
+            saved=Notice.ERROR,
+        )
+    return _redirect(
+        f"admin.{view.endpoint}",
+        saved=Notice.DELETED,
+    )

@@ -2,6 +2,7 @@ from typing import Any
 
 import requests
 from flask import render_template
+from markupsafe import Markup
 from sqlalchemy import or_
 from sqlalchemy.orm.session import Session
 from web.app.urls import url_for
@@ -9,7 +10,7 @@ from web.database.model import AppSettings
 from web.utils.markdown import Markdown
 
 from .action import Action
-from .column import Column, Link, row_input_name
+from .column import Column, row_input_name
 from .db import apply_fields, supports_soft_delete
 from .enums import MenuSection
 from .field import Field
@@ -33,7 +34,6 @@ class ModelView:
 
     # List page
     columns: list[Column] = []
-    header_links: list[Link] = []
     searchable: list[str] = []
     page_size: int = 40
     order_by: Any = None
@@ -191,14 +191,19 @@ class CachedModelView(ModelView):
             settings.cached_at = None
 
 
-class MarkdownView:
+class UrlView:
     endpoint: str = ""
     label: str = ""
     url: str = ""
+    format: str = "markdown"
+    cache: bool = False
     icon: str | None = None
     order: int = 100
     menu_section: MenuSection = MenuSection.BOTTOM
     menu_group: str | None = None
+
+    def __init__(self) -> None:
+        self._cached: str | None = None
 
     @property
     def route(self) -> str:
@@ -218,20 +223,35 @@ class MarkdownView:
             group=self.menu_group,
         )
 
-    def render(self) -> str:
+    def fetch(self) -> str:
         response = requests.get(self.url)
         response.raise_for_status()
-        lines = response.iter_lines(decode_unicode=True)
-        markdown_html = Markdown(*lines).html
+        return response.text
+
+    def content(self) -> str:
+        if self.cache and self._cached is not None:
+            return self._cached
+        raw = self.fetch()
+        if self.format == "markdown":
+            html = str(Markdown(*raw.splitlines()).html)
+        elif self.format == "html":
+            html = raw
+        else:
+            html = str(Markup('<pre class="mb-0">{}</pre>').format(raw))
+        if self.cache:
+            self._cached = html
+        return html
+
+    def render(self) -> str:
         return render_template(
-            "admin/markdown.html",
+            "admin/url.html",
             active_menu=self.endpoint,
             page_title=self.label,
-            markdown_html=markdown_html,
+            content=self.content(),
         )
 
 
-class PageView:
+class TemplateView:
     endpoint: str = ""
     label: str = ""
     template: str = ""
