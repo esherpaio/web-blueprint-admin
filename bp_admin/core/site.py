@@ -57,7 +57,7 @@ class AdminSite:
         bp.add_url_rule(
             "/admin",
             endpoint="index",
-            view_func=lambda r: redirect(url_for(r.route)),
+            view_func=lambda: redirect(url_for(home.route)),
             methods=["GET"],
         )
 
