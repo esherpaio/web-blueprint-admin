@@ -103,7 +103,7 @@ class OrderView(ModelView):
     actions = [
         LinkAction(
             "add",
-            "Add order",
+            "Add",
             endpoint="admin.order_create",
             icon="bi-plus-square",
         ),

@@ -110,7 +110,7 @@
                 {% if icon %}<i class="bi {{ icon }} me-1"></i>{% endif %}
             {{ text }}</a>
         {% else %}
-            <a class="btn {% if size %}btn-{{ size }}{% endif %}btn-{{ style }}"
+            <a class="btn{% if size %} btn-{{ size }}{% endif %} btn-{{ style }}"
                href="{{ href }}"
                {% if target %}target="{{ target }}" rel="noopener"{% endif %}
                {% if download %}download{% endif %}>
@@ -201,9 +201,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    {% if error %}
-                        <div class="alert alert-danger" role="alert">{{ error }}</div>
-                    {% endif %}
+                    {% if error %}<div class="alert alert-danger" role="alert">{{ error }}</div>{% endif %}
                     {% for key, hidden_value in hidden.items() %}
                         <input type="hidden" name="{{ key }}" value="{{ hidden_value }}">
                     {% endfor %}
@@ -230,9 +228,7 @@
                 type="button"
                 data-bs-toggle="modal"
                 data-bs-target="#{{ action.modal_id }}">
-            {% if action.icon %}
-                <i class="bi {{ action.icon }} me-1"></i>
-            {% endif %}
+            {% if action.icon %}<i class="bi {{ action.icon }} me-1"></i>{% endif %}
             {{ action.label }}
         </button>
     {% elif action.is_api %}
@@ -253,9 +249,7 @@
             <button class="btn btn-{{ action.style }}"
                     type="submit"
                     {% if action.confirm %}data-confirm="{{ action.confirm }}"{% endif %}>
-                {% if action.icon %}
-                    <i class="bi {{ action.icon }} me-1"></i>
-                {% endif %}
+                {% if action.icon %}<i class="bi {{ action.icon }} me-1"></i>{% endif %}
                 {{ action.label }}
             </button>
         </form>

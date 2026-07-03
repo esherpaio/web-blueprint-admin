@@ -10,11 +10,39 @@
               href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
         <link rel="stylesheet"
               href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css">
+        {% for blueprint in cache.blueprints %}
+            {% if blueprint.endpoint == request.blueprint %}
+                {% if blueprint.css_path %}
+                    <link type="text/css"
+                          rel="stylesheet"
+                          href="{{ cdn_url(blueprint.css_path) }}">
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+        {% for route in cache.routes %}
+            {% if route.endpoint == request.endpoint %}
+                {% if route.css_path %}
+                    <script defer src="{{ cdn_url(route.css_path) }}"></script>
+                {% endif %}
+            {% endif %}
+        {% endfor %}
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
         <script type="module" src="https://cdn.jsdelivr.net/npm/zero-md@3?register"></script>
-        {% include "admin/_templates/load_css.html" %}
-        {% include "admin/_templates/load_js.html" %}
+        {% for blueprint in cache.blueprints %}
+            {% if blueprint.endpoint == request.blueprint %}
+                {% if blueprint.js_path %}
+                    <script defer src="{{ cdn_url(blueprint.js_path) }}"></script>
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+        {% for route in cache.routes %}
+            {% if route.endpoint == request.endpoint %}
+                {% if route.js_path %}
+                    <script defer src="{{ cdn_url(route.js_path) }}"></script>
+                {% endif %}
+            {% endif %}
+        {% endfor %}
     </head>
     <body class="h-100 w-100 d-flex flex-row">
         {% from "admin/_engine/_menu.html" import nav_items %}
