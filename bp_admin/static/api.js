@@ -38,20 +38,15 @@ async function callApi(method, url, data = null, contentType = null, silent = fa
             }
         })
         .catch(() => {
-            let message, error;
+            let message;
             if (resp && resp.message) {
                 message = resp.message;
-                error = resp.message;
             } else {
                 message = "Something went wrong on our end.";
-                error = "No response from API.";
             }
             if (!silent) {
-                resetButtons();
-                showMessage(message);
-                throw new Error(error);
-            } else {
-                return resp;
+                throw new Error(message);
             }
+            return resp;
         });
 }

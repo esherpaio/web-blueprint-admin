@@ -3,6 +3,7 @@ from typing import Any, Callable
 from flask import Blueprint, redirect, request, url_for
 
 from . import handlers
+from .action import Action, ApiAction
 from .enums import CellFormat, InputType, Op
 from .menu import AdminMenu, build_menu
 from .view import ModelView, TemplateView, UrlView
@@ -13,6 +14,16 @@ class AdminSite:
         self.views: list[ModelView] = []
         self.url_views: list[UrlView] = []
         self.template_views: list[TemplateView] = []
+        self.account_actions: list[Action] = [
+            ApiAction(
+                "logout",
+                "Logout",
+                method="DELETE",
+                endpoint="/api/v1/sessions",
+                redirect="/",
+                icon="bi-box-arrow-right",
+            ),
+        ]
 
     #
     # Registration
@@ -48,7 +59,12 @@ class AdminSite:
         bp.add_app_template_global(Op, "Op")
         bp.add_app_template_global(InputType, "InputType")
         bp.add_app_template_global(CellFormat, "CellFormat")
-        bp.context_processor(lambda: {"admin_menu": self.build_menu()})
+        bp.context_processor(
+            lambda: {
+                "admin_menu": self.build_menu(),
+                "account_actions": self.account_actions,
+            }
+        )
 
     def _register_home(self, bp: Blueprint) -> None:
         home = next((v for v in self.views if v.is_home), None)

@@ -19,6 +19,7 @@ class CountryView(CachedModelView):
     order = 65
 
     searchable = ["name", "code"]
+    search_placeholder = "Search by name or code"
     order_by = [Country.name]
     can_edit = True
 

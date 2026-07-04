@@ -35,6 +35,7 @@ class ModelView:
     # List page
     columns: list[Column] = []
     searchable: list[str] = []
+    search_placeholder: str | None = None
     page_size: int = 40
     order_by: Any = None
     reorderable: bool = False
@@ -244,7 +245,7 @@ class UrlView:
 
     def render(self) -> str:
         return render_template(
-            "admin/url.html",
+            "admin/_templates/url.html",
             active_menu=self.endpoint,
             page_title=self.label,
             content=self.content(),

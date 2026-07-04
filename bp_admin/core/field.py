@@ -27,6 +27,7 @@ class Field:
         suffix: str | None = None,
         value: str | Callable[[Any], Any] | None = None,
         format: Callable[[Any], Any] | None = None,
+        col_class: str | None = None,
     ) -> None:
         self.name = name
         self.label = label if label is not None else default_label(name)
@@ -37,9 +38,12 @@ class Field:
         self.suffix = suffix
         self._value = value
         self._format = format
+        self._col_class = col_class
 
     @property
     def col_class(self) -> str:
+        if self._col_class is not None:
+            return self._col_class
         if self.input_type in (
             InputType.TEXTAREA,
             InputType.ATTRIBUTES,

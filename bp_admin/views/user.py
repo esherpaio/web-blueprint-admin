@@ -22,6 +22,7 @@ class UserView(CachedModelView):
     order = 55
 
     searchable = ["email", "display_name"]
+    search_placeholder = "Search by email or name"
     order_by = [User.id.desc()]
     can_edit = True
 

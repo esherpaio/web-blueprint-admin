@@ -2,13 +2,19 @@
 <html lang="{{ current_locale.language.code }}" class="h-100">
     <head>
         {% for tag in meta.tags %}{{ tag }}{% endfor %}
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
         <link rel="stylesheet"
               href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,500,600,700&display=swap">
         <link rel="stylesheet"
+              crossorigin="anonymous"
               href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
         <link rel="stylesheet"
+              crossorigin="anonymous"
               href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
         <link rel="stylesheet"
+              crossorigin="anonymous"
               href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css">
         {% for blueprint in cache.blueprints %}
             {% if blueprint.endpoint == request.blueprint %}
@@ -26,9 +32,13 @@
                 {% endif %}
             {% endif %}
         {% endfor %}
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
-        <script type="module" src="https://cdn.jsdelivr.net/npm/zero-md@3?register"></script>
+        <script crossorigin="anonymous"
+                src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+        <script crossorigin="anonymous"
+                src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
+        <script type="module"
+                crossorigin="anonymous"
+                src="https://cdn.jsdelivr.net/npm/zero-md@3?register"></script>
         {% for blueprint in cache.blueprints %}
             {% if blueprint.endpoint == request.blueprint %}
                 {% if blueprint.js_path %}
@@ -82,21 +92,27 @@
                             <li>
                                 <a class="dropdown-item disabled">{{ current_user.email }}</a>
                             </li>
-                            <li>
-                                <a class="dropdown-item" href="#" onclick="logoutUser();">
-                                    <i class="bi bi-box-arrow-right me-1"></i>
-                                    Logout
-                                </a>
-                            </li>
+                            {% for action in account_actions %}
+                                <li>
+                                    <form data-api-method="{{ action.method }}"
+                                          data-api-url="{{ action.api_url(none) }}"
+                                          {% if action.redirect %}data-api-redirect="{{ action.redirect }}"{% endif %}>
+                                        <button class="dropdown-item" type="submit">
+                                            {% if action.icon %}<i class="bi {{ action.icon }} me-1"></i>{% endif %}
+                                            {{ action.label }}
+                                        </button>
+                                    </form>
+                                </li>
+                            {% endfor %}
                         </ul>
                     </div>
                 </div>
             </nav>
             <div class="container-xxl p-3 p-sm-4 px-lg-5 px-xl-4">
+                <div data-flash></div>
                 {% block admin_body %}
                 {% endblock admin_body %}
             </div>
-            {% include "admin/_templates/message.html" %}
         </div>
     </body>
 </html>

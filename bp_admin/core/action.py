@@ -18,6 +18,7 @@ class Action:
         size: str | None = None,
         icon: str | None = None,
         confirm: str | None = None,
+        text: str | None = None,
         visible: Callable[[Any], bool] | None = None,
         tab: str | None = None,
     ) -> None:
@@ -29,12 +30,17 @@ class Action:
         self.size = size
         self.icon = icon
         self.confirm = confirm
+        self.text = text
         self._visible = visible
         self.tab = tab
 
     @property
     def modal_id(self) -> str:
         return f"modal-action-{self.name}"
+
+    @property
+    def has_modal(self) -> bool:
+        return bool(self.fields) or self.text is not None
 
     @property
     def is_api(self) -> bool:
@@ -67,6 +73,8 @@ class ApiAction(Action):
         style: str = "primary",
         icon: str | None = None,
         confirm: str | None = None,
+        text: str | None = None,
+        redirect: str | None = None,
         visible: Callable[[Any], bool] | None = None,
         tab: str | None = None,
     ) -> None:
@@ -77,11 +85,13 @@ class ApiAction(Action):
             style=style,
             icon=icon,
             confirm=confirm,
+            text=text,
             visible=visible,
             tab=tab,
         )
         self.method = method
         self._endpoint = endpoint
+        self.redirect = redirect
 
     @property
     def is_api(self) -> bool:

@@ -1,4 +1,4 @@
-{% extends "admin/_templates/main.html" %}
+{% extends "admin/_templates/base.html" %}
 
 {% block admin_body %}
     <script>
@@ -31,6 +31,34 @@
         const postOrdersIdPayments = (id, d) => callApi("POST", `/api/v1/orders/${id}/payments`, d, "application/json");
     </script>
     <script>
+        // button helpers
+        async function initButtons() {
+            const buttons = document.getElementsByClassName("btn-load");
+            for (const button of buttons) {
+                button.dataset.loading = "0";
+                const spinner = document.createElement("span");
+                spinner.classList.add("d-none", "spinner-grow", "spinner-grow-sm", "ms-2");
+                spinner.setAttribute("role", "status");
+                button.appendChild(spinner);
+            }
+        }
+
+        function updateButton(buttonId, value, override) {
+            const button = document.getElementById(buttonId);
+            if (!button || !button.classList.contains("btn-load")) return;
+            const spinner = button.getElementsByClassName("spinner-grow")[0];
+            const oldCount = parseInt(button.dataset.loading);
+            const newCount = override ? value : oldCount + value;
+            button.dataset.loading = String(newCount);
+            if (newCount > 0) {
+                button.classList.add("disabled");
+                if (spinner && spinner.classList.contains("d-none")) spinner.classList.remove("d-none");
+            } else {
+                button.classList.remove("disabled");
+                if (spinner && !spinner.classList.contains("d-none")) spinner.classList.add("d-none");
+            }
+        }
+
         // loading elements
         async function loadCart(cart) {
             document.getElementById("cart-coupon-code").innerHTML = cart.coupon_code ? cart.coupon_code : "None";
@@ -211,18 +239,23 @@
         // cart item actions
         async function addCartItem(event) {
             const cartId = parseInt(event.target.dataset.cartId);
-            await updateButton(event.target.id, 1);
-            const skuEl = document.querySelector('input[name="sku-id"]:checked');
-            const skuId = parseInt(skuEl.value);
-            const cartData = { sku_id: skuId, quantity: 1 };
-            await postCartsIdItems(cartId, cartData);
-            const cart = (await getCartsId(cartId)).data;
-            await loadCart(cart);
-            const cartItems = (await getCartsIdItems(cart.id)).data;
-            await loadCartItems(cartItems, cart);
-            const shipmentMethods = (await getShipmentMethods({ cart_id: cart.id })).data;
-            await loadShipmentMethods(shipmentMethods, cart);
-            await updateButton(event.target.id, -1);
+            updateButton(event.target.id, 1);
+            try {
+                const skuEl = document.querySelector('input[name="sku-id"]:checked');
+                const skuId = parseInt(skuEl.value);
+                const cartData = { sku_id: skuId, quantity: 1 };
+                await postCartsIdItems(cartId, cartData);
+                const cart = (await getCartsId(cartId)).data;
+                await loadCart(cart);
+                const cartItems = (await getCartsIdItems(cart.id)).data;
+                await loadCartItems(cartItems, cart);
+                const shipmentMethods = (await getShipmentMethods({ cart_id: cart.id })).data;
+                await loadShipmentMethods(shipmentMethods, cart);
+            } catch (error) {
+                window.adminFlash(error.message);
+            } finally {
+                updateButton(event.target.id, 0, true);
+            }
         }
         async function updateCartItemQuantity(event) {
             const cartId = parseInt(event.target.dataset.cartId);
@@ -230,25 +263,35 @@
             const cartItemQuantityEl = document.getElementById(`cart-item-quantity-${cartItemId}`);
             const cartItemQuantity = parseInt(cartItemQuantityEl.value);
             const cartData = { quantity: cartItemQuantity };
-            await patchCartsIdItemsId(cartId, cartItemId, cartData);
-            const cart = (await getCartsId(cartId)).data;
-            await loadCart(cart);
-            const cartItems = (await getCartsIdItems(cart.id)).data;
-            await loadCartItems(cartItems, cart);
-            const shipmentMethods = (await getShipmentMethods({ cart_id: cart.id })).data;
-            await loadShipmentMethods(shipmentMethods, cart);
+            try {
+                await patchCartsIdItemsId(cartId, cartItemId, cartData);
+                const cart = (await getCartsId(cartId)).data;
+                await loadCart(cart);
+                const cartItems = (await getCartsIdItems(cart.id)).data;
+                await loadCartItems(cartItems, cart);
+                const shipmentMethods = (await getShipmentMethods({ cart_id: cart.id })).data;
+                await loadShipmentMethods(shipmentMethods, cart);
+            } catch (error) {
+                window.adminFlash(error.message);
+            }
         }
         async function deleteCartItem(event) {
             const cartId = parseInt(event.target.dataset.cartId);
             const cartItemId = parseInt(event.target.dataset.cartItemId);
-            await updateButton(event.target.id, 1);
-            await deleteCartsIdItemsId(cartId, cartItemId);
-            const cart = (await getCartsId(cartId)).data;
-            await loadCart(cart);
-            const cartItems = (await getCartsIdItems(cart.id)).data;
-            await loadCartItems(cartItems, cart);
-            const shipmentMethods = (await getShipmentMethods({ cart_id: cart.id })).data;
-            await loadShipmentMethods(shipmentMethods, cart);
+            updateButton(event.target.id, 1);
+            try {
+                await deleteCartsIdItemsId(cartId, cartItemId);
+                const cart = (await getCartsId(cartId)).data;
+                await loadCart(cart);
+                const cartItems = (await getCartsIdItems(cart.id)).data;
+                await loadCartItems(cartItems, cart);
+                const shipmentMethods = (await getShipmentMethods({ cart_id: cart.id })).data;
+                await loadShipmentMethods(shipmentMethods, cart);
+            } catch (error) {
+                window.adminFlash(error.message);
+            } finally {
+                updateButton(event.target.id, 0, true);
+            }
         }
 
         // shipping actions
@@ -320,31 +363,38 @@
             const shipmentMethodEl = document.querySelector('input[name="shipment-method-id"]:checked');
             const shipmentMethodId = shipmentMethodEl ? parseInt(shipmentMethodEl.value) : null;
             const cartData = { shipment_method_id: shipmentMethodId };
-            const cart = (await patchCartsId(cartId, cartData)).data;
-            await loadCart(cart);
-
-            if (shipmentMethodId !== null) {
-                const shipmentMethod = (await getShipmentMethodsId(shipmentMethodId)).data;
-                const shippingPhoneEl = document.getElementById("shipping-phone");
-                shippingPhoneEl.required = shipmentMethod.requires_billing_phone;
+            try {
+                const cart = (await patchCartsId(cartId, cartData)).data;
+                await loadCart(cart);
+                if (shipmentMethodId !== null) {
+                    const shipmentMethod = (await getShipmentMethodsId(shipmentMethodId)).data;
+                    const shippingPhoneEl = document.getElementById("shipping-phone");
+                    shippingPhoneEl.required = shipmentMethod.requires_billing_phone;
+                }
+            } catch (error) {
+                window.adminFlash(error.message);
             }
         }
 
         // order actions
         async function addOrder(event) {
             const cartId = parseInt(event.target.dataset.cartId);
-            await updateButton(event.target.id, 1);
-            const cart = (await getCartsId(cartId)).data;
-            await updateShipping(cart);
-            await updateBilling(cart);
-            const orderData = { cart_id: cart.id, trigger_mail: false };
-            const order = (await postOrders(orderData)).data;
-            const baseUrl = `${location.protocol}//${location.host}`;
-            const redirectUrl = `${location.protocol}//${location.host}/admin/orders/${order.id}`;
-            await postOrdersIdPayments(order.id, { redirect_url: baseUrl, cancel_url: baseUrl, methods: ["banktransfer"] });
-            await deleteCartsId(cart.id);
-            await updateButton(event.target.id, -1);
-            window.location.href = redirectUrl;
+            updateButton(event.target.id, 1);
+            try {
+                const cart = (await getCartsId(cartId)).data;
+                await updateShipping(cart);
+                await updateBilling(cart);
+                const orderData = { cart_id: cart.id, trigger_mail: false };
+                const order = (await postOrders(orderData)).data;
+                const baseUrl = `${location.protocol}//${location.host}`;
+                const redirectUrl = `${location.protocol}//${location.host}/admin/orders/${order.id}`;
+                await postOrdersIdPayments(order.id, { redirect_url: baseUrl, cancel_url: baseUrl, methods: ["banktransfer"] });
+                await deleteCartsId(cart.id);
+                window.location.href = redirectUrl;
+            } catch (error) {
+                window.adminFlash(error.message);
+                updateButton(event.target.id, 0, true);
+            }
         }
 
         // initialization

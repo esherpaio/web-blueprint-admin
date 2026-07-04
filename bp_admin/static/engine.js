@@ -1,6 +1,33 @@
 (function () {
     "use strict";
 
+    function setButtonLoading(button, loading) {
+        if (!button) return;
+        button.disabled = loading;
+        button.classList.toggle("disabled", loading);
+    }
+
+    function showFlash(message, level) {
+        level = level || "danger";
+        const container = document.querySelector("[data-flash]");
+        if (!container) {
+            window.alert(message);
+            return;
+        }
+        const alert = document.createElement("div");
+        alert.className = "alert alert-" + level + " alert-dismissible fade show";
+        alert.setAttribute("role", "alert");
+        alert.textContent = message;
+        const close = document.createElement("button");
+        close.type = "button";
+        close.className = "btn-close";
+        close.setAttribute("data-bs-dismiss", "alert");
+        alert.appendChild(close);
+        container.appendChild(alert);
+    }
+
+    window.adminFlash = showFlash;
+
     function initSelectAll() {
         document.querySelectorAll("[data-select-all]").forEach(function (master) {
             const table = master.closest("table");
@@ -31,6 +58,8 @@
                 event.preventDefault();
                 const method = form.dataset.apiMethod;
                 const url = form.dataset.apiUrl;
+                const redirect = form.dataset.apiRedirect;
+                const button = form.querySelector('[type="submit"]');
                 const body = {};
                 let hasBody = false;
                 form.querySelectorAll("[name]").forEach(function (input) {
@@ -43,11 +72,16 @@
                 });
                 const data = hasBody ? body : null;
                 const contentType = hasBody ? "application/json" : null;
+                setButtonLoading(button, true);
                 callApi(method, url, data, contentType)
                     .then(function () {
-                        window.location.reload();
+                        if (redirect) window.location.href = redirect;
+                        else window.location.reload();
                     })
-                    .catch(function () {});
+                    .catch(function (error) {
+                        setButtonLoading(button, false);
+                        showFlash(error.message);
+                    });
             });
         });
     }

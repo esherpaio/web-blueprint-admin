@@ -212,7 +212,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button class="btn btn-primary" type="submit">Add</button>
+                    <button class="btn btn-warning" type="submit">Add</button>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 </div>
             </form>
@@ -223,8 +223,8 @@
 {% macro action_button(view, obj, action) %}
     {% if action.is_link %}
         {{ anchor(action.href(obj) , action.label, action.mode, action.style, action.size, action.icon, action.target, action.download) }}
-    {% elif action.fields %}
-        <button class="btn btn-{{ action.style }}"
+    {% elif action.has_modal %}
+        <button class="btn btn-primary"
                 type="button"
                 data-bs-toggle="modal"
                 data-bs-target="#{{ action.modal_id }}">

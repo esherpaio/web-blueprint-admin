@@ -91,6 +91,7 @@ class OrderView(ModelView):
     is_home = True
 
     searchable = ["billing.full_name", "shipment.url", "status.name"]
+    search_placeholder = "Search by customer, tracking or status"
 
     columns = [
         Column("id", "ID"),
@@ -122,6 +123,7 @@ class OrderView(ModelView):
             endpoint=lambda o: f"/api/v1/orders/{o.id}/shipments",
             fields=[StringField("url", "Tracking URL", readonly=False)],
             style="warning",
+            text="Adding a tracking URL marks this order as shipped and notifies the customer by email.",
             visible=lambda o: not o.is_pending,
             tab="shipments",
         ),
@@ -131,7 +133,7 @@ class OrderView(ModelView):
             method="DELETE",
             endpoint=lambda o: f"/api/v1/orders/{o.id}",
             style="warning",
-            confirm="Cancel this order?",
+            text="Cancelling this order refunds the customer and restocks the items. This action is irreversible.",
             visible=lambda o: o.is_pending,
         ),
         ApiAction(
@@ -141,6 +143,7 @@ class OrderView(ModelView):
             endpoint=lambda o: f"/api/v1/orders/{o.id}/refunds",
             fields=[DecimalField("total_price", readonly=False)],
             style="warning",
+            text="Refunds are processed immediately and cannot be undone. Enter the amount to refund to the customer.",
             visible=lambda o: o.is_refundable,
             tab="refunds",
         ),

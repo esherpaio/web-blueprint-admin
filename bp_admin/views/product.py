@@ -53,6 +53,7 @@ class ProductView(CachedModelView):
     can_delete = True
     can_edit = True
     searchable = ["name"]
+    search_placeholder = "Search by name"
     order_by = [Product.name]
 
     create_fields = [

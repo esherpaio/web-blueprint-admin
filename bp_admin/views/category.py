@@ -21,6 +21,7 @@ class CategoryView(CachedModelView):
     page_size = 50
 
     searchable = ["name"]
+    search_placeholder = "Search by name"
     order_by = [Category.order, Category.id]
     reorderable = True
     can_edit = True
@@ -60,5 +61,6 @@ class CategoryView(CachedModelView):
             ],
             order_by=CategoryItem.order,
             reorderable=True,
+            add_title="Add SKU",
         ),
     ]

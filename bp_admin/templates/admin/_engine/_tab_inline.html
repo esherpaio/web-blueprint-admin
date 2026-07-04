@@ -102,5 +102,5 @@
 </form>
 
 {% if tab.show_add %}
-    {{ form_modal(tab.add_modal_id, 'Add', tab_action, tab_ctx.create_fields, tab_ctx.choices, {}, none, {'_op': Op.ADD}) }}
+    {{ form_modal(tab.add_modal_id, tab.add_title, tab_action, tab_ctx.create_fields, tab_ctx.choices, {}, none, {'_op': Op.ADD}) }}
 {% endif %}

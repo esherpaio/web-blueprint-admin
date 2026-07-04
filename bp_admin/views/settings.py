@@ -18,7 +18,7 @@ class SettingsView(SingletonView):
     tabs = [
         FormTab(
             "General",
-            [StringField("banner", readonly=False)],
+            [StringField("banner", readonly=False, col_class="col-12")],
         ),
     ]
 

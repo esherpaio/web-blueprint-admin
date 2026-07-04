@@ -101,6 +101,7 @@ class InlineTableTab(Tab):
         can_delete: bool = True,
         reorderable: bool = False,
         order_field: str = "order",
+        add_title: str | None = None,
         key: str | None = None,
     ) -> None:
         super().__init__(label, key)
@@ -115,6 +116,7 @@ class InlineTableTab(Tab):
         self.can_delete = can_delete
         self.reorderable = reorderable
         self.order_field = order_field
+        self._add_title = add_title
 
     @property
     def soft_delete(self) -> bool:
@@ -125,6 +127,10 @@ class InlineTableTab(Tab):
     @property
     def add_modal_id(self) -> str:
         return f"modal-add-{self.key}"
+
+    @property
+    def add_title(self) -> str:
+        return self._add_title or "Add"
 
     @property
     def has_editable(self) -> bool:
