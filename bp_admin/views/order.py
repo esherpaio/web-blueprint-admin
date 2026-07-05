@@ -1,5 +1,3 @@
-from decimal import Decimal
-
 from markupsafe import Markup
 from sqlalchemy import or_
 from sqlalchemy.orm import Session, joinedload
@@ -41,12 +39,6 @@ _STATUS_COLOR = {
     OrderStatusId.READY: "text-bg-primary",
     OrderStatusId.COMPLETED: "text-bg-success",
 }
-
-
-def _price_label(value: Decimal | None, currency: str | None) -> str:
-    if value is None:
-        return ""
-    return f"{format_decimal(value)} {currency or ''}".strip()
 
 
 def _order_status_label(status: OrderStatus | None) -> Markup:
@@ -171,17 +163,21 @@ class OrderView(ModelView):
                 StringField("shipment_name", "Shipment"),
                 StringField(
                     "shipment_price",
-                    value=lambda o: _price_label(o.shipment_price, o.currency_code),
+                    format=format_decimal,
+                    suffix=lambda o: o.currency_code,
                 ),
                 StringField("coupon_code"),
                 StringField(
                     "discount",
-                    value=lambda o: _price_label(o.discount_price, o.currency_code),
+                    value="discount_price",
+                    format=format_decimal,
+                    suffix=lambda o: o.currency_code,
                 ),
                 StringField("vat_percentage", "VAT", suffix="%"),
                 StringField(
                     "total_price",
-                    value=lambda o: _price_label(o.total_price, o.currency_code),
+                    format=format_decimal,
+                    suffix=lambda o: o.currency_code,
                 ),
                 TextAreaField(
                     "shipping",

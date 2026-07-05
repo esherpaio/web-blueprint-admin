@@ -24,7 +24,7 @@ class Field:
         readonly: bool = True,
         placeholder: str | None = None,
         attrs: dict[str, Any] | None = None,
-        suffix: str | None = None,
+        suffix: str | Callable[[Any], Any] | None = None,
         value: str | Callable[[Any], Any] | None = None,
         format: Callable[[Any], Any] | None = None,
         col_class: str | None = None,
@@ -60,6 +60,11 @@ class Field:
 
     def is_readonly(self, editable: bool | None = None) -> bool:
         return self.readonly if editable is None else not editable
+
+    def suffix_for(self, obj: Any = None) -> Any:
+        if callable(self.suffix):
+            return self.suffix(obj) if obj is not None else None
+        return self.suffix
 
     #
     # Reading

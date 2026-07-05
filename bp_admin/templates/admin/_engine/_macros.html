@@ -1,4 +1,4 @@
-{% macro field_input(field, value, choices={}, name=None, editable=None) %}
+{% macro field_input(field, value, choices={}, name=None, editable=None, obj=None) %}
     {% set fname = name or field.name %}
     {% set is_readonly = field.is_readonly(editable) %}
     {% if field.input_type == InputType.ATTRIBUTES %}
@@ -59,7 +59,7 @@
                    {% for key, attr_value in field.attrs.items() %}{{ key }}="{{ attr_value }}"{% endfor %}
                    {% if field.required %}required{% endif %}
                    {% if is_readonly %}disabled{% endif %}>
-            {% if field.suffix %}<span class="input-group-text">{{ field.suffix }}</span>{% endif %}
+            {% if field.suffix_for(obj) %}<span class="input-group-text">{{ field.suffix_for(obj) }}</span>{% endif %}
         </div>
     {% endif %}
 {% endmacro %}
@@ -83,14 +83,14 @@
                 </option>
             {% endfor %}
         </select>
-    {% elif field.suffix %}
+    {% elif field.suffix_for(obj) %}
         <div class="input-group input-group-sm">
             <input class="form-control"
                    type="{{ field.html_input_type }}"
                    name="{{ name }}"
                    value="{{ value if value is not none else '' }}"
                    {% for key, attr_value in field.attrs.items() %}{{ key }}="{{ attr_value }}"{% endfor %}>
-            <span class="input-group-text">{{ field.suffix }}</span>
+            <span class="input-group-text">{{ field.suffix_for(obj) }}</span>
         </div>
     {% else %}
         <input class="form-control form-control-sm"

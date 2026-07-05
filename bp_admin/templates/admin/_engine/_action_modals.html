@@ -18,7 +18,7 @@
                             <div class="row g-2">
                                 {% for field in action.fields %}
                                     <div class="col-12">
-                                        {{ field_input(field, field.value_from_obj(obj) , action_choices.get(action.name, {}) , editable=true) }}
+                                        {{ field_input(field, field.value_from_obj(obj) , action_choices.get(action.name, {}) , editable=true, obj=obj) }}
                                     </div>
                                 {% endfor %}
                             </div>
