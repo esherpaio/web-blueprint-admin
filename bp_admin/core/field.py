@@ -58,6 +58,9 @@ class Field:
             return "datetime-local"
         return self.input_type
 
+    def is_readonly(self, editable: bool | None = None) -> bool:
+        return self.readonly if editable is None else not editable
+
     #
     # Reading
     #
@@ -191,6 +194,14 @@ class SelectField(Field):
         self._coerce_fn = coerce
         self.empty_label = empty_label
 
+    @property
+    def empty_option_label(self) -> str:
+        return self.empty_label or "None"
+
+    @property
+    def show_empty_option(self) -> bool:
+        return self.empty_label is not None or not self.required
+
     @classmethod
     def from_model(
         cls,
@@ -259,17 +270,6 @@ class HiddenField(Field):
 
 class JsonAttributesField(Field):
     input_type = InputType.ATTRIBUTES
-
-    VALUE_TYPES = (
-        (AttrType.NONE, "None"),
-        (AttrType.TEXT, "Text"),
-        (AttrType.INTEGER, "Integer"),
-        (AttrType.FLOAT, "Float"),
-        (AttrType.BOOLEAN, "Boolean"),
-        (AttrType.TIMESTAMP, "Timestamp"),
-        (AttrType.LIST, "List"),
-        (AttrType.DICT, "Dict"),
-    )
 
     def __init__(
         self,

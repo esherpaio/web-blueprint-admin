@@ -107,6 +107,10 @@ class ModelView:
         return f"Add {self.name.lower()}"
 
     @property
+    def search_hint(self) -> str:
+        return self.search_placeholder or "Search"
+
+    @property
     def soft_delete(self) -> bool:
         if self._soft_delete is not None:
             return self._soft_delete
@@ -245,7 +249,7 @@ class UrlView:
 
     def render(self) -> str:
         return render_template(
-            "admin/_templates/url.html",
+            "admin/templates/url.html",
             active_menu=self.endpoint,
             page_title=self.label,
             content=self.content(),

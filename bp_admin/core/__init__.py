@@ -1,6 +1,17 @@
 from .action import Action, ApiAction, LinkAction
 from .column import Column, LinkColumn
-from .enums import AttrType, CellFormat, InputType, MenuSection, Notice, Op
+from .enums import (
+    Align,
+    AttrType,
+    CellFormat,
+    InputType,
+    LinkMode,
+    MenuSection,
+    Notice,
+    Op,
+    Size,
+    Style,
+)
 from .field import (
     BoolField,
     DateTimeField,

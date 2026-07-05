@@ -1,6 +1,6 @@
 {% macro field_input(field, value, choices={}, name=None, editable=None) %}
     {% set fname = name or field.name %}
-    {% set is_readonly = field.readonly if editable is none else not editable %}
+    {% set is_readonly = field.is_readonly(editable) %}
     {% if field.input_type == InputType.ATTRIBUTES %}
         {{ attributes_editor(field, value) }}
     {% elif field.input_type == InputType.HTML %}
@@ -27,8 +27,8 @@
                     name="{{ fname }}"
                     {% if field.required %}required{% endif %}
                     {% if is_readonly %}disabled{% endif %}>
-                {% if field.empty_label is not none or not field.required %}
-                    <option value="">{{ field.empty_label or "None" }}</option>
+                {% if field.show_empty_option %}
+                    <option value="">{{ field.empty_option_label }}</option>
                 {% endif %}
                 {% for option_value, option_label in choices.get(field.name, []) %}
                     <option value="{{ option_value }}"
@@ -75,7 +75,7 @@
                {% if value %}checked{% endif %}>
     {% elif field.input_type == InputType.SELECT %}
         <select class="form-select form-select-sm" name="{{ name }}">
-            {% if not field.required %}<option value="">{{ field.empty_label or "None" }}</option>{% endif %}
+            {% if not field.required %}<option value="">{{ field.empty_option_label }}</option>{% endif %}
             {% for option_value, option_label in choices.get(field.name, []) %}
                 <option value="{{ option_value }}"
                         {% if value is not none and value|string == option_value|string %}selected{% endif %}>
@@ -110,7 +110,7 @@
                 {% if icon %}<i class="bi {{ icon }} me-1"></i>{% endif %}
             {{ text }}</a>
         {% else %}
-            <a class="btn{% if size %} btn-{{ size }}{% endif %} btn-{{ style }}"
+            <a class="{{ button_class(style, size) }}"
                href="{{ href }}"
                {% if target %}target="{{ target }}" rel="noopener"{% endif %}
                {% if download %}download{% endif %}>
@@ -126,16 +126,7 @@
             {{ anchor(column.href(obj) , column.text(obj), column.mode, column.style, column.size, column.icon, column.target, column.download) }}
         {% endif %}
     {% else %}
-        {% set value = column.value(obj) %}
-        {% if column.format_name == CellFormat.PRICE %}
-            {{ value|price if value is not none }}
-        {% elif column.format_name == CellFormat.DATETIME %}
-            {{ value|datetime if value is not none }}
-        {% elif column.format_name == CellFormat.BOOL %}
-            <i class="bi {{ 'bi-check-circle-fill text-success' if value else 'bi-dash-circle text-muted' }}"></i>
-        {% else %}
-            {{ column.display(obj) if column.display(obj) is not none }}
-        {% endif %}
+        {{ column.render(obj) }}
     {% endif %}
 {% endmacro %}
 
@@ -169,9 +160,8 @@
                     style="max-width:9rem"
                     name="attr-type"
                     {% if field.readonly %}disabled{% endif %}>
-                {% for type_value, type_label in field.VALUE_TYPES %}
-                    <option value="{{ type_value }}"
-                            {% if type_value == type %}selected{% endif %}>{{ type_label }}</option>
+                {% for attr_type in AttrType %}
+                    <option value="{{ attr_type }}" {% if attr_type == type %}selected{% endif %}>{{ attr_type.label }}</option>
                 {% endfor %}
             </select>
             <input class="form-control"
@@ -201,7 +191,9 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    {% if error %}<div class="alert alert-danger" role="alert">{{ error }}</div>{% endif %}
+                    {% if error %}
+                        <div class="alert alert-danger" role="alert">{{ error }}</div>
+                    {% endif %}
                     {% for key, hidden_value in hidden.items() %}
                         <input type="hidden" name="{{ key }}" value="{{ hidden_value }}">
                     {% endfor %}
@@ -228,13 +220,15 @@
                 type="button"
                 data-bs-toggle="modal"
                 data-bs-target="#{{ action.modal_id }}">
-            {% if action.icon %}<i class="bi {{ action.icon }} me-1"></i>{% endif %}
+            {% if action.icon %}
+                <i class="bi {{ action.icon }} me-1"></i>
+            {% endif %}
             {{ action.label }}
         </button>
     {% elif action.is_api %}
         <form data-api-method="{{ action.method }}"
               data-api-url="{{ action.api_url(obj) }}">
-            <button class="btn btn-{{ action.style }}"
+            <button class="{{ button_class(action.style) }}"
                     type="submit"
                     {% if action.confirm %}data-confirm="{{ action.confirm }}"{% endif %}>
                 {% if action.icon %}
@@ -246,10 +240,12 @@
     {% else %}
         <form method="post"
               action="{{ view.url('action', id_=obj.id, name=action.name) }}">
-            <button class="btn btn-{{ action.style }}"
+            <button class="{{ button_class(action.style) }}"
                     type="submit"
                     {% if action.confirm %}data-confirm="{{ action.confirm }}"{% endif %}>
-                {% if action.icon %}<i class="bi {{ action.icon }} me-1"></i>{% endif %}
+                {% if action.icon %}
+                    <i class="bi {{ action.icon }} me-1"></i>
+                {% endif %}
                 {{ action.label }}
             </button>
         </form>

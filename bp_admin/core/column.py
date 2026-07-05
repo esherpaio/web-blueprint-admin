@@ -1,5 +1,10 @@
 from typing import Any, Callable
 
+from markupsafe import Markup, escape
+from web.locale import current_locale
+from web.utils.generators import format_decimal
+
+from .enums import Align, CellFormat, LinkMode, Size, Style
 from .field import Field, StringField
 from .utils import default_label, resolve_href, resolve_path, resolve_value
 
@@ -18,9 +23,9 @@ class Column:
         *,
         editable: bool = False,
         field: Field | None = None,
-        format: str | Callable[[Any], Any] | None = None,
+        format: CellFormat | str | Callable[[Any], Any] | None = None,
         row_format: Callable[[Any], Any] | None = None,
-        align: str | None = None,
+        align: Align | str | None = None,
     ) -> None:
         self.name = name
         self.label = label if label is not None else default_label(name)
@@ -58,6 +63,26 @@ class Column:
             return self.format(value)
         return value
 
+    def render(self, obj: Any) -> Markup:
+        kind = self.format_name
+        if kind == CellFormat.PRICE:
+            value = self.value(obj)
+            return escape(format_decimal(value)) if value is not None else Markup("")
+        if kind == CellFormat.DATETIME:
+            value = self.value(obj)
+            if value is None:
+                return Markup("")
+            return escape(current_locale.format_datetime(value))
+        if kind == CellFormat.BOOL:
+            icon = (
+                "bi-check-circle-fill text-success"
+                if self.value(obj)
+                else "bi-dash-circle text-muted"
+            )
+            return Markup(f'<i class="bi {icon}"></i>')
+        display = self.display(obj)
+        return escape(display) if display is not None else Markup("")
+
 
 class LinkColumn(Column):
     is_link = True
@@ -73,12 +98,12 @@ class LinkColumn(Column):
         values: dict[str, Any] | Callable[[Any], dict[str, Any]] | None = None,
         target: str | None = None,
         download: bool = False,
-        style: str = "primary",
-        size: str | None = "sm",
+        style: Style | str = Style.PRIMARY,
+        size: Size | str | None = Size.SM,
         icon: str | None = None,
-        mode: str = "button",
+        mode: LinkMode | str = LinkMode.BUTTON,
         visible: Callable[[Any], bool] | None = None,
-        align: str | None = None,
+        align: Align | str | None = None,
     ) -> None:
         super().__init__(name, label, align=align)
         self._text = text

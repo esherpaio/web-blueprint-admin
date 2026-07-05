@@ -1,4 +1,4 @@
-{% extends "admin/_templates/base.html" %}
+{% extends "admin/templates/base.html" %}
 
 {% from "admin/_engine/_macros.html" import action_button, cell_input, display_cell, form_modal %}
 
@@ -55,7 +55,7 @@
                             <input class="form-control"
                                    name="s"
                                    type="text"
-                                   placeholder="{{ view.search_placeholder or 'Search' }}"
+                                   placeholder="{{ view.search_hint }}"
                                    value="{{ search if search }}">
                         </div>
                         <div class="col-12 col-lg-auto">

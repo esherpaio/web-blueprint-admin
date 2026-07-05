@@ -2,6 +2,7 @@ from typing import Any, Callable
 
 from sqlalchemy.orm.session import Session
 
+from .enums import LinkMode, Size, Style
 from .field import Field
 from .utils import resolve_href
 
@@ -14,8 +15,8 @@ class Action:
         handler: Callable[[Session, Any, dict[str, Any]], None] | None = None,
         *,
         fields: list[Field] | None = None,
-        style: str = "primary",
-        size: str | None = None,
+        style: Style | str = Style.PRIMARY,
+        size: Size | str | None = None,
         icon: str | None = None,
         confirm: str | None = None,
         text: str | None = None,
@@ -70,7 +71,7 @@ class ApiAction(Action):
         method: str,
         endpoint: Callable[[Any], str] | str,
         fields: list[Field] | None = None,
-        style: str = "primary",
+        style: Style | str = Style.PRIMARY,
         icon: str | None = None,
         confirm: str | None = None,
         text: str | None = None,
@@ -114,10 +115,10 @@ class LinkAction(Action):
         values: dict[str, Any] | Callable[[Any], dict[str, Any]] | None = None,
         target: str | None = None,
         download: bool = False,
-        style: str = "primary",
-        size: str | None = None,
+        style: Style | str = Style.PRIMARY,
+        size: Size | str | None = None,
         icon: str | None = None,
-        mode: str = "button",
+        mode: LinkMode | str = LinkMode.BUTTON,
         visible: Callable[[Any], bool] | None = None,
         tab: str | None = None,
     ) -> None:

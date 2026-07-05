@@ -1,15 +1,25 @@
 from typing import Any, Callable
 
 from flask import Blueprint, redirect, request, url_for
+from web.app.meta import Meta
+from web.auth import authorize_user
+from web.database.model import UserRoleLevel
+from werkzeug import Response
 
 from . import handlers
 from .action import Action, ApiAction
-from .enums import CellFormat, InputType, Op
+from .enums import AttrType, InputType, Op
 from .menu import AdminMenu, build_menu
+from .utils import button_class
 from .view import ModelView, TemplateView, UrlView
 
 
 class AdminSite:
+    name = "admin"
+    static_url_path = "/admin/static"
+    auth_role = UserRoleLevel.ADMIN
+    meta_title = "Admin"
+
     def __init__(self) -> None:
         self.views: list[ModelView] = []
         self.url_views: list[UrlView] = []
@@ -48,7 +58,20 @@ class AdminSite:
     # Flask wiring
     #
 
-    def init_blueprint(self, bp: Blueprint) -> None:
+    def build_blueprint(self, import_name: str) -> Blueprint:
+        bp = Blueprint(
+            name=self.name,
+            import_name=import_name,
+            template_folder="templates",
+            static_folder="static",
+            static_url_path=self.static_url_path,
+        )
+        self._register(bp)
+        bp.before_request(self._authorize)
+        bp.context_processor(self._context)
+        return bp
+
+    def _register(self, bp: Blueprint) -> None:
         for view in self.views:
             self._register_view(bp, view)
         for url_view in self.url_views:
@@ -58,13 +81,18 @@ class AdminSite:
         self._register_home(bp)
         bp.add_app_template_global(Op, "Op")
         bp.add_app_template_global(InputType, "InputType")
-        bp.add_app_template_global(CellFormat, "CellFormat")
-        bp.context_processor(
-            lambda: {
-                "admin_menu": self.build_menu(),
-                "account_actions": self.account_actions,
-            }
-        )
+        bp.add_app_template_global(AttrType, "AttrType")
+        bp.add_app_template_global(button_class, "button_class")
+
+    def _authorize(self) -> Response | None:
+        return authorize_user(self.auth_role)
+
+    def _context(self) -> dict[str, Any]:
+        return {
+            "meta": Meta(title=self.meta_title, robots="noindex,nofollow"),
+            "admin_menu": self.build_menu(),
+            "account_actions": self.account_actions,
+        }
 
     def _register_home(self, bp: Blueprint) -> None:
         home = next((v for v in self.views if v.is_home), None)

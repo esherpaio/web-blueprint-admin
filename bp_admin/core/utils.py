@@ -34,3 +34,12 @@ def resolve_href(
 def default_label(name: str) -> str:
     base = name[:-3] if name.endswith("_id") else name
     return base.replace("_", " ").strip().capitalize()
+
+
+def button_class(style: str | None = "primary", size: str | None = None) -> str:
+    parts = ["btn"]
+    if size:
+        parts.append(f"btn-{size}")
+    if style:
+        parts.append(f"btn-{style}")
+    return " ".join(parts)

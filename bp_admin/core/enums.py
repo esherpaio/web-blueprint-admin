@@ -33,6 +33,33 @@ class CellFormat(StrEnum):
     BOOL = "bool"
 
 
+class Style(StrEnum):
+    PRIMARY = "primary"
+    SECONDARY = "secondary"
+    SUCCESS = "success"
+    DANGER = "danger"
+    WARNING = "warning"
+    INFO = "info"
+    LIGHT = "light"
+    DARK = "dark"
+
+
+class Size(StrEnum):
+    SM = "sm"
+    LG = "lg"
+
+
+class Align(StrEnum):
+    START = "start"
+    CENTER = "center"
+    END = "end"
+
+
+class LinkMode(StrEnum):
+    BUTTON = "button"
+    TEXT = "text"
+
+
 class AttrType(StrEnum):
     NONE = "none"
     TEXT = "text"
@@ -42,6 +69,10 @@ class AttrType(StrEnum):
     TIMESTAMP = "timestamp"
     LIST = "list"
     DICT = "dict"
+
+    @property
+    def label(self) -> str:
+        return self.capitalize()
 
 
 class MenuSection(StrEnum):

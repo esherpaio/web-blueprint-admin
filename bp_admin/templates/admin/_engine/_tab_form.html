@@ -5,6 +5,7 @@
         <button class="btn btn-warning" type="submit" form="{{ tab.form_id }}">Save changes</button>
     </div>
 {% endif %}
+
 <form id="{{ tab.form_id }}"
       method="post"
       action="{{ view.url('tab', id_=obj.id, tab_key=tab.key) }}">
