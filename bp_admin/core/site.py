@@ -1,6 +1,8 @@
+import os
 from typing import Any, Callable
 
 from flask import Blueprint, redirect, request, url_for
+from jinja2 import ChoiceLoader, FileSystemLoader
 from web.app.meta import Meta
 from web.auth import authorize_user
 from web.database.model import UserRoleLevel
@@ -12,6 +14,10 @@ from .enums import AttrType, InputType, Op
 from .menu import AdminMenu, build_menu
 from .utils import button_class
 from .view import ModelView, TemplateView, UrlView
+
+_ENGINE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_ENGINE_TEMPLATES = os.path.join(_ENGINE_DIR, "templates")
+_ENGINE_STATIC = os.path.join(_ENGINE_DIR, "static")
 
 
 class AdminSite:
@@ -58,14 +64,22 @@ class AdminSite:
     # Flask wiring
     #
 
-    def build_blueprint(self, import_name: str) -> Blueprint:
+    def build_blueprint(
+        self,
+        import_name: str,
+        template_folder: str | None = None,
+    ) -> Blueprint:
         bp = Blueprint(
             name=self.name,
             import_name=import_name,
-            template_folder="templates",
-            static_folder="static",
+            static_folder=_ENGINE_STATIC,
             static_url_path=self.static_url_path,
         )
+        loaders: list[FileSystemLoader] = []
+        if template_folder is not None:
+            loaders.append(FileSystemLoader(template_folder))
+        loaders.append(FileSystemLoader(_ENGINE_TEMPLATES))
+        bp.jinja_loader = ChoiceLoader(loaders)  # type: ignore[assignment]
         self._register(bp)
         bp.before_request(self._authorize)
         bp.context_processor(self._context)
