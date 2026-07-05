@@ -2,6 +2,8 @@ from typing import Any, Callable
 
 from web.app.urls import url_for
 
+from .enums import Style
+
 
 def resolve_path(obj: Any, path: str) -> Any:
     value = obj
@@ -36,7 +38,7 @@ def default_label(name: str) -> str:
     return base.replace("_", " ").strip().capitalize()
 
 
-def button_class(style: str | None = "primary", size: str | None = None) -> str:
+def button_class(style: str | None = Style.PRIMARY, size: str | None = None) -> str:
     parts = ["btn"]
     if size:
         parts.append(f"btn-{size}")

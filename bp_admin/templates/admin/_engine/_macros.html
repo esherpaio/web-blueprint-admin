@@ -216,7 +216,7 @@
     {% if action.is_link %}
         {{ anchor(action.href(obj) , action.label, action.mode, action.style, action.size, action.icon, action.target, action.download) }}
     {% elif action.has_modal %}
-        <button class="btn btn-primary"
+        <button class="btn {{ button_class(action.style) }}"
                 type="button"
                 data-bs-toggle="modal"
                 data-bs-target="#{{ action.modal_id }}">
