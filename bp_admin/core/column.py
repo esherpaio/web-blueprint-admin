@@ -90,7 +90,7 @@ class LinkColumn(Column):
     def __init__(
         self,
         name: str,
-        label: str | None = "",
+        label: str | None = "Actions",
         *,
         text: str | Callable[[Any], str],
         endpoint: str | None = None,

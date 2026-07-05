@@ -91,7 +91,7 @@ class OrderView(ModelView):
     is_home = True
 
     searchable = ["billing.full_name", "shipment.url", "status.name"]
-    search_placeholder = "Search by customer, tracking or status"
+    search_placeholder = "Search by customer name, shipment URL or status"
 
     columns = [
         Column("id", "ID"),
@@ -205,13 +205,6 @@ class OrderView(ModelView):
                 Column("sku.details", "Options", format=_sku_details_label),
                 Column("quantity"),
                 Column("total_price", format=CellFormat.PRICE),
-                LinkColumn(
-                    "id",
-                    text="Open URL",
-                    url=lambda o: o.sku.product.file_url,
-                    target="_blank",
-                    align="end",
-                ),
             ],
             order_by=OrderLine.id,
             can_create=False,
