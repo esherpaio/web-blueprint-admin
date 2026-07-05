@@ -53,7 +53,11 @@ class UserView(CachedModelView):
                 Column("id", "ID"),
                 Column("created_at", "Date", format=CellFormat.DATETIME),
                 Column("status.name", "Status"),
-                Column("total_price", format=CellFormat.PRICE),
+                Column(
+                    "total_price",
+                    format=CellFormat.PRICE,
+                    suffix=lambda o: o.currency_code,
+                ),
             ],
             can_create=False,
             can_delete=False,

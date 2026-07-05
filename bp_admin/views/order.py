@@ -90,7 +90,11 @@ class OrderView(ModelView):
         Column("created_at", "Date", format=CellFormat.DATETIME),
         Column("billing.full_name", "Customer"),
         Column("status", format=_order_status_label),
-        Column("total_price", format=CellFormat.PRICE),
+        Column(
+            "total_price",
+            format=CellFormat.PRICE,
+            suffix=lambda o: o.currency_code,
+        ),
     ]
 
     actions = [
@@ -140,6 +144,7 @@ class OrderView(ModelView):
                     "total_price",
                     readonly=False,
                     value=lambda o: o.remaining_refund_amount,
+                    suffix=lambda o: o.currency_code,
                 )
             ],
             style="warning",
@@ -200,7 +205,11 @@ class OrderView(ModelView):
                 Column("sku.product.name", "Name"),
                 Column("sku.details", "Options", format=_sku_details_label),
                 Column("quantity"),
-                Column("total_price", format=CellFormat.PRICE),
+                Column(
+                    "total_price",
+                    format=CellFormat.PRICE,
+                    suffix=lambda o: o.order.currency_code,
+                ),
             ],
             order_by=OrderLine.id,
             can_create=False,
@@ -254,7 +263,11 @@ class OrderView(ModelView):
             "order_id",
             columns=[
                 Column("number"),
-                Column("total_price", format=CellFormat.PRICE),
+                Column(
+                    "total_price",
+                    format=CellFormat.PRICE,
+                    suffix=lambda o: o.order.currency_code,
+                ),
                 LinkColumn(
                     "id",
                     text="Download",
