@@ -1,5 +1,6 @@
 from typing import Any, Callable
 
+from markupsafe import Markup
 from sqlalchemy.orm.session import Session
 
 from .enums import LinkMode, Size, Style
@@ -20,6 +21,7 @@ class Action:
         icon: str | None = None,
         confirm: str | None = None,
         text: str | None = None,
+        irreversible: bool = False,
         visible: Callable[[Any], bool] | None = None,
         tab: str | None = None,
     ) -> None:
@@ -32,12 +34,19 @@ class Action:
         self.icon = icon
         self.confirm = confirm
         self.text = text
+        self.irreversible = irreversible
         self._visible = visible
         self.tab = tab
 
     @property
     def modal_id(self) -> str:
         return f"modal-action-{self.name}"
+
+    @property
+    def notice(self) -> Markup | None:
+        if not self.irreversible:
+            return None
+        return Markup("<strong>This action is irreversible.</strong>")
 
     @property
     def has_modal(self) -> bool:
@@ -75,6 +84,7 @@ class ApiAction(Action):
         icon: str | None = None,
         confirm: str | None = None,
         text: str | None = None,
+        irreversible: bool = False,
         redirect: str | None = None,
         visible: Callable[[Any], bool] | None = None,
         tab: str | None = None,
@@ -87,6 +97,7 @@ class ApiAction(Action):
             icon=icon,
             confirm=confirm,
             text=text,
+            irreversible=irreversible,
             visible=visible,
             tab=tab,
         )
