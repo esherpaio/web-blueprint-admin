@@ -60,7 +60,22 @@
             <div class="offcanvas-body text-bg-light">
                 <div class="d-flex flex-column justify-content-between h-100">
                     <div class="nav nav-pills w-100 flex-column">{{ nav_items(admin_menu.main) }}</div>
-                    <div class="nav nav-pills w-100 flex-column">{{ nav_items(admin_menu.bottom) }}</div>
+                    <div>
+                        <div class="nav nav-pills w-100 flex-column">{{ nav_items(admin_menu.bottom) }}</div>
+                        <hr class="text-secondary">
+                        <div class="d-flex flex-column align-items-center justify-content-center gap-0">
+                            <span class="text-body-secondary small">Powered by</span>
+                            <a class="text-decoration-none text-body-secondary small"
+                               href="https://esherpa.io/en-nl"
+                               target="_blank"
+                               rel="noopener">
+                                eSherpa
+                                <img src="https://cdn.esherpa.io/esherpa/logo_esherpa.png"
+                                     alt="eSherpa"
+                                     height="18">
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </nav>
