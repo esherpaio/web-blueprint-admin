@@ -12,8 +12,8 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
-                        {% if action.notice %}<p class="mb-3">{{ action.notice }}</p>{% endif %}
-                        {% if action.text %}<p class="mb-3">{{ action.text }}</p>{% endif %}
+                        {% if action.notice %}<p class="mb-2">{{ action.notice }}</p>{% endif %}
+                        {% if action.text %}<p>{{ action.text }}</p>{% endif %}
                         {% if action.fields %}
                             <div class="row g-2">
                                 {% for field in action.fields %}
