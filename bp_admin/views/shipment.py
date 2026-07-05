@@ -68,7 +68,7 @@ class ShipmentClassView(CachedModelView):
             ],
         ),
         InlineTableTab(
-            "Shipment methods",
+            "Shipment method",
             ShipmentMethod,
             "class_id",
             columns=[

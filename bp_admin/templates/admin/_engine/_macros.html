@@ -179,7 +179,7 @@
     </div>
 {% endmacro %}
 
-{% macro form_modal(modal_id, title, action, fields, choices={}, values={}, error=None, hidden={}) %}
+{% macro form_modal(modal_id, title, action, fields, choices={}, values={}, error=None, hidden={}, submit_label="Add") %}
     <div id="{{ modal_id }}"
          class="modal modal-lg fade"
          tabindex="-1"
@@ -204,7 +204,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button class="btn btn-warning" type="submit">Add</button>
+                    <button class="btn btn-warning" type="submit">{{ submit_label }}</button>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 </div>
             </form>

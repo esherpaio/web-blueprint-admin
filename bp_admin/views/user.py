@@ -46,7 +46,7 @@ class UserView(CachedModelView):
             ],
         ),
         InlineTableTab(
-            "Orders",
+            "Order",
             Order,
             "user_id",
             columns=[
@@ -65,7 +65,7 @@ class UserView(CachedModelView):
             key="orders",
         ),
         InlineTableTab(
-            "Emails",
+            "Email",
             Email,
             "user_id",
             columns=[

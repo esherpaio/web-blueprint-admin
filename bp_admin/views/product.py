@@ -97,7 +97,7 @@ class ProductView(CachedModelView):
             ],
         ),
         InlineTableTab(
-            "Options",
+            "Option",
             ProductOption,
             "product_id",
             columns=[
@@ -122,7 +122,7 @@ class ProductView(CachedModelView):
             path_prefix=lambda p: ("product", p.slug),
         ),
         InlineTableTab(
-            "Links",
+            "Link",
             ProductLink,
             "product_id",
             columns=[
@@ -141,7 +141,7 @@ class ProductView(CachedModelView):
             ],
         ),
         InlineTableTab(
-            "SKUs",
+            "SKU",
             Sku,
             "product_id",
             columns=[

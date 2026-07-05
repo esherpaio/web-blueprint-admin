@@ -9,7 +9,7 @@
                     type="button"
                     data-bs-toggle="modal"
                     data-bs-target="#{{ tab.add_modal_id }}">
-                Add
+                {{ tab.add_title }}
                 <i class="bi bi-plus-square ms-1"></i>
             </button>
         {% endif %}
@@ -103,5 +103,5 @@
 </form>
 
 {% if tab.show_add %}
-    {{ form_modal(tab.add_modal_id, tab.add_title, tab_action, tab_ctx.create_fields, tab_ctx.choices, {}, none, {'_op': Op.ADD}) }}
+    {{ form_modal(tab.add_modal_id, tab.add_title, tab_action, tab_ctx.create_fields, tab_ctx.choices, {}, none, {'_op': Op.ADD}, submit_label=tab.add_title) }}
 {% endif %}

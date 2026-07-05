@@ -29,7 +29,7 @@ class ProductOptionView(CachedModelView):
             [StringField("name")],
         ),
         InlineTableTab(
-            "Values",
+            "Value",
             ProductValue,
             "option_id",
             columns=[

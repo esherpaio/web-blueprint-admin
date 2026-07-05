@@ -88,11 +88,12 @@ class InlineTableTab(Tab):
 
     def __init__(
         self,
-        label: str,
+        name: str,
         model: Any,
         fk: str,
         columns: list[Column],
         *,
+        name_plural: str | None = None,
         create_fields: list[Field] | None = None,
         order_by: Any = None,
         query: Callable[[Session, Any], Any] | None = None,
@@ -101,10 +102,11 @@ class InlineTableTab(Tab):
         can_delete: bool = True,
         reorderable: bool = False,
         order_field: str = "order",
-        add_title: str | None = None,
         key: str | None = None,
     ) -> None:
-        super().__init__(label, key)
+        self.name = name
+        self.name_plural = name_plural or f"{name}s"
+        super().__init__(self.name_plural, key)
         self.model = model
         self.fk = fk
         self.columns = columns
@@ -116,7 +118,6 @@ class InlineTableTab(Tab):
         self.can_delete = can_delete
         self.reorderable = reorderable
         self.order_field = order_field
-        self._add_title = add_title
 
     @property
     def soft_delete(self) -> bool:
@@ -130,7 +131,7 @@ class InlineTableTab(Tab):
 
     @property
     def add_title(self) -> str:
-        return self._add_title or "Add"
+        return f"Add {self.name}"
 
     @property
     def has_editable(self) -> bool:

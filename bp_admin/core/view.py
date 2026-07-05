@@ -104,7 +104,7 @@ class ModelView:
 
     @property
     def create_title(self) -> str:
-        return f"Add {self.name.lower()}"
+        return f"Add {self.name}"
 
     @property
     def search_hint(self) -> str:

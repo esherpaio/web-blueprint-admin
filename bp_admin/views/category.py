@@ -43,7 +43,7 @@ class CategoryView(CachedModelView):
             ],
         ),
         InlineTableTab(
-            "Items",
+            "SKU",
             CategoryItem,
             "category_id",
             columns=[
@@ -61,6 +61,6 @@ class CategoryView(CachedModelView):
             ],
             order_by=CategoryItem.order,
             reorderable=True,
-            add_title="Add SKU",
+            name_plural="Items",
         ),
     ]

@@ -22,7 +22,7 @@
                                 type="button"
                                 data-bs-toggle="modal"
                                 data-bs-target="#modal-create">
-                            Add
+                            {{ view.create_title }}
                             <i class="bi bi-plus-square ms-1"></i>
                         </button>
                     {% endif %}
@@ -177,6 +177,6 @@
         {% endif %}
     </div>
     {% if view.can_create %}
-        {{ form_modal('modal-create', view.create_title, view.url('create') , view.create_fields, choices, create_values, create_error) }}
+        {{ form_modal('modal-create', view.create_title, view.url('create') , view.create_fields, choices, create_values, create_error, submit_label=view.create_title) }}
     {% endif %}
 {% endblock admin_body %}

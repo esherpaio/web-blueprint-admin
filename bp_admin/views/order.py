@@ -100,7 +100,7 @@ class OrderView(ModelView):
     actions = [
         LinkAction(
             "add",
-            "Add",
+            "Add order",
             endpoint="admin.order_create",
             icon="bi-plus-square",
         ),
@@ -198,7 +198,7 @@ class OrderView(ModelView):
             key="details",
         ),
         InlineTableTab(
-            "Items",
+            "Item",
             OrderLine,
             "order_id",
             columns=[
@@ -217,7 +217,7 @@ class OrderView(ModelView):
             key="items",
         ),
         InlineTableTab(
-            "Invoices",
+            "Invoice",
             Invoice,
             "order_id",
             columns=[
@@ -237,7 +237,7 @@ class OrderView(ModelView):
             key="invoices",
         ),
         InlineTableTab(
-            "Shipments",
+            "Shipment",
             Shipment,
             "order_id",
             columns=[
@@ -258,7 +258,7 @@ class OrderView(ModelView):
             key="shipments",
         ),
         InlineTableTab(
-            "Refunds",
+            "Refund",
             Refund,
             "order_id",
             columns=[
