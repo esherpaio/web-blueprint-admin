@@ -26,6 +26,7 @@ from bp_admin.core import (
     MediaTab,
     SelectField,
     StringField,
+    base_currency_code,
 )
 
 
@@ -63,7 +64,7 @@ class ProductView(CachedModelView):
     columns = [
         Column("name"),
         Column("shipment_class.name", "Shipment class"),
-        Column("unit_price", format=CellFormat.PRICE),
+        Column("unit_price", format=CellFormat.PRICE, suffix=base_currency_code),
     ]
 
     actions = [
@@ -82,7 +83,7 @@ class ProductView(CachedModelView):
             [
                 StringField("name"),
                 SelectField.from_model("type_id", ProductType, readonly=False),
-                DecimalField("unit_price", readonly=False),
+                DecimalField("unit_price", readonly=False, suffix=base_currency_code),
                 SelectField.from_model(
                     "shipment_class_id",
                     ShipmentClass,

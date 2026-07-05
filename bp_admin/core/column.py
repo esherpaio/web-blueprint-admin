@@ -1,7 +1,9 @@
 from typing import Any, Callable
 
 from markupsafe import Markup, escape
+from web.cache import cache
 from web.locale import current_locale
+from web.setup import config
 from web.utils.generators import format_decimal
 
 from .enums import Align, CellFormat, LinkMode, Size, Style
@@ -11,6 +13,20 @@ from .utils import default_label, resolve_href, resolve_path, resolve_value
 
 def row_input_name(row_id: Any, name: str) -> str:
     return f"rows-{row_id}-{name}"
+
+
+def base_currency_code(obj: Any = None) -> str:
+    country = next(
+        (c for c in cache.countries if c.code == config.LOCALE_COUNTRY_CODE),
+        None,
+    )
+    if country is None:
+        return ""
+    currency = next(
+        (c for c in cache.currencies if c.id == country.currency_id),
+        None,
+    )
+    return currency.code if currency else ""
 
 
 class Column:
@@ -25,6 +41,7 @@ class Column:
         field: Field | None = None,
         format: CellFormat | str | Callable[[Any], Any] | None = None,
         row_format: Callable[[Any], Any] | None = None,
+        suffix: str | Callable[[Any], Any] | None = None,
         align: Align | str | None = None,
     ) -> None:
         self.name = name
@@ -33,6 +50,7 @@ class Column:
         self.field = field if field is not None else StringField(name)
         self.format = format
         self.row_format = row_format
+        self.suffix = suffix
         self.align = align
 
     @property
@@ -42,6 +60,11 @@ class Column:
     @property
     def align_class(self) -> str:
         return f"text-{self.align}" if self.align else ""
+
+    def suffix_for(self, obj: Any = None) -> Any:
+        if callable(self.suffix):
+            return self.suffix(obj) if obj is not None else None
+        return self.suffix
 
     def value(self, obj: Any) -> Any:
         return resolve_path(obj, self.name)
@@ -67,7 +90,9 @@ class Column:
         kind = self.format_name
         if kind == CellFormat.PRICE:
             value = self.value(obj)
-            return escape(format_decimal(value)) if value is not None else Markup("")
+            if value is None:
+                return Markup("")
+            return self._with_suffix(escape(format_decimal(value)), obj)
         if kind == CellFormat.DATETIME:
             value = self.value(obj)
             if value is None:
@@ -81,7 +106,15 @@ class Column:
             )
             return Markup(f'<i class="bi {icon}"></i>')
         display = self.display(obj)
-        return escape(display) if display is not None else Markup("")
+        if display is None:
+            return Markup("")
+        return self._with_suffix(escape(display), obj)
+
+    def _with_suffix(self, rendered: Markup, obj: Any) -> Markup:
+        suffix = self.suffix_for(obj)
+        if not suffix:
+            return rendered
+        return rendered + escape(f" {suffix}")
 
 
 class LinkColumn(Column):

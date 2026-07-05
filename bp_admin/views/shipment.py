@@ -16,6 +16,7 @@ from bp_admin.core import (
     InlineTableTab,
     SelectField,
     StringField,
+    base_currency_code,
 )
 
 
@@ -76,7 +77,7 @@ class ShipmentClassView(CachedModelView):
                 Column(
                     "unit_price",
                     editable=True,
-                    field=DecimalField("unit_price"),
+                    field=DecimalField("unit_price", suffix=base_currency_code),
                 ),
                 Column(
                     "requires_billing_phone",
@@ -93,7 +94,7 @@ class ShipmentClassView(CachedModelView):
                     choices=_shipment_zone_choices,
                     coerce=int,
                 ),
-                DecimalField("unit_price"),
+                DecimalField("unit_price", suffix=base_currency_code),
                 BoolField("requires_billing_phone"),
             ],
             order_by=ShipmentMethod.name,

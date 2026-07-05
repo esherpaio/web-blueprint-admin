@@ -10,6 +10,7 @@ from bp_admin.core import (
     MenuSection,
     SelectField,
     StringField,
+    base_currency_code,
 )
 
 
@@ -33,7 +34,11 @@ class ProductOptionView(CachedModelView):
             "option_id",
             columns=[
                 Column("name"),
-                Column("unit_price", editable=True, field=DecimalField("unit_price")),
+                Column(
+                    "unit_price",
+                    editable=True,
+                    field=DecimalField("unit_price", suffix=base_currency_code),
+                ),
                 Column(
                     "media_id",
                     "Media",
@@ -54,7 +59,7 @@ class ProductOptionView(CachedModelView):
             ],
             create_fields=[
                 StringField("name", required=True),
-                DecimalField("unit_price"),
+                DecimalField("unit_price", suffix=base_currency_code),
             ],
             order_by=ProductValue.order,
             reorderable=True,
