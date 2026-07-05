@@ -141,7 +141,13 @@ class OrderView(ModelView):
             "Create refund",
             method="POST",
             endpoint=lambda o: f"/api/v1/orders/{o.id}/refunds",
-            fields=[DecimalField("total_price", readonly=False)],
+            fields=[
+                DecimalField(
+                    "total_price",
+                    readonly=False,
+                    value=lambda o: o.remaining_refund_amount,
+                )
+            ],
             style="warning",
             text="Refunds are processed immediately and cannot be undone. Enter the amount to refund to the customer.",
             visible=lambda o: o.is_refundable,
