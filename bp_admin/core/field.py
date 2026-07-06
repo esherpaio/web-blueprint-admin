@@ -5,6 +5,7 @@ from typing import Any, Callable, Sequence
 
 from sqlalchemy.orm import object_session
 from sqlalchemy.orm.session import Session
+from web.error import WebError
 
 from .enums import AttrType, InputType
 from .utils import default_label, resolve_path
@@ -379,6 +380,31 @@ class DateTimeField(Field):
 
 class HiddenField(Field):
     input_type = InputType.HIDDEN
+
+
+class JsonField(Field):
+    input_type = InputType.TEXT
+
+    def __init__(self, *args: Any, empty: Any = None, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self._empty = empty
+
+    def value_from_obj(self, obj: Any) -> str:
+        value = resolve_path(obj, self.name)
+        if value is None:
+            return ""
+        return json.dumps(value, ensure_ascii=False)
+
+    def _coerce(self, raw: Any) -> Any:
+        if raw is None:
+            return self._empty
+        raw = raw.strip() if isinstance(raw, str) else raw
+        if raw == "":
+            return self._empty
+        try:
+            return json.loads(raw)
+        except (TypeError, ValueError):
+            raise WebError(f"Invalid JSON in '{self.label}'.")
 
 
 class JsonAttributesField(Field):

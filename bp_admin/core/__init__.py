@@ -21,6 +21,7 @@ from .field import (
     HtmlField,
     IntegerField,
     JsonAttributesField,
+    JsonField,
     ListTextAreaField,
     MultiSelectField,
     PercentageField,
