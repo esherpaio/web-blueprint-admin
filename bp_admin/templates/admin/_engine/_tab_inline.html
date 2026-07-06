@@ -53,9 +53,7 @@
                         </th>
                     {% endif %}
                     {% for column in tab_ctx.columns %}
-                        {% if not (tab.reorderable and column.name == tab.order_field) %}
-                            <th class="{{ column.align_class }}">{{ column.label }}</th>
-                        {% endif %}
+                        <th class="{{ column.align_class }}">{{ column.label }}</th>
                     {% endfor %}
                 </tr>
             </thead>
@@ -81,15 +79,13 @@
                             </td>
                         {% endif %}
                         {% for column in tab_ctx.columns %}
-                            {% if not (tab.reorderable and column.name == tab.order_field) %}
-                                <td class="{{ column.align_class }}">
-                                    {% if column.editable %}
-                                        {{ cell_input(column, row, tab_ctx.choices, form_values) }}
-                                    {% else %}
-                                        {{ display_cell(column, row) }}
-                                    {% endif %}
-                                </td>
-                            {% endif %}
+                            <td class="{{ column.align_class }}">
+                                {% if column.editable %}
+                                    {{ cell_input(column, row, tab_ctx.choices, form_values) }}
+                                {% else %}
+                                    {{ display_cell(column, row) }}
+                                {% endif %}
+                            </td>
                         {% endfor %}
                     </tr>
                 {% else %}

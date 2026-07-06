@@ -135,9 +135,7 @@
                                     </th>
                                 {% endif %}
                                 {% for column in view.columns %}
-                                    {% if not (view.reorderable and column.name == view.order_field) %}
-                                        <th class="{{ column.align_class }}">{{ column.label }}</th>
-                                    {% endif %}
+                                    <th class="{{ column.align_class }}">{{ column.label }}</th>
                                 {% endfor %}
                                 {% if view.has_detail %}
                                     <th class="text-end">Actions</th>
@@ -166,15 +164,13 @@
                                         </td>
                                     {% endif %}
                                     {% for column in view.columns %}
-                                        {% if not (view.reorderable and column.name == view.order_field) %}
-                                            <td class="{{ column.align_class }}">
-                                                {% if column.editable %}
-                                                    {{ cell_input(column, obj, choices, form_values) }}
-                                                {% else %}
-                                                    {{ display_cell(column, obj) }}
-                                                {% endif %}
-                                            </td>
-                                        {% endif %}
+                                        <td class="{{ column.align_class }}">
+                                            {% if column.editable %}
+                                                {{ cell_input(column, obj, choices, form_values) }}
+                                            {% else %}
+                                                {{ display_cell(column, obj) }}
+                                            {% endif %}
+                                        </td>
                                     {% endfor %}
                                     {% if view.has_detail %}
                                         <td class="text-end">
