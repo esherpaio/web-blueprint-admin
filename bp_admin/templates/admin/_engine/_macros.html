@@ -38,6 +38,21 @@
                 {% endfor %}
             </select>
         </div>
+    {% elif field.input_type == InputType.MULTISELECT %}
+        {% set selected = (value or [])|map('string')|list %}
+        <label class="form-label fw-semibold">{{ field.label }}</label>
+        <select class="form-select"
+                name="{{ fname }}"
+                multiple
+                size="6"
+                {% if is_readonly %}disabled{% endif %}>
+            {% for option_value, option_label in choices.get(field.name, []) %}
+                <option value="{{ option_value }}"
+                        {% if option_value|string in selected %}selected{% endif %}>
+                    {{ option_label }}
+                </option>
+            {% endfor %}
+        </select>
     {% elif field.input_type == InputType.TEXTAREA %}
         <div class="input-group">
             <span class="input-group-text">{{ field.label }}</span>

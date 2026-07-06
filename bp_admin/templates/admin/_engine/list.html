@@ -17,6 +17,15 @@
                             <i class="bi bi-search ms-1"></i>
                         </button>
                     {% endif %}
+                    {% if view.has_filters %}
+                        <button class="btn btn-primary"
+                                type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#filters">
+                            Filters
+                            <i class="bi bi-funnel ms-1"></i>
+                        </button>
+                    {% endif %}
                     {% if view.can_create %}
                         <button class="btn btn-warning"
                                 type="button"
@@ -50,6 +59,9 @@
         {% if view.searchable %}
             <div id="search" class="col-12 collapse {{ 'show' if show_search }}">
                 <form action="{{ view.url() }}" method="get">
+                    {% for key, value in filter_values.items() %}
+                        <input type="hidden" name="{{ key }}" value="{{ value }}">
+                    {% endfor %}
                     <div class="row g-2">
                         <div class="col-12 col-lg">
                             <input class="form-control"
@@ -60,6 +72,41 @@
                         </div>
                         <div class="col-12 col-lg-auto">
                             <button class="btn btn-primary w-100" type="submit">Search</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        {% endif %}
+        {% if view.has_filters %}
+            <div id="filters" class="col-12 collapse {{ 'show' if show_filters }}">
+                <form action="{{ view.url() }}" method="get">
+                    {% if search %}
+                        <input type="hidden" name="s" value="{{ search }}">
+                    {% endif %}
+                    <div class="row g-2 align-items-end">
+                        {% for flt in view.filters %}
+                            {% if flt.is_divider %}
+                                <div class="col-12">
+                                    <hr class="my-1">
+                                </div>
+                            {% else %}
+                                <div class="col-12 col-md-6 col-lg-3">
+                                    <label class="form-label mb-1 small">{{ flt.label }}</label>
+                                    <select class="form-select" name="{{ flt.key }}">
+                                        <option value="">All</option>
+                                        {% for value, label in filter_options.get(flt.key, []) %}
+                                            <option value="{{ value }}"
+                                                    {{ 'selected' if filter_values.get(flt.key) == value }}>{{ label }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                        <div class="col-12 d-flex gap-2">
+                            <button class="btn btn-primary" type="submit">Apply</button>
+                            <a class="btn btn-outline-secondary"
+                               href="{{ view.url(s=search) if search else view.url() }}">Clear</a>
                         </div>
                     </div>
                 </form>
@@ -152,7 +199,7 @@
                     <ul class="pagination mb-0">
                         <li class="page-item {{ 'disabled' if not pagination.has_prev }}">
                             <a class="page-link"
-                               href="{{ view.url(p=pagination.prev_page, s=search) }}"
+                               href="{{ view.url(p=pagination.prev_page, **query_args) }}"
                                aria-label="Previous">&laquo;</a>
                         </li>
                         {% for number in pagination.numbers() %}
@@ -162,13 +209,13 @@
                                 </li>
                             {% else %}
                                 <li class="page-item {{ 'active' if number == pagination.page }}">
-                                    <a class="page-link" href="{{ view.url(p=number, s=search) }}">{{ number }}</a>
+                                    <a class="page-link" href="{{ view.url(p=number, **query_args) }}">{{ number }}</a>
                                 </li>
                             {% endif %}
                         {% endfor %}
                         <li class="page-item {{ 'disabled' if not pagination.has_next }}">
                             <a class="page-link"
-                               href="{{ view.url(p=pagination.next_page, s=search) }}"
+                               href="{{ view.url(p=pagination.next_page, **query_args) }}"
                                aria-label="Next">&raquo;</a>
                         </li>
                     </ul>

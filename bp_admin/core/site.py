@@ -13,7 +13,7 @@ from .action import Action, ApiAction
 from .enums import AttrType, InputType, Op
 from .menu import AdminMenu, build_menu
 from .utils import button_class
-from .view import ModelView, TemplateView, UrlView
+from .view import ActionView, ModelView, TemplateView, UrlView
 
 _ENGINE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _ENGINE_TEMPLATES = os.path.join(_ENGINE_DIR, "templates")
@@ -30,6 +30,7 @@ class AdminSite:
         self.views: list[ModelView] = []
         self.url_views: list[UrlView] = []
         self.template_views: list[TemplateView] = []
+        self.action_views: list[ActionView] = []
         self.account_actions: list[Action] = [
             ApiAction(
                 "logout",
@@ -47,13 +48,15 @@ class AdminSite:
 
     def register(
         self,
-        view: (type[ModelView] | type[UrlView] | type[TemplateView]),
-    ) -> ModelView | UrlView | TemplateView:
+        view: (type[ModelView] | type[UrlView] | type[TemplateView] | type[ActionView]),
+    ) -> ModelView | UrlView | TemplateView | ActionView:
         instance = view()
         if isinstance(instance, UrlView):
             self.url_views.append(instance)
         elif isinstance(instance, TemplateView):
             self.template_views.append(instance)
+        elif isinstance(instance, ActionView):
+            self.action_views.append(instance)
         elif isinstance(instance, ModelView):
             self.views.append(instance)
         else:
@@ -92,6 +95,8 @@ class AdminSite:
             self._register_url_view(bp, url_view)
         for template_view in self.template_views:
             self._register_template_view(bp, template_view)
+        for action_view in self.action_views:
+            self._register_action_view(bp, action_view)
         self._register_home(bp)
         bp.add_app_template_global(Op, "Op")
         bp.add_app_template_global(InputType, "InputType")
@@ -128,11 +133,27 @@ class AdminSite:
         )
 
     def _register_template_view(self, bp: Blueprint, view: TemplateView) -> None:
+        methods = ["GET", "POST"] if view.accepts_post else ["GET"]
+
+        def endpoint() -> Any:
+            if request.method == "POST":
+                return view.post()
+            return view.render()
+
+        endpoint.__name__ = view.endpoint
         bp.add_url_rule(
             view.rule,
             endpoint=view.endpoint,
-            view_func=view.render,
-            methods=["GET"],
+            view_func=endpoint,
+            methods=methods,
+        )
+
+    def _register_action_view(self, bp: Blueprint, view: ActionView) -> None:
+        bp.add_url_rule(
+            view.rule,
+            endpoint=view.endpoint,
+            view_func=view.dispatch,
+            methods=["POST"],
         )
 
     def _register_view(self, bp: Blueprint, view: ModelView) -> None:
@@ -254,6 +275,10 @@ class AdminSite:
                 sources.append(source)
         for template_view in self.template_views:
             source = template_view.nav_source
+            if source is not None:
+                sources.append(source)
+        for action_view in self.action_views:
+            source = action_view.nav_source
             if source is not None:
                 sources.append(source)
         return build_menu(sources, current)

@@ -1,19 +1,21 @@
 from typing import Any
 
 import requests
-from flask import render_template
+from flask import redirect, render_template
 from markupsafe import Markup
 from sqlalchemy import or_
 from sqlalchemy.orm.session import Session
 from web.app.urls import url_for
 from web.database.model import AppSettings
 from web.utils.markdown import Markdown
+from werkzeug import Response
 
 from .action import Action
 from .column import Column, row_input_name
 from .db import apply_fields, supports_soft_delete
-from .enums import MenuSection
+from .enums import MenuSection, Notice
 from .field import Field
+from .filter import Filter
 from .menu import NavSource
 from .tab import Tab
 
@@ -40,6 +42,7 @@ class ModelView:
     order_by: Any = None
     reorderable: bool = False
     order_field: str = "order"
+    filters: list[Filter] = []
 
     # Create modal
     create_fields: list[Field] = []
@@ -64,6 +67,13 @@ class ModelView:
             self.name_plural = self.name + "s"
         if self.endpoint is None:
             self.endpoint = self.name_plural.lower().replace(" ", "_")
+        index = 0
+        for filter_ in self.filters:
+            if filter_.is_divider:
+                continue
+            if filter_.key is None:
+                filter_.key = f"f{index}"
+            index += 1
 
     #
     # Derived properties
@@ -160,6 +170,33 @@ class ModelView:
                 return query.order_by(*self.order_by)
             return query.order_by(self.order_by)
         return query.order_by(self.model.id.desc())
+
+    @property
+    def has_filters(self) -> bool:
+        return any(not f.is_divider for f in self.filters)
+
+    def active_filter_args(self, args: Any) -> dict[str, str]:
+        active: dict[str, str] = {}
+        for filter_ in self.filters:
+            if filter_.is_divider or filter_.key is None:
+                continue
+            value = args.get(filter_.key)
+            if value:
+                active[filter_.key] = value
+        return active
+
+    def apply_filters(self, query: Any, args: Any) -> Any:
+        for filter_ in self.filters:
+            if filter_.is_divider or filter_.key is None:
+                continue
+            value = args.get(filter_.key)
+            if not value:
+                continue
+            try:
+                query = filter_.apply(query, value)
+            except (TypeError, ValueError):
+                continue
+        return query
 
     #
     # Operations
@@ -265,6 +302,7 @@ class TemplateView:
     order: int = 100
     menu_section: MenuSection = MenuSection.HIDDEN
     menu_group: str | None = None
+    accepts_post: bool = False
 
     @property
     def route(self) -> str:
@@ -298,3 +336,49 @@ class TemplateView:
             page_title=self.label,
             **self.context(),
         )
+
+    def post(self) -> Response | str:
+        return redirect(url_for(self.route))
+
+
+class ActionView:
+    endpoint: str = ""
+    label: str = ""
+    icon: str | None = None
+    order: int = 100
+    menu_section: MenuSection = MenuSection.BOTTOM
+    menu_group: str | None = None
+    confirm: str | None = None
+    redirect_endpoint: str | None = None
+
+    @property
+    def route(self) -> str:
+        return f"admin.{self.endpoint}"
+
+    @property
+    def rule(self) -> str:
+        return f"/admin/{self.endpoint}"
+
+    @property
+    def nav_source(self) -> NavSource | None:
+        if self.menu_section is MenuSection.HIDDEN:
+            return None
+        return NavSource(
+            section=self.menu_section,
+            label=self.label,
+            endpoint=self.route,
+            match=self.route,
+            order=self.order,
+            icon=self.icon,
+            group=self.menu_group,
+            is_action=True,
+            confirm=self.confirm,
+        )
+
+    def run(self) -> None:
+        pass
+
+    def dispatch(self) -> Response:
+        self.run()
+        target = self.redirect_endpoint or self.route
+        return redirect(url_for(target, saved=Notice.DONE))

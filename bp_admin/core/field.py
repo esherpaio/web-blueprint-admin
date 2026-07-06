@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
 from typing import Any, Callable, Sequence
 
+from sqlalchemy.orm import object_session
 from sqlalchemy.orm.session import Session
 
 from .enums import AttrType, InputType
@@ -252,6 +253,113 @@ class SelectField(Field):
             except (TypeError, ValueError):
                 return None
         return raw
+
+
+class MultiSelectField(SelectField):
+    input_type = InputType.MULTISELECT
+
+    def __init__(
+        self,
+        name: str,
+        label: str | None = None,
+        *,
+        model: Any = None,
+        value_attr: str = "id",
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(name, label, **kwargs)
+        self._model = model
+        self._value_attr = value_attr
+
+    @classmethod
+    def from_model(
+        cls,
+        name: str,
+        model: Any,
+        *,
+        label_attr: str = "name",
+        value_attr: str = "id",
+        label_fn: Callable[[Any], str] | None = None,
+        order_by: Any = None,
+        where: Any = None,
+        coerce: Callable[[Any], Any] | None = int,
+        **kwargs: Any,
+    ) -> "MultiSelectField":
+        def provider(s: Session) -> list[Choice]:
+            query = s.query(model)
+            if where is not None:
+                query = query.filter(where)
+            if order_by is not None:
+                query = query.order_by(order_by)
+            rows = query.all()
+            if label_fn is not None:
+                return [(getattr(row, value_attr), label_fn(row)) for row in rows]
+            return [
+                (getattr(row, value_attr), str(getattr(row, label_attr)))
+                for row in rows
+            ]
+
+        return cls(
+            name,
+            choices=provider,
+            coerce=coerce,
+            model=model,
+            value_attr=value_attr,
+            **kwargs,
+        )
+
+    def value_from_obj(self, obj: Any) -> list[Any]:
+        related = resolve_path(obj, self.name) or []
+        return [getattr(item, self._value_attr) for item in related]
+
+    def form_value(self, obj: Any, form_values: Any) -> Any:
+        if hasattr(form_values, "getlist"):
+            submitted = form_values.getlist(self.name)
+            if submitted:
+                return submitted
+        return self.value_from_obj(obj)
+
+    def parse(self, form: Any, files: Any = None, name: str | None = None) -> list[Any]:
+        raw = form.getlist(name or self.name)
+        result = []
+        for value in raw:
+            coerced = self._coerce(value)
+            if coerced is not None:
+                result.append(coerced)
+        return result
+
+    def apply(self, obj: Any, value: Any) -> None:
+        if self._model is None:
+            return
+        session = object_session(obj)
+        if session is None:
+            return
+        ids = value or []
+        if ids:
+            instances = (
+                session.query(self._model)
+                .filter(getattr(self._model, self._value_attr).in_(ids))
+                .all()
+            )
+        else:
+            instances = []
+        setattr(obj, self.name, instances)
+
+
+class ListTextAreaField(TextAreaField):
+    def __init__(self, *args: Any, separator: str = "\n", **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self.separator = separator
+
+    def value_from_obj(self, obj: Any) -> str:
+        items = resolve_path(obj, self.name) or []
+        return self.separator.join(items)
+
+    def parse(self, form: Any, files: Any = None, name: str | None = None) -> list[str]:
+        raw = form.get(name or self.name) or ""
+        raw = raw.replace("\r\n", "\n")
+        chunks = raw.split(self.separator)
+        return [chunk.strip() for chunk in chunks if chunk.strip()]
 
 
 class DateTimeField(Field):

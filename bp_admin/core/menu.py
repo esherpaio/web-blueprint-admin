@@ -13,6 +13,8 @@ class NavSource:
     order: int = 100
     icon: str | None = None
     group: str | None = None
+    is_action: bool = False
+    confirm: str | None = None
 
 
 @dataclass
@@ -24,6 +26,8 @@ class MenuLink:
     order: int = 100
     active: bool = False
     is_group: bool = False
+    is_action: bool = False
+    confirm: str | None = None
 
 
 @dataclass
@@ -61,6 +65,8 @@ def build_menu(sources: Iterable[NavSource], current: str) -> AdminMenu:
             icon=source.icon,
             order=source.order,
             active=current.startswith(source.match),
+            is_action=source.is_action,
+            confirm=source.confirm,
         )
         if source.group is None:
             bucket.append(link)

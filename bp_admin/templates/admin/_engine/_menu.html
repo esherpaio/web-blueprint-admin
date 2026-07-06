@@ -17,13 +17,23 @@
                     {% endfor %}
                 </ul>
             </li>
+        {% elif item.is_action %}
+            <li class="nav-item">
+                <form method="post"
+                      action="{{ url_for(item.endpoint) }}"
+                      {% if item.confirm %}onsubmit="return confirm('{{ item.confirm }}')"{% endif %}>
+                    <button class="nav-link text-start w-100 border-0 bg-transparent"
+                            type="submit">
+                        {% if item.icon %}<i class="bi {{ item.icon }} me-1"></i>{% endif %}
+                        {{ item.label }}
+                    </button>
+                </form>
+            </li>
         {% else %}
             <li class="nav-item">
                 <a class="nav-link {{ 'active' if item.active }}"
                    href="{{ url_for(item.endpoint) }}">
-                    {% if item.icon %}
-                        <i class="bi {{ item.icon }} me-1"></i>
-                    {% endif %}
+                    {% if item.icon %}<i class="bi {{ item.icon }} me-1"></i>{% endif %}
                     {{ item.label }}
                 </a>
             </li>

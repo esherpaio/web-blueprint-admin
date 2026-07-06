@@ -88,10 +88,13 @@ def render_list(
     limit = view.page_size
     offset = (limit * page) - limit
     show_search = bool(search)
+    filter_values = view.active_filter_args(request.args)
+    show_filters = bool(filter_values)
 
     with conn.begin() as s:
         query = view.get_query(s)
         query = view.apply_search(query, search)
+        query = view.apply_filters(query, request.args)
         total = query.count()
         query = view.apply_order(query)
         rows = query.limit(limit).offset(offset).all()
@@ -100,6 +103,14 @@ def render_list(
             s, [c.field for c in view.columns] + list(view.create_fields)
         )
         pagination = Pagination(page=page, per_page=limit, total=total)
+        filter_options = {
+            f.key: f.options(s)
+            for f in view.filters
+            if not f.is_divider and f.key is not None
+        }
+        query_args = dict(filter_values)
+        if search:
+            query_args["s"] = search
 
         return render_template(
             "admin/_engine/list.html",
@@ -109,6 +120,10 @@ def render_list(
             pagination=pagination,
             search=search,
             show_search=show_search,
+            filter_options=filter_options,
+            filter_values=filter_values,
+            show_filters=show_filters,
+            query_args=query_args,
             choices=choices,
             error=error,
             form_values=form_values or {},

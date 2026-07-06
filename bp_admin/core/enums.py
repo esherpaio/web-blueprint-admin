@@ -20,6 +20,7 @@ class InputType(StrEnum):
     NUMBER = "number"
     CHECKBOX = "checkbox"
     SELECT = "select"
+    MULTISELECT = "multiselect"
     TEXTAREA = "textarea"
     ATTRIBUTES = "attributes"
     HTML = "html"

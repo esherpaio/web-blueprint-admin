@@ -9,6 +9,6 @@ from ..field import Field
 def resolve_choices(s: Session, fields: Iterable[Field]) -> dict[str, list]:
     choices: dict[str, list] = {}
     for field in fields:
-        if field.input_type is InputType.SELECT:
+        if field.input_type in (InputType.SELECT, InputType.MULTISELECT):
             choices[field.name] = field.choices(s)
     return choices
