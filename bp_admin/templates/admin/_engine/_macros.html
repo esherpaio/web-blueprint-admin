@@ -154,7 +154,9 @@
             {% for row in field.rows_from(data) %}{{ attribute_row(field, row.key, row.type, row.value) }}{% endfor %}
         </div>
         {% if not field.readonly %}
-            <button type="button" class="btn btn-sm btn-light mt-2" data-attributes-add>
+            <button type="button"
+                    class="btn btn-sm btn-secondary mt-2"
+                    data-attributes-add>
                 <i class="bi bi-plus-square me-1"></i>
                 Add attribute
             </button>
