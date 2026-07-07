@@ -103,6 +103,15 @@
         });
     }
 
+    function initSearchFocus() {
+        const search = document.getElementById("search");
+        if (!search) return;
+        search.addEventListener("shown.bs.collapse", function () {
+            const input = search.querySelector('input[name="s"]');
+            if (input) input.focus();
+        });
+    }
+
     function initAttributes() {
         document.querySelectorAll("[data-attributes]").forEach(function (editor) {
             const rows = editor.querySelector("[data-attributes-rows]");
@@ -240,6 +249,7 @@
         initSelectAll();
         initConfirm();
         initShowModal();
+        initSearchFocus();
         initAttributes();
         initSortable();
         initAlertDismiss();
