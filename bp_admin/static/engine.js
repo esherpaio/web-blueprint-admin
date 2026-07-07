@@ -89,10 +89,10 @@
     function initBack() {
         document.querySelectorAll("[data-back]").forEach(function (element) {
             element.addEventListener("click", function (event) {
-                if (document.referrer.startsWith(window.location.origin)) {
-                    event.preventDefault();
-                    window.history.back();
-                }
+                event.preventDefault();
+                const path = window.location.pathname.replace(/\/+$/, "");
+                const parent = path.slice(0, path.lastIndexOf("/")) || "/";
+                window.location.assign(parent);
             });
         });
     }
