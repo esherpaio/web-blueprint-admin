@@ -10,8 +10,14 @@ table td {
     white-space: nowrap;
 }
 
-.nav-link {
-    background-color: var(--bs-light);
+.nav-link:not(:hover):not(.active) {
+    color: var(--bs-body-color);
+    background-color: var(--bs-gray-100);
+}
+
+.text-bg-light .nav-link:not(:hover):not(.active) {
+    color: var(--bs-body-color);
+    background-color: var(--bs-gray-200);
 }
 
 /* collapse */

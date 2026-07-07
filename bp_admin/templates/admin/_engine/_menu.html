@@ -22,8 +22,7 @@
                 <form method="post"
                       action="{{ url_for(item.endpoint) }}"
                       {% if item.confirm %}onsubmit="return confirm('{{ item.confirm }}')"{% endif %}>
-                    <button class="nav-link text-start w-100 border-0 bg-transparent"
-                            type="submit">
+                    <button class="nav-link text-start w-100 border-0" type="submit">
                         {% if item.icon %}<i class="bi {{ item.icon }} me-1"></i>{% endif %}
                         {{ item.label }}
                     </button>
