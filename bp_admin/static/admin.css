@@ -10,6 +10,10 @@ table td {
     white-space: nowrap;
 }
 
+table td {
+    line-height: 1.25rem;
+}
+
 /* nav link colors */
 
 .nav-link:not(:hover):not(.active) {
