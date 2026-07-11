@@ -8,7 +8,9 @@
         <input type="hidden" name="{{ fname }}">
         <div data-html-editor
              data-target="{{ fname }}"
-             {% if is_readonly %}data-readonly{% endif %}>{{ value|safe if value is not none else "" }}</div>
+             {% if is_readonly %}data-readonly{% endif %}>
+            {{ value if value is not none else "" }}
+        </div>
     {% elif field.input_type == InputType.CHECKBOX %}
         <div class="input-group">
             <span class="input-group-text">{{ field.label }}</span>
@@ -76,7 +78,9 @@
                    {% for key, attr_value in field.attrs.items() %}{{ key }}="{{ attr_value }}"{% endfor %}
                    {% if field.required %}required{% endif %}
                    {% if is_readonly %}disabled{% endif %}>
-            {% if field.suffix_for(obj) %}<span class="input-group-text">{{ field.suffix_for(obj) }}</span>{% endif %}
+            {% if field.suffix_for(obj) %}
+                <span class="input-group-text">{{ field.suffix_for(obj) }}</span>
+            {% endif %}
         </div>
     {% endif %}
 {% endmacro %}
@@ -151,7 +155,9 @@
     <div class="admin-attributes" data-attributes>
         <label class="form-label fw-semibold">{{ field.label }}</label>
         <div data-attributes-rows class="row g-2">
-            {% for row in field.rows_from(data) %}{{ attribute_row(field, row.key, row.type, row.value) }}{% endfor %}
+            {% for row in field.rows_from(data) %}
+                {{ attribute_row(field, row.key, row.type, row.value) }}
+            {% endfor %}
         </div>
         {% if not field.readonly %}
             <button type="button" class="btn btn-sm btn-light mt-2" data-attributes-add>
@@ -178,7 +184,9 @@
                     name="attr-type"
                     {% if field.readonly %}disabled{% endif %}>
                 {% for attr_type in AttrType %}
-                    <option value="{{ attr_type }}" {% if attr_type == type %}selected{% endif %}>{{ attr_type.label }}</option>
+                    <option value="{{ attr_type }}" {% if attr_type == type %}selected{% endif %}>
+                        {{ attr_type.label }}
+                    </option>
                 {% endfor %}
             </select>
             <input class="form-control"

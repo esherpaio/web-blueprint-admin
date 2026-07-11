@@ -21,7 +21,9 @@
                         <form method="post" action="{{ view.url('delete', id_=obj.id) }}">
                             <button class="btn btn-danger"
                                     type="submit"
-                                    data-confirm="Delete this {{ view.name|lower }}?">Delete</button>
+                                    data-confirm="Delete this {{ view.name|lower }}?">
+                                Delete
+                            </button>
                         </form>
                     {% endif %}
                 </div>

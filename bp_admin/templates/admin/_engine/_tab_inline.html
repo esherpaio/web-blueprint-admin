@@ -28,9 +28,7 @@
                     value="{{ Op.DELETE }}"
                     data-confirm="Delete the selected records?">Delete selected</button>
         {% endif %}
-        {% for action in tab_ctx.actions %}
-            {{ action_button(view, obj, action) }}
-        {% endfor %}
+        {% for action in tab_ctx.actions %}{{ action_button(view, obj, action) }}{% endfor %}
     </div>
 {% endif %}
 

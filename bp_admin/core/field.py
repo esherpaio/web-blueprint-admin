@@ -464,38 +464,42 @@ class JsonAttributesField(Field):
             key = key.strip()
             if not key:
                 continue
-            result[key] = self._coerce_value(type_, value)
+            result[key] = self._coerce_value(key, type_, value)
         return result
 
     @staticmethod
-    def _coerce_value(type_: str, raw: str) -> Any:
+    def _coerce_value(key: str, type_: str, raw: str) -> Any:
         try:
             attr_type = AttrType(type_)
         except ValueError:
-            attr_type = AttrType.TEXT
+            raise WebError(f"Unsupported type '{type_}' for attribute '{key}'.")
+
         if attr_type is AttrType.NONE:
             return None
-        raw = raw if raw is not None else ""
         if attr_type is AttrType.BOOLEAN:
             return raw.strip().lower() in ("1", "true", "yes", "on")
         if attr_type is AttrType.INTEGER:
             try:
                 return int(raw)
             except (TypeError, ValueError):
-                return 0
+                raise WebError(f"Invalid integer for attribute '{key}'.")
         if attr_type is AttrType.FLOAT:
             try:
                 return float(raw)
             except (TypeError, ValueError):
-                return 0.0
+                raise WebError(f"Invalid number for attribute '{key}'.")
         if attr_type is AttrType.TIMESTAMP:
             return raw.strip()
         if attr_type is AttrType.LIST:
             return [line.strip() for line in raw.splitlines() if line.strip()]
         if attr_type is AttrType.DICT:
+            if not raw.strip():
+                return {}
             try:
-                parsed = json.loads(raw) if raw.strip() else {}
+                parsed = json.loads(raw)
             except (TypeError, ValueError):
-                parsed = {}
-            return parsed if isinstance(parsed, dict) else {}
+                raise WebError(f"Invalid JSON for attribute '{key}'.")
+            if not isinstance(parsed, dict):
+                raise WebError(f"Attribute '{key}' must be a JSON object.")
+            return parsed
         return raw

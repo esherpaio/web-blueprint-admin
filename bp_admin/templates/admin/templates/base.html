@@ -1,58 +1,36 @@
 <!DOCTYPE html>
 <html lang="{{ current_locale.language.code }}" class="h-100">
     <head>
+        {% set current_blueprint = cache.blueprints | selectattr("endpoint", "equalto", request.blueprint) | first %}
+        {% set current_route = cache.routes | selectattr("endpoint", "equalto", request.endpoint) | first %}
         {% for tag in meta.tags %}{{ tag }}{% endfor %}
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
         <link rel="stylesheet"
               href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,500,600,700&display=swap">
         <link rel="stylesheet"
-              crossorigin="anonymous"
               href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
         <link rel="stylesheet"
-              crossorigin="anonymous"
               href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
         <link rel="stylesheet"
-              crossorigin="anonymous"
               href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css">
-        {% for blueprint in cache.blueprints %}
-            {% if blueprint.endpoint == request.blueprint %}
-                {% if blueprint.css_path %}
-                    <link type="text/css"
-                          rel="stylesheet"
-                          href="{{ cdn_url(blueprint.css_path) }}">
-                {% endif %}
-            {% endif %}
-        {% endfor %}
-        {% for route in cache.routes %}
-            {% if route.endpoint == request.endpoint %}
-                {% if route.css_path %}
-                    <script defer src="{{ cdn_url(route.css_path) }}"></script>
-                {% endif %}
-            {% endif %}
-        {% endfor %}
-        <script crossorigin="anonymous"
-                src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-        <script crossorigin="anonymous"
-                src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
-        <script type="module"
-                crossorigin="anonymous"
-                src="https://cdn.jsdelivr.net/npm/zero-md@3?register"></script>
-        {% for blueprint in cache.blueprints %}
-            {% if blueprint.endpoint == request.blueprint %}
-                {% if blueprint.js_path %}
-                    <script defer src="{{ cdn_url(blueprint.js_path) }}"></script>
-                {% endif %}
-            {% endif %}
-        {% endfor %}
-        {% for route in cache.routes %}
-            {% if route.endpoint == request.endpoint %}
-                {% if route.js_path %}
-                    <script defer src="{{ cdn_url(route.js_path) }}"></script>
-                {% endif %}
-            {% endif %}
-        {% endfor %}
+        {% if current_blueprint and current_blueprint.css_path %}
+            <link type="text/css"
+                  rel="stylesheet"
+                  href="{{ cdn_url(current_blueprint.css_path) }}">
+        {% endif %}
+        {% if current_route and current_route.css_path %}
+            <link type="text/css"
+                  rel="stylesheet"
+                  href="{{ cdn_url(current_route.css_path) }}">
+        {% endif %}
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
+        <script type="module" src="https://cdn.jsdelivr.net/npm/zero-md@3?register"></script>
+        {% if current_blueprint and current_blueprint.js_path %}
+            <script defer src="{{ cdn_url(current_blueprint.js_path) }}"></script>
+        {% endif %}
+        {% if current_route and current_route.js_path %}
+            <script defer src="{{ cdn_url(current_route.js_path) }}"></script>
+        {% endif %}
     </head>
     <body class="h-100 w-100 d-flex flex-row">
         {% from "admin/_engine/_menu.html" import nav_items %}
@@ -110,7 +88,9 @@
                                           data-api-url="{{ action.api_url(none) }}"
                                           {% if action.redirect %}data-api-redirect="{{ action.redirect }}"{% endif %}>
                                         <button class="dropdown-item" type="submit">
-                                            {% if action.icon %}<i class="bi {{ action.icon }} me-1"></i>{% endif %}
+                                            {% if action.icon %}
+                                                <i class="bi {{ action.icon }} me-1"></i>
+                                            {% endif %}
                                             {{ action.label }}
                                         </button>
                                     </form>

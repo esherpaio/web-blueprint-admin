@@ -9,9 +9,7 @@ async function callApi(method, url, data = null, contentType = null, silent = fa
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000);
     const options = { body: data, method: method, signal: controller.signal };
-    if (contentType) {
-        options.headers = { "Content-Type": contentType };
-    }
+    if (contentType) options.headers = { "Content-Type": contentType };
 
     let resp;
     try {
@@ -25,9 +23,10 @@ async function callApi(method, url, data = null, contentType = null, silent = fa
 
     if (resp && resp.code >= 200 && resp.code <= 299) {
         return resp;
-    }
-    if (silent) {
+    } else if (silent) {
         return resp;
+    } else {
+        let msg = (resp && resp.message) || "Something went wrong on our end.";
+        throw new Error(msg);
     }
-    throw new Error((resp && resp.message) || "Something went wrong on our end.");
 }

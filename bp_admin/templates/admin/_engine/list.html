@@ -48,7 +48,9 @@
                                 form="bulk-form"
                                 name="_op"
                                 value="{{ Op.DELETE }}"
-                                data-confirm="Delete the selected records?">Delete selected</button>
+                                data-confirm="Delete the selected records?">
+                            Delete selected
+                        </button>
                     {% endif %}
                     {% for action in view.actions if action.is_link %}
                         {{ action_button(view, none, action) }}
