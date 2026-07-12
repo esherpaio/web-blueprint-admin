@@ -1,9 +1,15 @@
 from typing import Any, Iterable
 
+from sqlalchemy import func
 from sqlalchemy.orm.session import Session
 
 from ..column import Column, row_input_name
 from ..field import Field
+
+
+def next_order(query: Any, order_column: Any) -> int:
+    current = query.with_entities(func.max(order_column)).order_by(None).scalar()
+    return (current or 0) + 1
 
 
 def apply_fields(

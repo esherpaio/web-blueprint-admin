@@ -14,6 +14,7 @@ from .db import (
     apply_bulk_fields,
     apply_fields,
     delete_objects,
+    next_order,
     resolve_choices,
     supports_soft_delete,
 )
@@ -191,6 +192,10 @@ class InlineTableTab(Tab):
             child = self.model()
             setattr(child, self.fk, obj.id)
             apply_fields(child, self.create_fields, form, files, respect_readonly=False)
+            if self.reorderable and getattr(child, self.order_field, None) is None:
+                order_column = getattr(self.model, self.order_field)
+                order = next_order(self.base_query(s, obj), order_column)
+                setattr(child, self.order_field, order)
             s.add(child)
             s.flush()
         elif op is Op.DELETE and self.can_delete:

@@ -12,7 +12,7 @@ from werkzeug import Response
 
 from .action import Action
 from .column import Column, row_input_name
-from .db import apply_fields, supports_soft_delete
+from .db import apply_fields, next_order, supports_soft_delete
 from .enums import MenuSection, Notice
 from .field import Field
 from .filter import Filter
@@ -208,6 +208,11 @@ class ModelView:
     def create(self, s: Session, form: Any, files: Any) -> Any:
         obj = self.model()
         apply_fields(obj, self.create_fields, form, files, respect_readonly=False)
+        if self.reorderable and getattr(obj, self.order_field, None) is None:
+            order_column = getattr(self.model, self.order_field)
+            setattr(
+                obj, self.order_field, next_order(s.query(self.model), order_column)
+            )
         s.add(obj)
         s.flush()
         self.after_write(s, obj)
