@@ -9,7 +9,7 @@
         <div data-html-editor
              data-target="{{ fname }}"
              {% if is_readonly %}data-readonly{% endif %}>
-            {{ value if value is not none else "" }}
+            {{ value|safe if value is not none else "" }}
         </div>
     {% elif field.input_type == InputType.CHECKBOX %}
         <div class="input-group">
