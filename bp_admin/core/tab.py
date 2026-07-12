@@ -307,7 +307,7 @@ class MediaTab(Tab):
             s.flush()
             child = self.model()
             setattr(child, self.fk, obj.id)
-            setattr(child, f"{self.file_rel}_id", file_.id)
+            setattr(child, self.file_rel, file_)
             s.add(child)
             s.flush()
 
