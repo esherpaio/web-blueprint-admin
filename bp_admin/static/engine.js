@@ -177,22 +177,15 @@
         });
     }
 
-    // Redistribute the existing order values over the new item positions.
+    // Assign sequential positions so the visual order is authoritative. Using
+    // 1..N guarantees unique values and self-heals duplicate/NULL order data.
     function renumber(body, field) {
-        const inputs = [];
+        let position = 0;
         Array.prototype.forEach.call(body.children, function (item) {
             const input = item.querySelector('input[name$="-' + field + '"]');
-            if (input) inputs.push(input);
-        });
-        const values = inputs.map(function (input, index) {
-            const parsed = parseInt(input.value, 10);
-            return isNaN(parsed) ? index + 1 : parsed;
-        });
-        values.sort(function (a, b) {
-            return a - b;
-        });
-        inputs.forEach(function (input, index) {
-            input.value = values[index];
+            if (!input) return;
+            position += 1;
+            input.value = position;
         });
     }
 
