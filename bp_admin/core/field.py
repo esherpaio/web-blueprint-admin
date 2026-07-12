@@ -65,7 +65,7 @@ class Field:
 
     def suffix_for(self, obj: Any = None) -> Any:
         if callable(self.suffix):
-            return self.suffix(obj) if obj is not None else None
+            return self.suffix(obj)
         return self.suffix
 
     #
