@@ -90,6 +90,14 @@
         document.querySelectorAll("[data-back]").forEach(function (element) {
             element.addEventListener("click", function (event) {
                 event.preventDefault();
+                const cameFromApp =
+                    document.referrer &&
+                    document.referrer.indexOf(window.location.origin) === 0 &&
+                    document.referrer !== window.location.href;
+                if (cameFromApp && window.history.length > 1) {
+                    window.history.back();
+                    return;
+                }
                 const path = window.location.pathname.replace(/\/+$/, "");
                 const parent = path.slice(0, path.lastIndexOf("/")) || "/";
                 window.location.assign(parent);
