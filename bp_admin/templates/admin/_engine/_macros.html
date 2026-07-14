@@ -246,7 +246,7 @@
     {% if action.is_link %}
         {{ anchor(action.href(obj) , action.label, action.mode, action.style, action.size, action.icon, action.target, action.download) }}
     {% elif action.has_modal %}
-        <button class="btn {{ button_class(action.style) }} d-flex gap-2"
+        <button class="btn {{ button_class(action.style) }} d-inline-flex gap-2"
                 type="button"
                 data-bs-toggle="modal"
                 data-bs-target="#{{ action.modal_id }}">
@@ -258,7 +258,7 @@
     {% elif action.is_api %}
         <form data-api-method="{{ action.method }}"
               data-api-url="{{ action.api_url(obj) }}">
-            <button class="{{ button_class(action.style) }} d-flex gap-2"
+            <button class="{{ button_class(action.style) }} d-inline-flex gap-2"
                     type="submit"
                     {% if action.confirm %}data-confirm="{{ action.confirm }}"{% endif %}>
                 {% if action.icon %}
@@ -270,7 +270,7 @@
     {% else %}
         <form method="post"
               action="{{ view.url('action', id_=obj.id, name=action.name) }}">
-            <button class="{{ button_class(action.style) }} d-flex gap-2"
+            <button class="{{ button_class(action.style) }} d-inline-flex gap-2"
                     type="submit"
                     {% if action.confirm %}data-confirm="{{ action.confirm }}"{% endif %}>
                 {% if action.icon %}
