@@ -20,9 +20,10 @@
                     {% include "admin/_engine/_actions.html" %}
                     {% if view.can_delete %}
                         <form method="post" action="{{ view.url('delete', id_=obj.id) }}">
-                            <button class="btn btn-danger"
+                            <button class="btn btn-danger d-flex gap-2"
                                     type="submit"
                                     data-confirm="Delete this {{ view.name|lower }}?">
+                                <i class="bi bi-thrash-fill"></i>
                                 {{ view.delete_title }}
                             </button>
                         </form>

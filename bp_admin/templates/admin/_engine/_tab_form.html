@@ -2,7 +2,12 @@
 
 {% if tab.has_editable %}
     <div class="d-flex flex-wrap justify-content-end gap-2 mb-3">
-        <button class="btn btn-warning" type="submit" form="{{ tab.form_id }}">Save changes</button>
+        <button class="btn btn-warning d-flex gap-2"
+                type="submit"
+                form="{{ tab.form_id }}">
+            <i class="bi bi-floppy-fill"></i>
+            Save changes
+        </button>
     </div>
 {% endif %}
 
