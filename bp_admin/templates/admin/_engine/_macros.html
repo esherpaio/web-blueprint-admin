@@ -125,18 +125,19 @@
 {% macro anchor(href, text, mode="button", style="primary", size="sm", icon=none, target=none, download=false) %}
     {% if href %}
         {% if mode == "text" %}
-            <a href="{{ href }}"
-               {% if target %}target="{{ target }}" rel="noopener"{% endif %}
-               {% if download %}download{% endif %}>
-                {% if icon %}<i class="bi {{ icon }} me-1"></i>{% endif %}
-                {{ text }}
-            </a>
-        {% else %}
-            <a class="{{ button_class(style, size) }}"
+            <a class="d-flex gap-2"
                href="{{ href }}"
                {% if target %}target="{{ target }}" rel="noopener"{% endif %}
                {% if download %}download{% endif %}>
-                {% if icon %}<i class="bi {{ icon }} me-1"></i>{% endif %}
+                {% if icon %}<i class="bi {{ icon }}"></i>{% endif %}
+                {{ text }}
+            </a>
+        {% else %}
+            <a class="{{ button_class(style, size) }} d-flex gap-2"
+               href="{{ href }}"
+               {% if target %}target="{{ target }}" rel="noopener"{% endif %}
+               {% if download %}download{% endif %}>
+                {% if icon %}<i class="bi {{ icon }}"></i>{% endif %}
                 {{ text }}
             </a>
         {% endif %}
@@ -162,8 +163,10 @@
             {% endfor %}
         </div>
         {% if not field.readonly %}
-            <button type="button" class="btn btn-sm btn-light mt-2" data-attributes-add>
-                <i class="bi bi-plus-square me-1"></i>
+            <button type="button"
+                    class="btn btn-sm btn-light mt-2 d-flex gap-2"
+                    data-attributes-add>
+                <i class="bi bi-plus-square"></i>
                 Add attribute
             </button>
             <template data-attributes-template>{{ attribute_row(field, "", "text", "") }}</template>
@@ -243,23 +246,23 @@
     {% if action.is_link %}
         {{ anchor(action.href(obj) , action.label, action.mode, action.style, action.size, action.icon, action.target, action.download) }}
     {% elif action.has_modal %}
-        <button class="btn {{ button_class(action.style) }}"
+        <button class="btn {{ button_class(action.style) }} d-flex gap-2"
                 type="button"
                 data-bs-toggle="modal"
                 data-bs-target="#{{ action.modal_id }}">
             {% if action.icon %}
-                <i class="bi {{ action.icon }} me-1"></i>
+                <i class="bi {{ action.icon }}"></i>
             {% endif %}
             {{ action.label }}
         </button>
     {% elif action.is_api %}
         <form data-api-method="{{ action.method }}"
               data-api-url="{{ action.api_url(obj) }}">
-            <button class="{{ button_class(action.style) }}"
+            <button class="{{ button_class(action.style) }} d-flex gap-2"
                     type="submit"
                     {% if action.confirm %}data-confirm="{{ action.confirm }}"{% endif %}>
                 {% if action.icon %}
-                    <i class="bi {{ action.icon }} me-1"></i>
+                    <i class="bi {{ action.icon }}"></i>
                 {% endif %}
                 {{ action.label }}
             </button>
@@ -267,11 +270,11 @@
     {% else %}
         <form method="post"
               action="{{ view.url('action', id_=obj.id, name=action.name) }}">
-            <button class="{{ button_class(action.style) }}"
+            <button class="{{ button_class(action.style) }} d-flex gap-2"
                     type="submit"
                     {% if action.confirm %}data-confirm="{{ action.confirm }}"{% endif %}>
                 {% if action.icon %}
-                    <i class="bi {{ action.icon }} me-1"></i>
+                    <i class="bi {{ action.icon }}"></i>
                 {% endif %}
                 {{ action.label }}
             </button>

@@ -87,9 +87,9 @@
                                     <form data-api-method="{{ action.method }}"
                                           data-api-url="{{ action.api_url(none) }}"
                                           {% if action.redirect %}data-api-redirect="{{ action.redirect }}"{% endif %}>
-                                        <button class="dropdown-item" type="submit">
+                                        <button class="dropdown-item d-flex gap-2" type="submit">
                                             {% if action.icon %}
-                                                <i class="bi {{ action.icon }} me-1"></i>
+                                                <i class="bi {{ action.icon }}"></i>
                                             {% endif %}
                                             {{ action.label }}
                                         </button>

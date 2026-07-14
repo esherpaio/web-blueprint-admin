@@ -9,53 +9,53 @@
                 <h2 class="mb-0">{{ view.name_plural }}</h2>
                 <div class="btn-toolbar flex-wrap gap-2">
                     {% if view.searchable %}
-                        <button class="btn btn-primary"
+                        <button class="btn btn-primary d-flex gap-2"
                                 type="button"
                                 data-bs-toggle="collapse"
                                 data-bs-target="#search">
-                            <i class="bi bi-search ms-1"></i>
+                            <i class="bi bi-search"></i>
                             Search
 
                         </button>
                     {% endif %}
                     {% if view.has_filters %}
-                        <button class="btn btn-primary"
+                        <button class="btn btn-primary d-flex gap-2"
                                 type="button"
                                 data-bs-toggle="collapse"
                                 data-bs-target="#filters">
-                            <i class="bi bi-funnel ms-1"></i>
+                            <i class="bi bi-funnel"></i>
                             Filters
 
                         </button>
                     {% endif %}
                     {% if view.can_create %}
-                        <button class="btn btn-warning"
+                        <button class="btn btn-warning d-flex gap-2"
                                 type="button"
                                 data-bs-toggle="modal"
                                 data-bs-target="#modal-create">
-                            <i class="bi bi-plus-square ms-1"></i>
+                            <i class="bi bi-plus-square"></i>
                             {{ view.create_title }}
 
                         </button>
                     {% endif %}
                     {% if view.has_bulk_edit %}
-                        <button class="btn btn-warning"
+                        <button class="btn btn-warning d-flex gap-2"
                                 type="submit"
                                 form="bulk-form"
                                 name="_op"
                                 value="{{ Op.SAVE }}">
-                            <i class="bi bi-floppy-fill ms-1"></i>
+                            <i class="bi bi-floppy-fill"></i>
                             Save changes
                         </button>
                     {% endif %}
                     {% if view.can_delete %}
-                        <button class="btn btn-danger"
+                        <button class="btn btn-dange d-flex gap-2"
                                 type="submit"
                                 form="bulk-form"
                                 name="_op"
                                 value="{{ Op.DELETE }}"
                                 data-confirm="Delete the selected records?">
-                            <i class="bi bi-trash-fill ms-1"></i>
+                            <i class="bi bi-trash-fill"></i>
                             Delete selected
                         </button>
                     {% endif %}

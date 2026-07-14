@@ -1,25 +1,31 @@
 {% set tab_action = view.url('tab', id_=obj.id, tab_key=tab.key) %}
 
 <div class="d-flex flex-wrap justify-content-end gap-2 mb-3">
-    <button class="btn btn-warning"
+    <button class="btn btn-warning d-flex gap-2"
             type="button"
             data-bs-toggle="modal"
             data-bs-target="#{{ tab.add_modal_id }}">
+        <i class="bi bi-plus-square"></i>
         Add media
-        <i class="bi bi-plus-square ms-1"></i>
     </button>
-    <button class="btn btn-warning"
+    <button class="btn btn-warning d-flex gap-2"
             type="submit"
             form="{{ tab.form_id }}"
             name="_op"
-            value="{{ Op.SAVE }}">Save changes</button>
+            value="{{ Op.SAVE }}">
+        <i class="bi bi-floppy-fill"></i>
+        Save changes
+    </button>
     {% if tab.can_delete %}
-        <button class="btn btn-danger"
+        <button class="btn btn-danger d-flex gap-2"
                 type="submit"
                 form="{{ tab.form_id }}"
                 name="_op"
                 value="{{ Op.DELETE }}"
-                data-confirm="Delete the selected media?">Delete selected</button>
+                data-confirm="Delete the selected media?">
+            <i class="bi bi-thrash-fill"></i>
+            Delete selected
+        </button>
     {% endif %}
 </div>
 

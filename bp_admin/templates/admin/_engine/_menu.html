@@ -2,11 +2,11 @@
     {% for item in items %}
         {% if item.is_group %}
             <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle {{ 'active' if item.active }}"
+                <a class="nav-link dropdown-toggle {{ 'active' if item.active }} d-flex gap-2"
                    href="#"
                    role="button"
                    data-bs-toggle="dropdown">
-                    {% if item.icon %}<i class="bi {{ item.icon }} me-1"></i>{% endif %}
+                    {% if item.icon %}<i class="bi {{ item.icon }}"></i>{% endif %}
                     {{ item.label }}
                 </a>
                 <ul class="dropdown-menu ms-auto">
@@ -22,17 +22,17 @@
                 <form method="post"
                       action="{{ url_for(item.endpoint) }}"
                       {% if item.confirm %}onsubmit="return confirm('{{ item.confirm }}')"{% endif %}>
-                    <button class="nav-link text-start w-100 border-0" type="submit">
-                        {% if item.icon %}<i class="bi {{ item.icon }} me-1"></i>{% endif %}
+                    <button class="nav-link text-start w-100 border-0 d-flex gap-2" type="submit">
+                        {% if item.icon %}<i class="bi {{ item.icon }}"></i>{% endif %}
                         {{ item.label }}
                     </button>
                 </form>
             </li>
         {% else %}
             <li class="nav-item">
-                <a class="nav-link {{ 'active' if item.active }}"
+                <a class="nav-link {{ 'active' if item.active }} d-flex gap-2"
                    href="{{ url_for(item.endpoint) }}">
-                    {% if item.icon %}<i class="bi {{ item.icon }} me-1"></i>{% endif %}
+                    {% if item.icon %}<i class="bi {{ item.icon }}"></i>{% endif %}
                     {{ item.label }}
                 </a>
             </li>
