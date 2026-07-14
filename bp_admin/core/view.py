@@ -239,6 +239,7 @@ class ModelView:
 class SingletonView(ModelView):
     singleton = True
     can_edit = True
+    show_back = False
 
 
 class CachedModelView(ModelView):
