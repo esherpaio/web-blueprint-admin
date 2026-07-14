@@ -106,6 +106,9 @@ class ModelView:
         endpoint = self.route if not suffix else f"{self.route}_{suffix}"
         return url_for(endpoint, **values)
 
+    def back_url(self, obj: Any) -> str | None:
+        return None
+
     def order_input_name(self, row_id: Any) -> str:
         return row_input_name(row_id, self.order_field)
 
