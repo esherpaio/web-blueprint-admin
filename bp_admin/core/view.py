@@ -31,6 +31,7 @@ class ModelView:
     icon: str | None = None
     menu_group: str | None = None
     menu_section: MenuSection = MenuSection.MAIN
+    menu_match: str | None = None
     order: int = 100
     is_home: bool = False
 
@@ -315,6 +316,7 @@ class TemplateView:
     order: int = 100
     menu_section: MenuSection = MenuSection.HIDDEN
     menu_group: str | None = None
+    menu_match: str | None = None
     accepts_post: bool = False
 
     @property

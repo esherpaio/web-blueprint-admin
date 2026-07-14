@@ -264,7 +264,7 @@ class AdminSite:
     #
 
     def build_menu(self) -> AdminMenu:
-        current = request.endpoint or ""
+        current = self._menu_current()
         sources = []
         for view in self.views:
             source = view.nav_source
@@ -283,3 +283,30 @@ class AdminSite:
             if source is not None:
                 sources.append(source)
         return build_menu(sources, current)
+
+    def _menu_current(self) -> str:
+        current = request.endpoint or ""
+        match = self._menu_match(current)
+        if match is None:
+            return current
+        return match if match.startswith("admin.") else f"admin.{match}"
+
+    def _menu_match(self, current: str) -> str | None:
+        if not current:
+            return None
+        for view in self.views:
+            match = getattr(view, "menu_match", None)
+            if match and (
+                current == view.route or current.startswith(f"{view.route}_")
+            ):
+                return match
+        others: list[TemplateView | UrlView | ActionView] = [
+            *self.template_views,
+            *self.url_views,
+            *self.action_views,
+        ]
+        for other in others:
+            match = getattr(other, "menu_match", None)
+            if match and current == other.route:
+                return match
+        return None
