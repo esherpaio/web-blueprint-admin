@@ -67,6 +67,7 @@ class ModelView:
             self.name_plural = self.name + "s"
         if self.endpoint is None:
             self.endpoint = self.name_plural.lower().replace(" ", "_")
+
         index = 0
         for filter_ in self.filters:
             if filter_.is_divider:

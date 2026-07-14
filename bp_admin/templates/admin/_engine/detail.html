@@ -14,7 +14,7 @@
                        title="Back">
                         <i class="bi bi-arrow-left"></i>
                     </a>
-                    <h2 class="mb-0">{{ view.title(obj) }}</h2>
+                    <h2 class="mb-0">{{ view.title(obj) |capfirst }}</h2>
                 </div>
                 <div class="btn-toolbar flex-wrap gap-2">
                     {% include "admin/_engine/_actions.html" %}
@@ -41,7 +41,7 @@
                         <li class="nav-item" role="presentation">
                             <a class="nav-link py-2 {{ 'active' if item.tab.key == active_tab }}"
                                href="{{ view.url('detail', id_=obj.id, tab=item.tab.key) }}">
-                                {{ item.tab.label }}
+                                {{ item.tab.label|capfirst }}
                             </a>
                         </li>
                     {% endfor %}

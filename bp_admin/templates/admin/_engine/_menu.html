@@ -7,12 +7,12 @@
                    role="button"
                    data-bs-toggle="dropdown">
                     {% if item.icon %}<i class="bi {{ item.icon }}"></i>{% endif %}
-                    {{ item.label }}
+                    {{ item.label|capfirst }}
                 </a>
                 <ul class="dropdown-menu ms-auto">
                     {% for child in item.items %}
                         <li>
-                            <a class="dropdown-item" href="{{ url_for(child.endpoint) }}">{{ child.label }}</a>
+                            <a class="dropdown-item" href="{{ url_for(child.endpoint) }}">{{ child.label|capfirst }}</a>
                         </li>
                     {% endfor %}
                 </ul>
@@ -24,7 +24,7 @@
                       {% if item.confirm %}onsubmit="return confirm('{{ item.confirm }}')"{% endif %}>
                     <button class="nav-link text-start w-100 border-0 d-flex gap-2" type="submit">
                         {% if item.icon %}<i class="bi {{ item.icon }}"></i>{% endif %}
-                        {{ item.label }}
+                        {{ item.label|capfirst }}
                     </button>
                 </form>
             </li>
@@ -33,7 +33,7 @@
                 <a class="nav-link {{ 'active' if item.active }} d-flex gap-2"
                    href="{{ url_for(item.endpoint) }}">
                     {% if item.icon %}<i class="bi {{ item.icon }}"></i>{% endif %}
-                    {{ item.label }}
+                    {{ item.label|capfirst }}
                 </a>
             </li>
         {% endif %}

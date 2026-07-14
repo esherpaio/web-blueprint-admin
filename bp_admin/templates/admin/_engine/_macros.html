@@ -4,7 +4,7 @@
     {% if field.input_type == InputType.ATTRIBUTES %}
         {{ attributes_editor(field, value) }}
     {% elif field.input_type == InputType.HTML %}
-        <label class="form-label fw-semibold">{{ field.label }}</label>
+        <label class="form-label fw-semibold">{{ field.label|capfirst }}</label>
         <input type="hidden" name="{{ fname }}">
         <div data-html-editor
              data-target="{{ fname }}"
@@ -13,7 +13,7 @@
         </div>
     {% elif field.input_type == InputType.CHECKBOX %}
         <div class="input-group">
-            <span class="input-group-text">{{ field.label }}</span>
+            <span class="input-group-text">{{ field.label|capfirst }}</span>
             <div class="input-group-text">
                 <input class="form-check-input mt-0"
                        type="checkbox"
@@ -24,7 +24,7 @@
         </div>
     {% elif field.input_type == InputType.SELECT %}
         <div class="input-group">
-            <span class="input-group-text">{{ field.label }}</span>
+            <span class="input-group-text">{{ field.label|capfirst }}</span>
             <select class="form-select"
                     name="{{ fname }}"
                     {% if field.required %}required{% endif %}
@@ -43,7 +43,7 @@
     {% elif field.input_type == InputType.MULTISELECT %}
         {% set selected = (value or [])|map('string')|list %}
         <div class="input-group">
-            <span class="input-group-text">{{ field.label }}</span>
+            <span class="input-group-text">{{ field.label|capfirst }}</span>
             <select class="form-select"
                     name="{{ fname }}"
                     multiple
@@ -59,7 +59,7 @@
         </div>
     {% elif field.input_type == InputType.TEXTAREA %}
         <div class="input-group">
-            <span class="input-group-text">{{ field.label }}</span>
+            <span class="input-group-text">{{ field.label|capfirst }}</span>
             <textarea class="form-control"
                       name="{{ fname }}"
                       rows="{{ field.rows }}"
@@ -69,7 +69,7 @@
         </div>
     {% else %}
         <div class="input-group">
-            <span class="input-group-text">{{ field.label }}</span>
+            <span class="input-group-text">{{ field.label|capfirst }}</span>
             <input class="form-control"
                    type="{{ field.html_input_type }}"
                    name="{{ fname }}"
@@ -156,7 +156,7 @@
 
 {% macro attributes_editor(field, data) %}
     <div class="admin-attributes" data-attributes>
-        <label class="form-label fw-semibold">{{ field.label }}</label>
+        <label class="form-label fw-semibold">{{ field.label|capfirst }}</label>
         <div data-attributes-rows class="row g-2">
             {% for row in field.rows_from(data) %}
                 {{ attribute_row(field, row.key, row.type, row.value) }}

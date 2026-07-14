@@ -57,7 +57,7 @@
                         </th>
                     {% endif %}
                     {% for column in tab_ctx.columns %}
-                        <th class="{{ column.align_class }}">{{ column.label }}</th>
+                        <th class="{{ column.align_class }}">{{ column.label|capfirst }}</th>
                     {% endfor %}
                 </tr>
             </thead>

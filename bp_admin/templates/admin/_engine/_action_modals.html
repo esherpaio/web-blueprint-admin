@@ -8,7 +8,7 @@
                       {% if action.is_api %} data-api-method="{{ action.method }}" data-api-url="{{ action.api_url(obj) }}" {% endif %}
                       {% if action.is_link %} method="post" action="{{ view.url('action', id_=obj.id, name=action.name) }}" {% endif %}>
                     <div class="modal-header">
-                        <h5 class="modal-title">{{ action.label }}</h5>
+                        <h5 class="modal-title">{{ action.label|capfirst }}</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">

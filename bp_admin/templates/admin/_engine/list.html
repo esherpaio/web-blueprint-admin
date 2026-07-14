@@ -6,7 +6,7 @@
     <div class="row g-3">
         <div class="col-12">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 row-gap-3">
-                <h2 class="mb-0">{{ view.name_plural }}</h2>
+                <h2 class="mb-0">{{ view.name_plural|capfirst }}</h2>
                 <div class="btn-toolbar flex-wrap gap-2">
                     {% if view.searchable %}
                         <button class="btn btn-primary d-flex gap-2"
@@ -95,7 +95,7 @@
                                 <div class="w-100 m-0"></div>
                             {% else %}
                                 <div class="col-12 col-md-6 col-lg-3">
-                                    <label class="form-label mb-1 small">{{ flt.label }}</label>
+                                    <label class="form-label mb-1 small">{{ flt.label|capfirst }}</label>
                                     <select class="form-select" name="{{ flt.key }}">
                                         <option value="">All</option>
                                         {% for value, label in filter_options.get(flt.key, []) %}
@@ -139,7 +139,7 @@
                                     </th>
                                 {% endif %}
                                 {% for column in view.columns %}
-                                    <th class="{{ column.align_class }}">{{ column.label }}</th>
+                                    <th class="{{ column.align_class }}">{{ column.label|capfirst }}</th>
                                 {% endfor %}
                                 {% if view.has_detail %}
                                     <th class="text-end">Actions</th>

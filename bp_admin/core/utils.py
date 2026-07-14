@@ -33,9 +33,15 @@ def resolve_href(
     return None
 
 
+def capfirst(text: str | None) -> str:
+    if not text:
+        return ""
+    return text[0].upper() + text[1:]
+
+
 def default_label(name: str) -> str:
     base = name[:-3] if name.endswith("_id") else name
-    return base.replace("_", " ").strip().capitalize()
+    return capfirst(base.replace("_", " ").strip())
 
 
 def button_class(style: str | None = Style.PRIMARY, size: str | None = None) -> str:
