@@ -50,6 +50,7 @@ class ModelView:
 
     # Detail page
     tabs: list[Tab] = []
+    show_back: bool = True
 
     # Action buttons
     actions: list[Action] = []
