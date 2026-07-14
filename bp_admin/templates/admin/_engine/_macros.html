@@ -129,14 +129,16 @@
                {% if target %}target="{{ target }}" rel="noopener"{% endif %}
                {% if download %}download{% endif %}>
                 {% if icon %}<i class="bi {{ icon }} me-1"></i>{% endif %}
-            {{ text }}</a>
+                {{ text }}
+            </a>
         {% else %}
             <a class="{{ button_class(style, size) }}"
                href="{{ href }}"
                {% if target %}target="{{ target }}" rel="noopener"{% endif %}
                {% if download %}download{% endif %}>
                 {% if icon %}<i class="bi {{ icon }} me-1"></i>{% endif %}
-            {{ text }}</a>
+                {{ text }}
+            </a>
         {% endif %}
     {% endif %}
 {% endmacro %}

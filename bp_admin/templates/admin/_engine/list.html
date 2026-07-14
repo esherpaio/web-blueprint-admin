@@ -13,8 +13,9 @@
                                 type="button"
                                 data-bs-toggle="collapse"
                                 data-bs-target="#search">
-                            Search
                             <i class="bi bi-search ms-1"></i>
+                            Search
+
                         </button>
                     {% endif %}
                     {% if view.has_filters %}
@@ -22,8 +23,9 @@
                                 type="button"
                                 data-bs-toggle="collapse"
                                 data-bs-target="#filters">
-                            Filters
                             <i class="bi bi-funnel ms-1"></i>
+                            Filters
+
                         </button>
                     {% endif %}
                     {% if view.can_create %}
@@ -31,8 +33,9 @@
                                 type="button"
                                 data-bs-toggle="modal"
                                 data-bs-target="#modal-create">
-                            {{ view.create_title }}
                             <i class="bi bi-plus-square ms-1"></i>
+                            {{ view.create_title }}
+
                         </button>
                     {% endif %}
                     {% if view.has_bulk_edit %}
@@ -40,7 +43,10 @@
                                 type="submit"
                                 form="bulk-form"
                                 name="_op"
-                                value="{{ Op.SAVE }}">Save changes</button>
+                                value="{{ Op.SAVE }}">
+                            <i class="bi bi-floppy-fill ms-1"></i>
+                            Save changes
+                        </button>
                     {% endif %}
                     {% if view.can_delete %}
                         <button class="btn btn-danger"
@@ -49,6 +55,7 @@
                                 name="_op"
                                 value="{{ Op.DELETE }}"
                                 data-confirm="Delete the selected records?">
+                            <i class="bi bi-trash-fill ms-1"></i>
                             Delete selected
                         </button>
                     {% endif %}

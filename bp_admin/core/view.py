@@ -120,6 +120,10 @@ class ModelView:
         return f"Add {self.name}"
 
     @property
+    def delete_title(self) -> str:
+        return f"Delete {self.name}"
+
+    @property
     def search_hint(self) -> str:
         return self.search_placeholder or "Search"
 
