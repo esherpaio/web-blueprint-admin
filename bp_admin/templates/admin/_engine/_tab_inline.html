@@ -1,0 +1,103 @@
+{% from "admin/_engine/_macros.html" import cell_input, display_cell, form_modal, action_button %}
+
+{% set tab_action = view.url('tab', id_=obj.id, tab_key=tab.key) %}
+
+{% if tab.show_toolbar or tab_ctx.actions %}
+    <div class="d-flex flex-wrap justify-content-end gap-2 mb-3">
+        {% if tab.show_add %}
+            <button class="btn btn-warning d-flex gap-2"
+                    type="button"
+                    data-bs-toggle="modal"
+                    data-bs-target="#{{ tab.add_modal_id }}">
+                <i class="bi bi-plus-square"></i>
+                {{ tab.add_title }}
+            </button>
+        {% endif %}
+        {% if tab.show_save %}
+            <button class="btn btn-warning d-flex gap-2"
+                    type="submit"
+                    form="{{ tab.form_id }}"
+                    name="_op"
+                    value="{{ Op.SAVE }}">
+                <i class="bi bi-floppy-fill"></i>
+                Save changes
+            </button>
+        {% endif %}
+        {% if tab.can_delete %}
+            <button class="btn btn-danger d-flex gap-2"
+                    type="submit"
+                    form="{{ tab.form_id }}"
+                    name="_op"
+                    value="{{ Op.DELETE }}"
+                    data-confirm="Delete the selected records?">
+                <i class="bi bi-trash-fill"></i>
+                Delete selected
+            </button>
+        {% endif %}
+        {% for action in tab_ctx.actions %}{{ action_button(view, obj, action) }}{% endfor %}
+    </div>
+{% endif %}
+
+<form id="{{ tab.form_id }}" method="post" action="{{ tab_action }}">
+    {% if tab.show_save %}
+        {% for row in tab_ctx.rows %}
+            <input type="hidden" name="row-id" value="{{ row.id }}">
+        {% endfor %}
+    {% endif %}
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead class="table-secondary">
+                <tr>
+                    {% if tab.reorderable %}
+                        <th style="width:2rem"></th>
+                    {% endif %}
+                    {% if tab.can_delete %}
+                        <th style="width:2.5rem">
+                            <input class="form-check-input" type="checkbox" data-select-all>
+                        </th>
+                    {% endif %}
+                    {% for column in tab_ctx.columns %}
+                        <th class="{{ column.align_class }}">{{ column.label|capfirst }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody class="table-light"
+                   {% if tab.reorderable %}data-sortable data-sort-field="{{ tab.order_field }}"{% endif %}>
+                {% for row in tab_ctx.rows %}
+                    <tr>
+                        {% if tab.reorderable %}
+                            <td class="text-muted text-center" style="cursor:grab">
+                                <i class="bi bi-grip-vertical" data-drag-handle></i>
+                                <input type="hidden"
+                                       name="{{ tab.order_input_name(row.id) }}"
+                                       value="{{ row|attr(tab.order_field) }}">
+                            </td>
+                        {% endif %}
+                        {% if tab.can_delete %}
+                            <td>
+                                <input class="form-check-input"
+                                       type="checkbox"
+                                       name="select"
+                                       value="{{ row.id }}"
+                                       data-select-row>
+                            </td>
+                        {% endif %}
+                        {% for column in tab_ctx.columns %}
+                            <td class="{{ column.align_class }}">
+                                {% if column.editable %}
+                                    {{ cell_input(column, row, tab_ctx.choices, form_values) }}
+                                {% else %}
+                                    {{ display_cell(column, row) }}
+                                {% endif %}
+                            </td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</form>
+
+{% if tab.show_add %}
+    {{ form_modal(tab.add_modal_id, tab.add_title, tab_action, tab_ctx.create_fields, tab_ctx.choices, {}, none, {'_op': Op.ADD}, submit_label=tab.add_title) }}
+{% endif %}

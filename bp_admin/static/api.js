@@ -1,66 +1,32 @@
 async function callApi(method, url, data = null, contentType = null, silent = false) {
     if (data && method === "GET") {
-        let url_params = "?";
-        for (const [key, value] of Object.entries(data)) {
-            url_params += `${key}=${value}`;
-        }
-        url = `${url}${url_params}`;
+        url = `${url}?${new URLSearchParams(data)}`;
         data = null;
     } else if (data && contentType === "application/json") {
         data = JSON.stringify(data);
     }
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 25000);
-    let options = {
-        body: data,
-        headers: { "Content-Type": contentType },
-        method: method,
-        signal: controller.signal,
-    };
-    if (contentType === false) {
-        delete options.headers;
-    }
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+    const options = { body: data, method: method, signal: controller.signal };
+    if (contentType) options.headers = { "Content-Type": contentType };
 
     let resp;
-    return await fetch(url, options)
-        .then((data) => {
-            return data.json();
-        })
-        .then((data) => {
-            clearTimeout(timeoutId);
-            resp = data;
-            console.info(`API ${method} ${resp.code} ${url}`);
-            if (200 <= resp.code && resp.code <= 299) {
-                return resp;
-            } else {
-                return Promise.reject();
-            }
-        })
-        .catch(() => {
-            let message, error;
-            if (resp && resp.message) {
-                message = resp.message;
-                error = resp.message;
-            } else {
-                message = "Something went wrong on our end.";
-                error = "No response from API.";
-            }
-            if (!silent) {
-                resetButtons();
-                showMessage(message);
-                throw new Error(error);
-            } else {
-                return resp;
-            }
-        });
-}
-
-function emptyStrToNull(dict) {
-    for (let key in dict) {
-        if (dict[key] === "") {
-            dict[key] = null;
-        }
+    try {
+        const response = await fetch(url, options);
+        resp = await response.json();
+    } catch {
+        resp = undefined;
+    } finally {
+        clearTimeout(timeoutId);
     }
-    return dict;
+
+    if (resp && resp.code >= 200 && resp.code <= 299) {
+        return resp;
+    } else if (silent) {
+        return resp;
+    } else {
+        let msg = (resp && resp.message) || "Something went wrong on our end.";
+        throw new Error(msg);
+    }
 }

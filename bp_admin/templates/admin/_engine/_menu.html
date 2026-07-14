@@ -1,0 +1,41 @@
+{% macro nav_items(items) %}
+    {% for item in items %}
+        {% if item.is_group %}
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle {{ 'active' if item.active }} d-flex gap-2"
+                   href="#"
+                   role="button"
+                   data-bs-toggle="dropdown">
+                    {% if item.icon %}<i class="bi {{ item.icon }}"></i>{% endif %}
+                    {{ item.label|capfirst }}
+                </a>
+                <ul class="dropdown-menu ms-auto">
+                    {% for child in item.items %}
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for(child.endpoint) }}">{{ child.label|capfirst }}</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </li>
+        {% elif item.is_action %}
+            <li class="nav-item">
+                <form method="post"
+                      action="{{ url_for(item.endpoint) }}"
+                      {% if item.confirm %}onsubmit="return confirm('{{ item.confirm }}')"{% endif %}>
+                    <button class="nav-link text-start w-100 border-0 d-flex gap-2" type="submit">
+                        {% if item.icon %}<i class="bi {{ item.icon }}"></i>{% endif %}
+                        {{ item.label|capfirst }}
+                    </button>
+                </form>
+            </li>
+        {% else %}
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if item.active }} d-flex gap-2"
+                   href="{{ url_for(item.endpoint) }}">
+                    {% if item.icon %}<i class="bi {{ item.icon }}"></i>{% endif %}
+                    {{ item.label|capfirst }}
+                </a>
+            </li>
+        {% endif %}
+    {% endfor %}
+{% endmacro %}

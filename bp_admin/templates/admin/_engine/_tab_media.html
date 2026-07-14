@@ -1,0 +1,103 @@
+{% set tab_action = view.url('tab', id_=obj.id, tab_key=tab.key) %}
+
+<div class="d-flex flex-wrap justify-content-end gap-2 mb-3">
+    <button class="btn btn-warning d-flex gap-2"
+            type="button"
+            data-bs-toggle="modal"
+            data-bs-target="#{{ tab.add_modal_id }}">
+        <i class="bi bi-plus-square"></i>
+        Add media
+    </button>
+    <button class="btn btn-warning d-flex gap-2"
+            type="submit"
+            form="{{ tab.form_id }}"
+            name="_op"
+            value="{{ Op.SAVE }}">
+        <i class="bi bi-floppy-fill"></i>
+        Save changes
+    </button>
+    {% if tab.can_delete %}
+        <button class="btn btn-danger d-flex gap-2"
+                type="submit"
+                form="{{ tab.form_id }}"
+                name="_op"
+                value="{{ Op.DELETE }}"
+                data-confirm="Delete the selected media?">
+            <i class="bi bi-trash-fill"></i>
+            Delete selected
+        </button>
+    {% endif %}
+</div>
+
+<form id="{{ tab.form_id }}" method="post" action="{{ tab_action }}">
+    <div class="row g-3" data-sortable data-sort-field="{{ tab.order_field }}">
+        {% for media in tab_ctx.rows %}
+            {% set file = media[tab.file_rel] %}
+            <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                <input type="hidden" name="row-id" value="{{ media.id }}">
+                <input type="hidden"
+                       name="{{ tab.order_input_name(media.id) }}"
+                       value="{{ media[tab.order_field] if media[tab.order_field] is not none }}">
+                <div class="card h-100 position-relative">
+                    {% if tab.can_delete %}
+                        <input class="form-check-input position-absolute top-0 start-0 m-2 shadow-sm"
+                               style="z-index:2"
+                               type="checkbox"
+                               name="select"
+                               value="{{ media.id }}"
+                               aria-label="Select media">
+                    {% endif %}
+                    {% if file and file.is_image %}
+                        <img class="card-img-top bg-light border-bottom object-fit-contain"
+                             src="{{ cdn_url(file.path) }}?class=medium"
+                             alt="{{ file.description if file.description }}"
+                             loading="lazy"
+                             draggable="false"
+                             data-drag-handle
+                             style="cursor:grab;
+                                    height: 160px">
+                    {% elif file and file.is_video %}
+                        <video controls
+                               muted
+                               class="card-img-top bg-light border-bottom object-fit-contain"
+                               data-drag-handle
+                               style="cursor:grab;
+                                      height: 160px">
+                            <source src="{{ cdn_url(file.path) }}">
+                        </video>
+                    {% endif %}
+                    <div class="card-body">
+                        <input class="form-control form-control-sm"
+                               type="text"
+                               name="{{ tab.description_input_name(media.id) }}"
+                               placeholder="Description"
+                               value="{{ file.description if file and file.description }}">
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="col-12 text-muted">No media.</div>
+        {% endfor %}
+    </div>
+</form>
+
+<div id="{{ tab.add_modal_id }}" class="modal modal-lg fade" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content"
+              method="post"
+              action="{{ tab_action }}"
+              enctype="multipart/form-data">
+            <div class="modal-header">
+                <h5 class="modal-title">Add media</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input required multiple class="form-control" type="file" name="file">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-warning" type="submit" name="_op" value="{{ Op.ADD }}">Add media</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>

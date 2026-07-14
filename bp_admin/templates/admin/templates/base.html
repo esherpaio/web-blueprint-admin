@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="{{ current_locale.language.code }}" class="h-100">
+    <head>
+        {% set current_blueprint = cache.blueprints | selectattr("endpoint", "equalto", request.blueprint) | first %}
+        {% set current_route = cache.routes | selectattr("endpoint", "equalto", request.endpoint) | first %}
+        {% for tag in meta.tags %}{{ tag }}{% endfor %}
+        <link rel="stylesheet"
+              href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,500,600,700&display=swap">
+        <link rel="stylesheet"
+              href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+        <link rel="stylesheet"
+              href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+        <link rel="stylesheet"
+              href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css">
+        {% if current_blueprint and current_blueprint.css_path %}
+            <link type="text/css"
+                  rel="stylesheet"
+                  href="{{ cdn_url(current_blueprint.css_path) }}">
+        {% endif %}
+        {% if current_route and current_route.css_path %}
+            <link type="text/css"
+                  rel="stylesheet"
+                  href="{{ cdn_url(current_route.css_path) }}">
+        {% endif %}
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
+        <script type="module" src="https://cdn.jsdelivr.net/npm/zero-md@3?register"></script>
+        {% if current_blueprint and current_blueprint.js_path %}
+            <script defer src="{{ cdn_url(current_blueprint.js_path) }}"></script>
+        {% endif %}
+        {% if current_route and current_route.js_path %}
+            <script defer src="{{ cdn_url(current_route.js_path) }}"></script>
+        {% endif %}
+    </head>
+    <body class="h-100 w-100 d-flex flex-row">
+        {% from "admin/_engine/_menu.html" import nav_items %}
+        <nav id="sidebar" class="offcanvas offcanvas-start" tabindex="-1">
+            <div class="offcanvas-body text-bg-light">
+                <div class="d-flex flex-column justify-content-between h-100 gap-2">
+                    <div class="nav nav-pills w-100 flex-column gap-2">{{ nav_items(admin_menu.main) }}</div>
+                    <div>
+                        <div class="nav nav-pills w-100 flex-column gap-2">{{ nav_items(admin_menu.bottom) }}</div>
+                        <hr class="text-secondary">
+                        <div class="d-flex flex-column align-items-center justify-content-center gap-0">
+                            <span class="text-body-secondary small">Powered by</span>
+                            <a class="text-decoration-none text-body-secondary small"
+                               href="https://esherpa.io/en-nl"
+                               target="_blank"
+                               rel="noopener">
+                                eSherpa
+                                <img src="https://cdn.esherpa.io/esherpa/logo_esherpa.png"
+                                     alt="eSherpa"
+                                     height="18">
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+        <div class="flex-grow-1 overflow-auto">
+            <nav class="navbar navbar-dark bg-primary sticky-top">
+                <div class="container-xxl px-4 px-lg-5 px-xl-4">
+                    <a class="d-block d-xl-none text-white fs-2"
+                       href="#"
+                       type="button"
+                       data-bs-toggle="offcanvas"
+                       data-bs-target="#sidebar">
+                        <i class="bi bi-layout-sidebar-inset"></i>
+                    </a>
+                    <a href="/" class="navbar-brand fw-semibold" target="_blank">{{ config.META_WEBSITE_NAME }}</a>
+                    <div class="position-relative">
+                        <a class="d-block d-md-none text-white fs-2"
+                           href="#"
+                           role="button"
+                           data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle"></i>
+                        </a>
+                        <a class="dropdown-toggle d-none d-md-block text-white text-decoration-none"
+                           role="button"
+                           data-bs-toggle="dropdown">Account</a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item disabled">{{ current_user.email }}</a>
+                            </li>
+                            {% for action in account_actions %}
+                                <li>
+                                    <form data-api-method="{{ action.method }}"
+                                          data-api-url="{{ action.api_url(none) }}"
+                                          {% if action.redirect %}data-api-redirect="{{ action.redirect }}"{% endif %}>
+                                        <button class="dropdown-item d-flex gap-2" type="submit">
+                                            {% if action.icon %}
+                                                <i class="bi {{ action.icon }}"></i>
+                                            {% endif %}
+                                            {{ action.label }}
+                                        </button>
+                                    </form>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+            <div class="container-xxl p-3 p-sm-4 px-lg-5 px-xl-4">
+                <div data-flash></div>
+                {% block admin_body %}
+                {% endblock admin_body %}
+            </div>
+        </div>
+    </body>
+</html>

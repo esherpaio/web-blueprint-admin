@@ -1,0 +1,35 @@
+{% from "admin/_engine/_macros.html" import field_input %}
+
+{% for action in view.actions %}
+    {% if action.has_modal and action.is_visible(obj) %}
+        <div id="{{ action.modal_id }}" class="modal modal-lg fade" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <form class="modal-content"
+                      {% if action.is_api %} data-api-method="{{ action.method }}" data-api-url="{{ action.api_url(obj) }}" {% endif %}
+                      {% if action.is_link %} method="post" action="{{ view.url('action', id_=obj.id, name=action.name) }}" {% endif %}>
+                    <div class="modal-header">
+                        <h5 class="modal-title">{{ action.label|capfirst }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        {% if action.notice %}<p class="mb-2">{{ action.notice }}</p>{% endif %}
+                        {% if action.text %}<p>{{ action.text }}</p>{% endif %}
+                        {% if action.fields %}
+                            <div class="row g-2">
+                                {% for field in action.fields %}
+                                    <div class="col-12">
+                                        {{ field_input(field, field.value_from_obj(obj) , action_choices.get(action.name, {}) , editable=true, obj=obj) }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-warning" type="submit">{{ action.label }}</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    {% endif %}
+{% endfor %}

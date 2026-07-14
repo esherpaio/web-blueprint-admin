@@ -1,0 +1,215 @@
+{% extends "admin/templates/base.html" %}
+
+{% from "admin/_engine/_macros.html" import action_button, cell_input, display_cell, form_modal %}
+
+{% block admin_body %}
+    <div class="row g-3">
+        <div class="col-12">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 row-gap-3">
+                <h2 class="mb-0">{{ view.name_plural|capfirst }}</h2>
+                <div class="btn-toolbar flex-wrap gap-2">
+                    {% if view.searchable %}
+                        <button class="btn btn-primary d-flex gap-2"
+                                type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#search">
+                            <i class="bi bi-search"></i>
+                            Search
+                        </button>
+                    {% endif %}
+                    {% if view.has_filters %}
+                        <button class="btn btn-primary d-flex gap-2"
+                                type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#filters">
+                            <i class="bi bi-funnel"></i>
+                            Filters
+                        </button>
+                    {% endif %}
+                    {% if view.can_create %}
+                        <button class="btn btn-warning d-flex gap-2"
+                                type="button"
+                                data-bs-toggle="modal"
+                                data-bs-target="#modal-create">
+                            <i class="bi bi-plus-square"></i>
+                            {{ view.create_title }}
+                        </button>
+                    {% endif %}
+                    {% if view.has_bulk_edit %}
+                        <button class="btn btn-warning d-flex gap-2"
+                                type="submit"
+                                form="bulk-form"
+                                name="_op"
+                                value="{{ Op.SAVE }}">
+                            <i class="bi bi-floppy-fill"></i>
+                            Save changes
+                        </button>
+                    {% endif %}
+                    {% if view.can_delete %}
+                        <button class="btn btn-danger d-flex gap-2"
+                                type="submit"
+                                form="bulk-form"
+                                name="_op"
+                                value="{{ Op.DELETE }}"
+                                data-confirm="Delete the selected records?">
+                            <i class="bi bi-trash-fill"></i>
+                            Delete selected
+                        </button>
+                    {% endif %}
+                    {% for action in view.actions if action.is_link %}
+                        {{ action_button(view, none, action) }}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% if view.searchable %}
+            <div id="search" class="col-12 collapse {{ 'show' if show_search }}">
+                <form action="{{ view.url() }}" method="get">
+                    {% for key, value in filter_values.items() %}
+                        <input type="hidden" name="{{ key }}" value="{{ value }}">
+                    {% endfor %}
+                    <div class="row g-2">
+                        <div class="col-12 col-lg">
+                            <input class="form-control"
+                                   name="s"
+                                   type="text"
+                                   placeholder="{{ view.search_hint }}"
+                                   value="{{ search if search }}">
+                        </div>
+                        <div class="col-12 col-lg-auto">
+                            <button class="btn btn-primary w-100" type="submit">Search</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        {% endif %}
+        {% if view.has_filters %}
+            <div id="filters" class="col-12 collapse {{ 'show' if show_filters }}">
+                <form action="{{ view.url() }}" method="get">
+                    {% if search %}
+                        <input type="hidden" name="s" value="{{ search }}">
+                    {% endif %}
+                    <div class="row g-2 align-items-end">
+                        {% for flt in view.filters %}
+                            {% if flt.is_divider %}
+                                <div class="w-100 m-0"></div>
+                            {% else %}
+                                <div class="col-12 col-md-6 col-lg-3">
+                                    <label class="form-label mb-1 small">{{ flt.label|capfirst }}</label>
+                                    <select class="form-select" name="{{ flt.key }}">
+                                        <option value="">All</option>
+                                        {% for value, label in filter_options.get(flt.key, []) %}
+                                            <option value="{{ value }}"
+                                                    {{ 'selected' if filter_values.get(flt.key) == value }}>{{ label }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                        <div class="col-12 d-flex gap-2">
+                            <button class="btn btn-primary" type="submit">Apply</button>
+                            <a class="btn btn-light"
+                               href="{{ view.url(s=search) if search else view.url() }}">Clear</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        {% endif %}
+        {% if error or notice %}
+            <div class="col-12" data-alert-wrapper>{% include "admin/_engine/_alerts.html" %}</div>
+        {% endif %}
+        <div class="col-12">
+            <form id="bulk-form" method="post" action="{{ view.url() }}">
+                {% if view.has_bulk_edit %}
+                    {% for obj in rows %}
+                        <input type="hidden" name="row-id" value="{{ obj.id }}">
+                    {% endfor %}
+                {% endif %}
+                <div class="table-responsive">
+                    <table class="table rounded-2 overflow-hidden align-middle mb-0">
+                        <thead class="table-secondary">
+                            <tr>
+                                {% if view.reorderable %}
+                                    <th style="width:2rem"></th>
+                                {% endif %}
+                                {% if view.can_delete %}
+                                    <th style="width:2.5rem">
+                                        <input class="form-check-input" type="checkbox" data-select-all>
+                                    </th>
+                                {% endif %}
+                                {% for column in view.columns %}
+                                    <th class="{{ column.align_class }}">{{ column.label|capfirst }}</th>
+                                {% endfor %}
+                                {% if view.has_detail %}
+                                    <th class="text-end">Actions</th>
+                                {% endif %}
+                            </tr>
+                        </thead>
+                        <tbody class="table-light"
+                               {% if view.reorderable %}data-sortable data-sort-field="{{ view.order_field }}"{% endif %}>
+                            {% for obj in rows %}
+                                <tr>
+                                    {% if view.reorderable %}
+                                        <td class="text-muted text-center" style="cursor:grab">
+                                            <i class="bi bi-grip-vertical" data-drag-handle></i>
+                                            <input type="hidden"
+                                                   name="{{ view.order_input_name(obj.id) }}"
+                                                   value="{{ obj|attr(view.order_field) }}">
+                                        </td>
+                                    {% endif %}
+                                    {% if view.can_delete %}
+                                        <td>
+                                            <input class="form-check-input"
+                                                   type="checkbox"
+                                                   name="select"
+                                                   value="{{ obj.id }}"
+                                                   data-select-row>
+                                        </td>
+                                    {% endif %}
+                                    {% for column in view.columns %}
+                                        <td class="{{ column.align_class }}">
+                                            {% if column.editable %}
+                                                {{ cell_input(column, obj, choices, form_values) }}
+                                            {% else %}
+                                                {{ display_cell(column, obj) }}
+                                            {% endif %}
+                                        </td>
+                                    {% endfor %}
+                                    {% if view.has_detail %}
+                                        <td class="text-end">
+                                            <a class="btn btn-sm btn-primary"
+                                               href="{{ view.url('detail', id_=obj.id) }}">View</a>
+                                        </td>
+                                    {% endif %}
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </form>
+        </div>
+        {% if pagination.pages > 1 %}
+            <div class="col-12">
+                <nav>
+                    <ul class="pagination mb-0">
+                        {% for number in pagination.numbers() %}
+                            {% if number is none %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">&hellip;</span>
+                                </li>
+                            {% else %}
+                                <li class="page-item {{ 'active' if number == pagination.page }}">
+                                    <a class="page-link" href="{{ view.url(p=number, **query_args) }}">{{ number }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                </nav>
+            </div>
+        {% endif %}
+    </div>
+    {% if view.can_create %}
+        {{ form_modal('modal-create', view.create_title, view.url('create') , view.create_fields, choices, create_values, create_error, submit_label=view.create_title) }}
+    {% endif %}
+{% endblock admin_body %}

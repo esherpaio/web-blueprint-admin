@@ -1,0 +1,283 @@
+{% macro field_input(field, value, choices={}, name=None, editable=None, obj=None) %}
+    {% set fname = name or field.name %}
+    {% set is_readonly = field.is_readonly(editable) %}
+    {% if field.input_type == InputType.ATTRIBUTES %}
+        {{ attributes_editor(field, value) }}
+    {% elif field.input_type == InputType.HTML %}
+        <label class="form-label fw-semibold">{{ field.label|capfirst }}</label>
+        <input type="hidden" name="{{ fname }}">
+        <div data-html-editor
+             data-target="{{ fname }}"
+             {% if is_readonly %}data-readonly{% endif %}>
+            {{ value|safe if value is not none else "" }}
+        </div>
+    {% elif field.input_type == InputType.CHECKBOX %}
+        <div class="input-group">
+            <span class="input-group-text">{{ field.label|capfirst }}</span>
+            <div class="input-group-text">
+                <input class="form-check-input mt-0"
+                       type="checkbox"
+                       name="{{ fname }}"
+                       {% if value %}checked{% endif %}
+                       {% if is_readonly %}disabled{% endif %}>
+            </div>
+        </div>
+    {% elif field.input_type == InputType.SELECT %}
+        <div class="input-group">
+            <span class="input-group-text">{{ field.label|capfirst }}</span>
+            <select class="form-select"
+                    name="{{ fname }}"
+                    {% if field.required %}required{% endif %}
+                    {% if is_readonly %}disabled{% endif %}>
+                {% if field.show_empty_option %}
+                    <option value="">{{ field.empty_option_label }}</option>
+                {% endif %}
+                {% for option_value, option_label in choices.get(field.name, []) %}
+                    <option value="{{ option_value }}"
+                            {% if value is not none and value|string == option_value|string %}selected{% endif %}>
+                        {{ option_label }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+    {% elif field.input_type == InputType.MULTISELECT %}
+        {% set selected = (value or [])|map('string')|list %}
+        <div class="input-group">
+            <span class="input-group-text">{{ field.label|capfirst }}</span>
+            <select class="form-select"
+                    name="{{ fname }}"
+                    multiple
+                    size="6"
+                    {% if is_readonly %}disabled{% endif %}>
+                {% for option_value, option_label in choices.get(field.name, []) %}
+                    <option value="{{ option_value }}"
+                            {% if option_value|string in selected %}selected{% endif %}>
+                        {{ option_label }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+    {% elif field.input_type == InputType.TEXTAREA %}
+        <div class="input-group">
+            <span class="input-group-text">{{ field.label|capfirst }}</span>
+            <textarea class="form-control"
+                      name="{{ fname }}"
+                      rows="{{ field.rows }}"
+                      {% if field.placeholder %}placeholder="{{ field.placeholder }}"{% endif %}
+                      {% if field.required %}required{% endif %}
+                      {% if is_readonly %}disabled{% endif %}>{{ value if value is not none else "" }}</textarea>
+        </div>
+    {% else %}
+        <div class="input-group">
+            <span class="input-group-text">{{ field.label|capfirst }}</span>
+            <input class="form-control"
+                   type="{{ field.html_input_type }}"
+                   name="{{ fname }}"
+                   value="{{ value if value is not none else '' }}"
+                   {% if field.placeholder %}placeholder="{{ field.placeholder }}"{% endif %}
+                   {% for key, attr_value in field.attrs.items() %}{{ key }}="{{ attr_value }}"{% endfor %}
+                   {% if field.required %}required{% endif %}
+                   {% if is_readonly %}disabled{% endif %}>
+            {% if field.suffix_for(obj) %}
+                <span class="input-group-text">{{ field.suffix_for(obj) }}</span>
+            {% endif %}
+        </div>
+    {% endif %}
+{% endmacro %}
+
+{% macro cell_input(column, obj, choices={}, form_values={}) %}
+    {% set field = column.field %}
+    {% set name = column.input_name(obj.id) %}
+    {% set value = column.cell_value(obj, form_values) %}
+    {% if field.input_type == InputType.CHECKBOX %}
+        <input class="form-check-input"
+               type="checkbox"
+               name="{{ name }}"
+               {% if value %}checked{% endif %}>
+    {% elif field.input_type == InputType.SELECT %}
+        <select class="form-select form-select-sm" name="{{ name }}">
+            {% if not field.required %}<option value="">{{ field.empty_option_label }}</option>{% endif %}
+            {% for option_value, option_label in choices.get(field.name, []) %}
+                <option value="{{ option_value }}"
+                        {% if value is not none and value|string == option_value|string %}selected{% endif %}>
+                    {{ option_label }}
+                </option>
+            {% endfor %}
+        </select>
+    {% elif field.suffix_for(obj) %}
+        <div class="input-group input-group-sm">
+            <input class="form-control"
+                   type="{{ field.html_input_type }}"
+                   name="{{ name }}"
+                   value="{{ value if value is not none else '' }}"
+                   {% for key, attr_value in field.attrs.items() %}{{ key }}="{{ attr_value }}"{% endfor %}>
+            <span class="input-group-text">{{ field.suffix_for(obj) }}</span>
+        </div>
+    {% else %}
+        <input class="form-control form-control-sm"
+               type="{{ field.html_input_type }}"
+               name="{{ name }}"
+               value="{{ value if value is not none else '' }}"
+               {% for key, attr_value in field.attrs.items() %}{{ key }}="{{ attr_value }}"{% endfor %}>
+    {% endif %}
+{% endmacro %}
+
+{% macro anchor(href, text, mode="button", style="primary", size="sm", icon=none, target=none, download=false) %}
+    {% if href %}
+        {% if mode == "text" %}
+            <a class="d-inline-flex gap-2"
+               href="{{ href }}"
+               {% if target %}target="{{ target }}" rel="noopener"{% endif %}
+               {% if download %}download{% endif %}>
+                {% if icon %}<i class="bi {{ icon }}"></i>{% endif %}
+                {{ text }}
+            </a>
+        {% else %}
+            <a class="{{ button_class(style, size) }} d-inline-flex gap-2"
+               href="{{ href }}"
+               {% if target %}target="{{ target }}" rel="noopener"{% endif %}
+               {% if download %}download{% endif %}>
+                {% if icon %}<i class="bi {{ icon }}"></i>{% endif %}
+                {{ text }}
+            </a>
+        {% endif %}
+    {% endif %}
+{% endmacro %}
+
+{% macro display_cell(column, obj) %}
+    {% if column.is_link %}
+        {% if column.is_visible(obj) %}
+            {{ anchor(column.href(obj) , column.text(obj), column.mode, column.style, column.size, column.icon, column.target, column.download) }}
+        {% endif %}
+    {% else %}
+        {{ column.render(obj) }}
+    {% endif %}
+{% endmacro %}
+
+{% macro attributes_editor(field, data) %}
+    <div class="admin-attributes" data-attributes>
+        <label class="form-label fw-semibold">{{ field.label|capfirst }}</label>
+        <div data-attributes-rows class="row g-2">
+            {% for row in field.rows_from(data) %}
+                {{ attribute_row(field, row.key, row.type, row.value) }}
+            {% endfor %}
+        </div>
+        {% if not field.readonly %}
+            <button type="button"
+                    class="btn btn-sm btn-light mt-2 d-flex gap-2"
+                    data-attributes-add>
+                <i class="bi bi-plus-square"></i>
+                Add attribute
+            </button>
+            <template data-attributes-template>{{ attribute_row(field, "", "text", "") }}</template>
+        {% endif %}
+    </div>
+{% endmacro %}
+
+{% macro attribute_row(field, key, type, value) %}
+    <div class="col-12 admin-attribute-row">
+        <div class="input-group">
+            <input class="form-control"
+                   style="max-width:14rem"
+                   type="text"
+                   name="attr-key"
+                   placeholder="Key"
+                   value="{{ key }}"
+                   {% if field.readonly %}disabled{% endif %}>
+            <select class="form-select"
+                    style="max-width:9rem"
+                    name="attr-type"
+                    {% if field.readonly %}disabled{% endif %}>
+                {% for attr_type in AttrType %}
+                    <option value="{{ attr_type }}" {% if attr_type == type %}selected{% endif %}>
+                        {{ attr_type.label }}
+                    </option>
+                {% endfor %}
+            </select>
+            <input class="form-control"
+                   type="text"
+                   name="attr-value"
+                   placeholder="Value"
+                   value="{{ value }}"
+                   {% if field.readonly %}disabled{% endif %}>
+            {% if not field.readonly %}
+                <button type="button" class="btn btn-danger" data-attributes-remove>
+                    <i class="bi bi-trash"></i>
+                </button>
+            {% endif %}
+        </div>
+    </div>
+{% endmacro %}
+
+{% macro form_modal(modal_id, title, action, fields, choices={}, values={}, error=None, hidden={}, submit_label="Add") %}
+    <div id="{{ modal_id }}"
+         class="modal modal-lg fade"
+         tabindex="-1"
+         {% if error %}data-show-modal{% endif %}>
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content" method="post" action="{{ action }}">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ title }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    {% if error %}
+                        <div class="alert alert-danger" role="alert">{{ error }}</div>
+                    {% endif %}
+                    {% for key, hidden_value in hidden.items() %}
+                        <input type="hidden" name="{{ key }}" value="{{ hidden_value }}">
+                    {% endfor %}
+                    <div class="row g-2">
+                        {% for field in fields %}
+                            <div class="col-12">{{ field_input(field, values.get(field.name) , choices, editable=true) }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-warning" type="submit">{{ submit_label }}</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endmacro %}
+
+{% macro action_button(view, obj, action) %}
+    {% if action.is_link %}
+        {{ anchor(action.href(obj) , action.label, action.mode, action.style, action.size, action.icon, action.target, action.download) }}
+    {% elif action.has_modal %}
+        <button class="btn {{ button_class(action.style) }} d-inline-flex gap-2"
+                type="button"
+                data-bs-toggle="modal"
+                data-bs-target="#{{ action.modal_id }}">
+            {% if action.icon %}
+                <i class="bi {{ action.icon }}"></i>
+            {% endif %}
+            {{ action.label }}
+        </button>
+    {% elif action.is_api %}
+        <form data-api-method="{{ action.method }}"
+              data-api-url="{{ action.api_url(obj) }}">
+            <button class="{{ button_class(action.style) }} d-inline-flex gap-2"
+                    type="submit"
+                    {% if action.confirm %}data-confirm="{{ action.confirm }}"{% endif %}>
+                {% if action.icon %}
+                    <i class="bi {{ action.icon }}"></i>
+                {% endif %}
+                {{ action.label }}
+            </button>
+        </form>
+    {% else %}
+        <form method="post"
+              action="{{ view.url('action', id_=obj.id, name=action.name) }}">
+            <button class="{{ button_class(action.style) }} d-inline-flex gap-2"
+                    type="submit"
+                    {% if action.confirm %}data-confirm="{{ action.confirm }}"{% endif %}>
+                {% if action.icon %}
+                    <i class="bi {{ action.icon }}"></i>
+                {% endif %}
+                {{ action.label }}
+            </button>
+        </form>
+    {% endif %}
+{% endmacro %}

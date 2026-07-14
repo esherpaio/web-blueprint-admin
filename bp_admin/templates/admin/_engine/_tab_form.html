@@ -1,0 +1,24 @@
+{% from "admin/_engine/_macros.html" import field_input %}
+
+{% if tab.has_editable %}
+    <div class="d-flex flex-wrap justify-content-end gap-2 mb-3">
+        <button class="btn btn-warning d-flex gap-2"
+                type="submit"
+                form="{{ tab.form_id }}">
+            <i class="bi bi-floppy-fill"></i>
+            Save changes
+        </button>
+    </div>
+{% endif %}
+
+<form id="{{ tab.form_id }}"
+      method="post"
+      action="{{ view.url('tab', id_=obj.id, tab_key=tab.key) }}">
+    <div class="row g-3">
+        {% for field in tab_ctx.fields %}
+            <div class="{{ field.col_class }}">
+                {{ field_input(field, field.form_value(obj, form_values) , tab_ctx.choices, obj=obj) }}
+            </div>
+        {% endfor %}
+    </div>
+</form>

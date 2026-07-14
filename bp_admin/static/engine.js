@@ -1,0 +1,254 @@
+(function () {
+    "use strict";
+
+    function setButtonLoading(button, loading) {
+        if (!button) return;
+        button.disabled = loading;
+        button.classList.toggle("disabled", loading);
+    }
+
+    function showFlash(message, level) {
+        level = level || "danger";
+        const container = document.querySelector("[data-flash]");
+        if (!container) {
+            window.alert(message);
+            return;
+        }
+        const alert = document.createElement("div");
+        alert.className = "alert alert-" + level + " alert-dismissible fade show";
+        alert.setAttribute("role", "alert");
+        alert.textContent = message;
+        const close = document.createElement("button");
+        close.type = "button";
+        close.className = "btn-close";
+        close.setAttribute("data-bs-dismiss", "alert");
+        alert.appendChild(close);
+        container.appendChild(alert);
+    }
+
+    window.adminFlash = showFlash;
+
+    function initSelectAll() {
+        document.querySelectorAll("[data-select-all]").forEach(function (master) {
+            const table = master.closest("table");
+            if (!table) return;
+            master.addEventListener("change", function () {
+                table
+                    .querySelectorAll("[data-select-row]")
+                    .forEach(function (checkbox) {
+                        checkbox.checked = master.checked;
+                    });
+            });
+        });
+    }
+
+    function initConfirm() {
+        document.querySelectorAll("[data-confirm]").forEach(function (button) {
+            button.addEventListener("click", function (event) {
+                if (!window.confirm(button.dataset.confirm)) {
+                    event.preventDefault();
+                }
+            });
+        });
+    }
+
+    function initApiActions() {
+        document.querySelectorAll("form[data-api-url]").forEach(function (form) {
+            form.addEventListener("submit", function (event) {
+                event.preventDefault();
+                const method = form.dataset.apiMethod;
+                const url = form.dataset.apiUrl;
+                const redirect = form.dataset.apiRedirect;
+                const button = form.querySelector('[type="submit"]');
+                const body = {};
+                let hasBody = false;
+                form.querySelectorAll("[name]").forEach(function (input) {
+                    if (input.disabled) return;
+                    hasBody = true;
+                    let value = input.value;
+                    if (input.type === "checkbox") value = input.checked;
+                    else if (value === "") value = null;
+                    body[input.name] = value;
+                });
+                const data = hasBody ? body : null;
+                const contentType = hasBody ? "application/json" : null;
+                setButtonLoading(button, true);
+                callApi(method, url, data, contentType)
+                    .then(function () {
+                        if (redirect) window.location.href = redirect;
+                        else window.location.reload();
+                    })
+                    .catch(function (error) {
+                        setButtonLoading(button, false);
+                        showFlash(error.message);
+                    });
+            });
+        });
+    }
+
+    function initBack() {
+        document.querySelectorAll("[data-back]").forEach(function (element) {
+            element.addEventListener("click", function (event) {
+                event.preventDefault();
+                const path = window.location.pathname.replace(/\/+$/, "");
+                const parent = path.slice(0, path.lastIndexOf("/")) || "/";
+                window.location.assign(parent);
+            });
+        });
+    }
+
+    function initShowModal() {
+        document.querySelectorAll("[data-show-modal]").forEach(function (element) {
+            new bootstrap.Modal(element).show();
+        });
+    }
+
+    function initSearchFocus() {
+        const search = document.getElementById("search");
+        if (!search) return;
+        search.addEventListener("shown.bs.collapse", function () {
+            const input = search.querySelector('input[name="s"]');
+            if (input) input.focus();
+        });
+    }
+
+    function initAttributes() {
+        document.querySelectorAll("[data-attributes]").forEach(function (editor) {
+            const rows = editor.querySelector("[data-attributes-rows]");
+            const template = editor.querySelector("[data-attributes-template]");
+            const addButton = editor.querySelector("[data-attributes-add]");
+
+            if (addButton && rows && template) {
+                addButton.addEventListener("click", function () {
+                    rows.appendChild(template.content.cloneNode(true));
+                });
+            }
+            editor.addEventListener("click", function (event) {
+                const remove = event.target.closest("[data-attributes-remove]");
+                if (!remove) return;
+                const row = remove.closest(".admin-attribute-row");
+                if (row) row.remove();
+            });
+        });
+    }
+
+    function initSortable() {
+        document.querySelectorAll("[data-sortable]").forEach(function (body) {
+            const field = body.dataset.sortField || "order";
+            let dragItem = null;
+
+            Array.prototype.forEach.call(body.children, function (item) {
+                const handle = item.querySelector("[data-drag-handle]");
+                if (!handle) return;
+
+                handle.addEventListener("mousedown", function () {
+                    item.draggable = true;
+                });
+                item.addEventListener("mouseup", function () {
+                    item.draggable = false;
+                });
+
+                item.addEventListener("dragstart", function (event) {
+                    dragItem = item;
+                    item.classList.add("opacity-50");
+                    event.dataTransfer.effectAllowed = "move";
+                    event.dataTransfer.setData("text/plain", "");
+                });
+                item.addEventListener("dragend", function () {
+                    item.draggable = false;
+                    item.classList.remove("opacity-50");
+                    dragItem = null;
+                    renumber(body, field);
+                });
+            });
+
+            body.addEventListener("dragover", function (event) {
+                if (!dragItem) return;
+                event.preventDefault();
+                let target = event.target;
+                while (target && target.parentNode !== body) {
+                    target = target.parentNode;
+                }
+                if (!target || target === dragItem) return;
+                const rect = target.getBoundingClientRect();
+                const after = event.clientY > rect.top + rect.height / 2;
+                body.insertBefore(dragItem, after ? target.nextSibling : target);
+            });
+        });
+    }
+
+    // Assign sequential positions so the visual order is authoritative. Using
+    // 1..N guarantees unique values and self-heals duplicate/NULL order data.
+    function renumber(body, field) {
+        let position = 0;
+        Array.prototype.forEach.call(body.children, function (item) {
+            const input = item.querySelector('input[name$="-' + field + '"]');
+            if (!input) return;
+            position += 1;
+            input.value = position;
+        });
+    }
+
+    function initAlertDismiss() {
+        document
+            .querySelectorAll("[data-alert-wrapper]")
+            .forEach(function (wrapper) {
+                wrapper.querySelectorAll(".alert").forEach(function (alert) {
+                    alert.addEventListener("closed.bs.alert", function () {
+                        wrapper.remove();
+                    });
+                });
+            });
+    }
+
+    function initCleanUrl() {
+        const url = new URL(window.location.href);
+        if (url.searchParams.has("saved")) {
+            url.searchParams.delete("saved");
+            const query = url.searchParams.toString();
+            window.history.replaceState(
+                {},
+                "",
+                url.pathname + (query ? "?" + query : "") + url.hash,
+            );
+        }
+    }
+
+    function initHtmlEditors() {
+        const toolbar = [
+            [{ header: [2, 3, 4, false] }],
+            ["bold", "italic", "underline", "strike"],
+            ["link"],
+            [{ list: "ordered" }, { list: "bullet" }],
+            ["clean"],
+        ];
+        document.querySelectorAll("[data-html-editor]").forEach(function (el) {
+            const input = document.getElementsByName(el.dataset.target)[0];
+            const readonly = el.hasAttribute("data-readonly");
+            const quill = new Quill(el, {
+                theme: "snow",
+                readOnly: readonly,
+                modules: { toolbar: readonly ? false : toolbar },
+            });
+            if (!input) return;
+            input.value = quill.root.innerHTML;
+            quill.on("text-change", function () {
+                input.value = quill.root.innerHTML;
+            });
+        });
+    }
+
+    window.addEventListener("load", function () {
+        initSelectAll();
+        initConfirm();
+        initShowModal();
+        initSearchFocus();
+        initAttributes();
+        initSortable();
+        initAlertDismiss();
+        initCleanUrl();
+        initHtmlEditors();
+        initBack();
+        initApiActions();
+    });
+})();
