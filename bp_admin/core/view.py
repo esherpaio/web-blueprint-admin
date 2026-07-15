@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from typing import Any
 
 import requests
@@ -246,7 +247,7 @@ class CachedModelView(ModelView):
     def after_write(self, s: Session, obj: Any = None) -> None:
         settings = s.query(AppSettings).first()
         if settings is not None:
-            settings.cached_at = None
+            settings.cached_at = datetime.now(timezone.utc)
 
 
 class UrlView:
