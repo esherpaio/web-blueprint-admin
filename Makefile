@@ -11,21 +11,21 @@ packages:
 	pip install -r requirements.txt
 	pip install -r requirements-dev.txt
 
-.PHONY: format format_py format_html
-format: format_py format_html
-format_py:
+.PHONY: format format-py format-html
+format: format-py format-html
+format-py:
 	ruff check . --fix
 	ruff format .
-format_html:
+format-html:
 	djlint . --reformat
 
-.PHONY: lint lint_py lint_html
-lint: lint_py lint_html
-lint_py:
+.PHONY: lint lint-py lint-html
+lint: lint-py lint-html
+lint-py:
 	ruff check .
 	ruff format . --check
 	mypy --install-types --non-interactive .
-lint_html:
+lint-html:
 	djlint . --check
 
 .PHONY: test
