@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
 from typing import Any, Callable, Sequence
 
+from sqlalchemy import inspect as sa_inspect
 from sqlalchemy.orm import object_session
 from sqlalchemy.orm.session import Session
 from web.error import WebError
@@ -12,6 +13,8 @@ from .utils import default_label, resolve_path
 
 Choice = tuple[Any, str]
 ChoiceProvider = Sequence[Choice] | Callable[[Session], Sequence[Choice]]
+
+COERCE_INFER = object()
 
 
 class Field:
@@ -209,6 +212,14 @@ class SelectField(Field):
     def show_empty_option(self) -> bool:
         return self.empty_label is not None or not self.required
 
+    @staticmethod
+    def infer_coerce(model: Any, attr: str) -> Callable[[Any], Any]:
+        try:
+            python_type = sa_inspect(model).columns[attr].type.python_type
+        except Exception:
+            return int
+        return int if issubclass(python_type, int) else str
+
     @classmethod
     def from_model(
         cls,
@@ -220,7 +231,7 @@ class SelectField(Field):
         label_fn: Callable[[Any], str] | None = None,
         order_by: Any = None,
         where: Any = None,
-        coerce: Callable[[Any], Any] | None = int,
+        coerce: Callable[[Any], Any] | None = COERCE_INFER,
         **kwargs: Any,
     ) -> "SelectField":
         def provider(s: Session) -> list[Choice]:
@@ -237,6 +248,8 @@ class SelectField(Field):
                 for row in rows
             ]
 
+        if coerce is COERCE_INFER:
+            coerce = cls.infer_coerce(model, value_attr)
         return cls(name, choices=provider, coerce=coerce, **kwargs)
 
     def choices(self, s: Session) -> list[Choice]:
@@ -283,7 +296,7 @@ class MultiSelectField(SelectField):
         label_fn: Callable[[Any], str] | None = None,
         order_by: Any = None,
         where: Any = None,
-        coerce: Callable[[Any], Any] | None = int,
+        coerce: Callable[[Any], Any] | None = COERCE_INFER,
         **kwargs: Any,
     ) -> "MultiSelectField":
         def provider(s: Session) -> list[Choice]:
@@ -300,6 +313,8 @@ class MultiSelectField(SelectField):
                 for row in rows
             ]
 
+        if coerce is COERCE_INFER:
+            coerce = cls.infer_coerce(model, value_attr)
         return cls(
             name,
             choices=provider,
