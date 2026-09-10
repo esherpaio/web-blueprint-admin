@@ -14,6 +14,14 @@ table td {
     line-height: 1.25rem;
 }
 
+table td .input-group {
+    flex-wrap: nowrap;
+}
+
+table td .input-group > .form-control {
+    min-width: 5rem;
+}
+
 /* nav link colors */
 
 .nav-link:not(:hover):not(.active) {
