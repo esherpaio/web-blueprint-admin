@@ -1,7 +1,8 @@
 import json
 from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
-from typing import Any, Callable, Sequence
+from enum import Enum
+from typing import Any, Callable, Final, Literal, Sequence
 
 from sqlalchemy import inspect as sa_inspect
 from sqlalchemy.orm import object_session
@@ -14,7 +15,13 @@ from .utils import default_label, resolve_path
 Choice = tuple[Any, str]
 ChoiceProvider = Sequence[Choice] | Callable[[Session], Sequence[Choice]]
 
-COERCE_INFER = object()
+
+class _Sentinel(Enum):
+    COERCE_INFER = "COERCE_INFER"
+
+
+COERCE_INFER: Final = _Sentinel.COERCE_INFER
+CoerceArg = Callable[[Any], Any] | None | Literal[_Sentinel.COERCE_INFER]
 
 
 class Field:
@@ -231,7 +238,7 @@ class SelectField(Field):
         label_fn: Callable[[Any], str] | None = None,
         order_by: Any = None,
         where: Any = None,
-        coerce: Callable[[Any], Any] | None = COERCE_INFER,
+        coerce: CoerceArg = COERCE_INFER,
         **kwargs: Any,
     ) -> "SelectField":
         def provider(s: Session) -> list[Choice]:
@@ -296,7 +303,7 @@ class MultiSelectField(SelectField):
         label_fn: Callable[[Any], str] | None = None,
         order_by: Any = None,
         where: Any = None,
-        coerce: Callable[[Any], Any] | None = COERCE_INFER,
+        coerce: CoerceArg = COERCE_INFER,
         **kwargs: Any,
     ) -> "MultiSelectField":
         def provider(s: Session) -> list[Choice]:
