@@ -1,12 +1,11 @@
 from typing import Any
 
 from flask import abort, redirect, render_template, request
-from psycopg2.errors import ForeignKeyViolation, NotNullViolation, UniqueViolation
 from sqlalchemy.exc import IntegrityError
 from web.app.urls import url_for
 from web.database import conn
 from web.error import WebError
-from web.i18n import _
+from web.logger import log
 from werkzeug import Response
 
 from .db import apply_bulk_fields, delete_objects, resolve_choices
@@ -27,23 +26,8 @@ def _redirect(endpoint: str, **values: Any) -> Response:
 
 
 def error_message(error: Exception) -> str:
-    if isinstance(error, WebError):
-        if error.translation_key is not None:
-            try:
-                return _(error.translation_key, **error.translation_kwargs)
-            except Exception:
-                pass
-        return str(error) or "Something went wrong."
-    if isinstance(error, IntegrityError):
-        orig = getattr(error, "orig", None)
-        if isinstance(orig, UniqueViolation):
-            return "That value already exists."
-        if isinstance(orig, NotNullViolation):
-            return "A required value is missing."
-        if isinstance(orig, ForeignKeyViolation):
-            return "A related record prevents this change."
-        return "Could not save due to a database constraint."
-    return "Something went wrong."
+    log.error(f"Admin error: {error}", exc_info=True)
+    return "Something went wrong, your adminstrator has been notified."
 
 
 def notice_text(notice: Notice, view: ModelView) -> str:
