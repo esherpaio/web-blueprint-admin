@@ -9,7 +9,7 @@
                 <h2 class="mb-0">{{ view.name_plural|capfirst }}</h2>
                 <div class="btn-toolbar flex-wrap gap-2">
                     {% if view.searchable %}
-                        <button class="btn btn-primary d-flex gap-2"
+                        <button class="btn btn-primary d-flex gap-2 align-items-center"
                                 type="button"
                                 data-bs-toggle="collapse"
                                 data-bs-target="#search">
@@ -18,7 +18,7 @@
                         </button>
                     {% endif %}
                     {% if view.has_filters %}
-                        <button class="btn btn-primary d-flex gap-2"
+                        <button class="btn btn-primary d-flex gap-2 align-items-center"
                                 type="button"
                                 data-bs-toggle="collapse"
                                 data-bs-target="#filters">
@@ -27,7 +27,7 @@
                         </button>
                     {% endif %}
                     {% if view.can_create %}
-                        <button class="btn btn-warning d-flex gap-2"
+                        <button class="btn btn-warning d-flex gap-2 align-items-center"
                                 type="button"
                                 data-bs-toggle="modal"
                                 data-bs-target="#modal-create">
@@ -36,7 +36,7 @@
                         </button>
                     {% endif %}
                     {% if view.has_bulk_edit %}
-                        <button class="btn btn-warning d-flex gap-2"
+                        <button class="btn btn-warning d-flex gap-2 align-items-center"
                                 type="submit"
                                 form="bulk-form"
                                 name="_op"
@@ -46,7 +46,7 @@
                         </button>
                     {% endif %}
                     {% if view.can_delete %}
-                        <button class="btn btn-danger d-flex gap-2"
+                        <button class="btn btn-danger d-flex gap-2 align-items-center"
                                 type="submit"
                                 form="bulk-form"
                                 name="_op"
@@ -107,7 +107,7 @@
                                 </div>
                             {% endif %}
                         {% endfor %}
-                        <div class="col-12 d-flex gap-2">
+                        <div class="col-12 d-flex gap-2 align-items-center">
                             <button class="btn btn-primary" type="submit">Apply</button>
                             <a class="btn btn-light"
                                href="{{ view.url(s=search) if search else view.url() }}">Clear</a>
