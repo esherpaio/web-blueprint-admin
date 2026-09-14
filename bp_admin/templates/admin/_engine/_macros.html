@@ -269,7 +269,7 @@
         </form>
     {% else %}
         <form method="post"
-              action="{{ view.url('action', id_=obj.id, name=action.name) }}">
+              action="{{ view.url('list_action', name=action.name) if obj is none else view.url('action', id_=obj.id, name=action.name) }}">
             <button class="{{ button_class(action.style) }} d-inline-flex gap-2"
                     type="submit"
                     {% if action.confirm %}data-confirm="{{ action.confirm }}"{% endif %}>

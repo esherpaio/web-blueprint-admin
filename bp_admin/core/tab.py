@@ -18,7 +18,7 @@ from .db import (
     resolve_choices,
     supports_soft_delete,
 )
-from .enums import Op
+from .enums import ActionScope, Op
 from .field import Field
 
 
@@ -166,7 +166,11 @@ class InlineTableTab(Tab):
     def context(self, view: Any, s: Session, obj: Any) -> dict[str, Any]:
         rows = self.base_query(s, obj).all()
         fields = [c.field for c in self.columns] + self.create_fields
-        actions = [a for a in view.actions if a.tab == self.key and a.is_visible(obj)]
+        actions = [
+            a
+            for a in view.actions
+            if a.scope is ActionScope.DETAIL and a.tab == self.key and a.is_visible(obj)
+        ]
         return {
             "tab": self,
             "rows": rows,

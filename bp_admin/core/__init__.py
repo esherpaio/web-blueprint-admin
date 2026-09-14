@@ -1,6 +1,7 @@
 from .action import Action, ApiAction, LinkAction
 from .column import Column, LinkColumn, base_currency_code
 from .enums import (
+    ActionScope,
     Align,
     AttrType,
     CellFormat,

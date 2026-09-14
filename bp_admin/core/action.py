@@ -3,7 +3,7 @@ from typing import Any, Callable
 from markupsafe import Markup
 from sqlalchemy.orm.session import Session
 
-from .enums import LinkMode, Size, Style
+from .enums import ActionScope, LinkMode, Size, Style
 from .field import Field
 from .utils import resolve_href
 
@@ -24,8 +24,10 @@ class Action:
         irreversible: bool = False,
         visible: Callable[[Any], bool] | None = None,
         tab: str | None = None,
+        scope: ActionScope = ActionScope.DETAIL,
     ) -> None:
         self.name = name
+        self.scope = ActionScope(scope)
         self.label = label
         self.handler = handler
         self.fields = fields or []

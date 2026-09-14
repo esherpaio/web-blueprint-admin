@@ -1,6 +1,11 @@
 from enum import StrEnum
 
 
+class ActionScope(StrEnum):
+    DETAIL = "detail"
+    LIST = "list"
+
+
 class Op(StrEnum):
     SAVE = "save"
     DELETE = "delete"

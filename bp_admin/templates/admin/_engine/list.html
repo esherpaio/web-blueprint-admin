@@ -56,7 +56,7 @@
                             Delete selected
                         </button>
                     {% endif %}
-                    {% for action in view.actions if action.is_link %}
+                    {% for action in view.actions if action.is_link or (action.scope == ActionScope.LIST and action.is_visible(none)) %}
                         {{ action_button(view, none, action) }}
                     {% endfor %}
                 </div>
@@ -94,7 +94,7 @@
                             {% if flt.is_divider %}
                                 <div class="w-100 m-0"></div>
                             {% else %}
-                                <div class="col-12 col-md-6 col-lg-3">
+                                <div class="col-6 col-sm-4 col-md-3 col-lg-2">
                                     <label class="form-label mb-1 small">{{ flt.label|capfirst }}</label>
                                     <select class="form-select" name="{{ flt.key }}">
                                         <option value="">All</option>
@@ -212,4 +212,5 @@
     {% if view.can_create %}
         {{ form_modal('modal-create', view.create_title, view.url('create') , view.create_fields, choices, create_values, create_error, submit_label=view.create_title) }}
     {% endif %}
+    {% include "admin/_engine/_action_modals.html" %}
 {% endblock admin_body %}

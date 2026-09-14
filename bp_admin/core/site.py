@@ -10,7 +10,7 @@ from werkzeug import Response
 
 from . import handlers
 from .action import Action, ApiAction
-from .enums import AttrType, InputType, Op
+from .enums import ActionScope, AttrType, InputType, Op
 from .menu import AdminMenu, build_menu
 from .utils import button_class, capfirst
 from .view import ActionView, ModelView, TemplateView, UrlView
@@ -98,6 +98,7 @@ class AdminSite:
         for action_view in self.action_views:
             self._register_action_view(bp, action_view)
         self._register_home(bp)
+        bp.add_app_template_global(ActionScope, "ActionScope")
         bp.add_app_template_global(Op, "Op")
         bp.add_app_template_global(InputType, "InputType")
         bp.add_app_template_global(AttrType, "AttrType")
@@ -188,6 +189,14 @@ class AdminSite:
             view_func=self._bind(handlers.list_endpoint, view),
             methods=["GET", "POST"],
         )
+        if any(action.scope is ActionScope.LIST for action in view.actions):
+            bp.add_url_rule(
+                f"/admin/{slug}/action/<name>",
+                endpoint=f"{e}_list_action",
+                defaults={"id_": None},
+                view_func=self._bind_action(handlers.action_endpoint, view),
+                methods=["POST"],
+            )
         if view.can_create:
             bp.add_url_rule(
                 f"/admin/{slug}/new",

@@ -9,7 +9,7 @@ from web.logger import log
 from werkzeug import Response
 
 from .db import apply_bulk_fields, delete_objects, resolve_choices
-from .enums import Notice, Op
+from .enums import ActionScope, Notice, Op
 from .pagination import Pagination
 from .view import ModelView
 
@@ -86,6 +86,11 @@ def render_list(
         choices = resolve_choices(
             s, [c.field for c in view.columns] + list(view.create_fields)
         )
+        action_choices = {
+            action.name: resolve_choices(s, action.fields)
+            for action in view.actions
+            if action.scope is ActionScope.LIST and action.is_visible(None)
+        }
         pagination = Pagination(page=page, per_page=limit, total=total)
         filter_options = {
             f.key: f.options(s)
@@ -99,6 +104,8 @@ def render_list(
         return render_template(
             "admin/_engine/list.html",
             view=view,
+            obj=None,
+            action_choices=action_choices,
             rows=rows,
             total=total,
             pagination=pagination,
@@ -133,7 +140,9 @@ def render_detail(
 
         tabs_ctx = [{"tab": tab, "ctx": tab.context(view, s, obj)} for tab in view.tabs]
         action_choices = {
-            action.name: resolve_choices(s, action.fields) for action in view.actions
+            action.name: resolve_choices(s, action.fields)
+            for action in view.actions
+            if action.scope is ActionScope.DETAIL
         }
         active = (
             active_tab
@@ -261,23 +270,32 @@ def tab_endpoint(view: ModelView, id_: Any, tab_key: str) -> Response | str:
 
 def action_endpoint(view: ModelView, id_: Any, name: str) -> Response | str:
     action = view.action_by_name(name)
-    if action is None:
+    scope = ActionScope.LIST if id_ is None else ActionScope.DETAIL
+    if action is None or action.scope is not scope:
         abort(404)
     try:
         with conn.begin() as s:
-            obj = view.get_object(s, id_)
-            if obj is None:
+            obj = view.get_object(s, id_) if id_ is not None else None
+            if id_ is not None and obj is None:
+                abort(404)
+            if scope is ActionScope.LIST and not action.is_visible(None):
                 abort(404)
             data = action.parse(request.form, request.files)
             action.run(s, obj, data)
             view.after_write(s, obj)
     except WriteError as error:
+        if scope is ActionScope.LIST:
+            return render_list(
+                view, error=error_message(error), form_values=request.form
+            )
         return render_detail(
             view,
             id_,
             active_tab=action.tab,
             error=error_message(error),
         )
+    if scope is ActionScope.LIST:
+        return _redirect(f"admin.{view.endpoint}", saved=Notice.DONE)
     return _redirect(
         f"admin.{view.endpoint}_detail",
         id_=id_,
