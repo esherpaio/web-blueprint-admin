@@ -24,7 +24,7 @@ class AdminSite:
     name = "admin"
     static_url_path = "/admin/static"
     auth_role = UserRoleLevel.ADMIN
-    meta_title = "Admin"
+    meta_title = "Back Office"
 
     def __init__(self) -> None:
         self.views: list[ModelView] = []
