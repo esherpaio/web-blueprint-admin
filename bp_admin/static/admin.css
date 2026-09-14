@@ -18,8 +18,9 @@ table td .input-group {
     flex-wrap: nowrap;
 }
 
-table td .input-group > .form-control {
-    min-width: 5rem;
+table td .form-control,
+table td .form-select {
+    min-width: 6rem;
 }
 
 /* nav link colors */
