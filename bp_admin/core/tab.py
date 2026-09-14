@@ -4,7 +4,7 @@ from typing import Any, Callable
 
 from flask import abort
 from sqlalchemy.orm.session import Session
-from web import cdn
+from web.cdn import Client
 from web.database.model import File, FileTypeId
 from web.setup import config
 from werkzeug.utils import secure_filename
@@ -288,28 +288,29 @@ class MediaTab(Tab):
     def _upload(self, s: Session, obj: Any, files: Any) -> None:
         prefix = self.path_prefix(obj)
         sequence = self._last_sequence(s, obj)
-        for upload in files.getlist("file"):
-            if not upload.filename:
-                continue
-            extension = os.path.splitext(upload.filename)[1].lstrip(".").lower()
-            type_id = self._type_for(extension)
-            if type_id is None:
-                continue
-            sequence += 1
-            if config.CDN_AUTO_NAMING:
-                name = f"{prefix[-1]}-{sequence}"
-            else:
-                name = secure_filename(os.path.splitext(upload.filename)[0])
-            path = os.path.join(*prefix, f"{name}.{extension}")
-            cdn.upload(upload, path)
-            file_ = File(path=path, type_id=type_id)
-            s.add(file_)
-            s.flush()
-            child = self.model()
-            setattr(child, self.fk, obj.id)
-            setattr(child, self.file_rel, file_)
-            s.add(child)
-            s.flush()
+        with Client.connect() as c:
+            for upload in files.getlist("file"):
+                if not upload.filename:
+                    continue
+                extension = os.path.splitext(upload.filename)[1].lstrip(".").lower()
+                type_id = self._type_for(extension)
+                if type_id is None:
+                    continue
+                sequence += 1
+                if config.CDN_AUTO_NAMING:
+                    name = f"{prefix[-1]}-{sequence}"
+                else:
+                    name = secure_filename(os.path.splitext(upload.filename)[0])
+                path = os.path.join(*prefix, f"{name}.{extension}")
+                c.upload(upload, path)
+                file_ = File(path=path, type_id=type_id)
+                s.add(file_)
+                s.flush()
+                child = self.model()
+                setattr(child, self.fk, obj.id)
+                setattr(child, self.file_rel, file_)
+                s.add(child)
+                s.flush()
 
     def _save(self, s: Session, obj: Any, form: Any) -> None:
         rows = {str(r.id): r for r in self.base_query(s, obj).all()}
@@ -331,12 +332,13 @@ class MediaTab(Tab):
 
     def _delete(self, s: Session, obj: Any, ids: list[Any]) -> None:
         rows = self.base_query(s, obj).filter(self.model.id.in_(ids)).all()
-        for row in rows:
-            file_ = getattr(row, self.file_rel)
-            if file_ is not None:
-                cdn.delete(file_.path)
-                s.delete(file_)
-            s.delete(row)
+        with Client.connect() as c:
+            for row in rows:
+                file_ = getattr(row, self.file_rel)
+                if file_ is not None:
+                    c.delete(file_.path)
+                    s.delete(file_)
+                s.delete(row)
 
     def _last_sequence(self, s: Session, obj: Any) -> int:
         if not config.CDN_AUTO_NAMING:
