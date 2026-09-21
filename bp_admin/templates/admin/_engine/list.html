@@ -139,7 +139,8 @@
                                     </th>
                                 {% endif %}
                                 {% for column in view.columns %}
-                                    <th class="{{ column.align_class }}">{{ column.label|capfirst }}</th>
+                                    <th class="{{ column.align_class }}"
+                                        {% if column.width %}style="width:{{ column.width }}"{% endif %}>{{ column.label|capfirst }}</th>
                                 {% endfor %}
                                 {% if view.has_detail %}
                                     <th class="text-end">Actions</th>

@@ -57,7 +57,8 @@
                         </th>
                     {% endif %}
                     {% for column in tab_ctx.columns %}
-                        <th class="{{ column.align_class }}">{{ column.label|capfirst }}</th>
+                        <th class="{{ column.align_class }}"
+                            {% if column.width %}style="width:{{ column.width }}"{% endif %}>{{ column.label|capfirst }}</th>
                     {% endfor %}
                 </tr>
             </thead>

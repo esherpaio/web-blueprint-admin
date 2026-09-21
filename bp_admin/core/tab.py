@@ -51,6 +51,12 @@ class Tab:
         pass
 
 
+class FormSection:
+    def __init__(self, label: str, fields: list[Field]) -> None:
+        self.label = label
+        self.fields = fields
+
+
 class FormTab(Tab):
     template = "admin/_engine/_tab_form.html"
 
@@ -60,16 +66,28 @@ class FormTab(Tab):
         fields: list[Field] | None = None,
         *,
         key: str = "general",
+        sections: list[FormSection] | None = None,
     ) -> None:
         super().__init__(label, key)
-        self.fields = fields or []
+        if fields is not None and sections is not None:
+            raise ValueError("Use either fields or sections, not both.")
+        self.sections = sections or []
+        self.fields = (
+            [field for section in self.sections for field in section.fields]
+            if self.sections
+            else fields or []
+        )
 
     @property
     def has_editable(self) -> bool:
         return any(not field.readonly for field in self.fields)
 
     def context(self, view: Any, s: Session, obj: Any) -> dict[str, Any]:
-        return {"fields": self.fields, "choices": resolve_choices(s, self.fields)}
+        return {
+            "fields": self.fields,
+            "sections": self.sections,
+            "choices": resolve_choices(s, self.fields),
+        }
 
     def handle_post(
         self,

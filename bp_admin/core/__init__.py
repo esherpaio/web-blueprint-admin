@@ -41,7 +41,7 @@ from .filter import (
 )
 from .pagination import Pagination
 from .site import AdminSite
-from .tab import FormTab, InlineTableTab, MediaTab, Tab
+from .tab import FormSection, FormTab, InlineTableTab, MediaTab, Tab
 from .view import (
     ActionView,
     CachedModelView,

@@ -1,7 +1,15 @@
 {% from "admin/_engine/_macros.html" import field_input %}
 
-{% if tab.has_editable %}
-    <div class="d-flex flex-wrap justify-content-end gap-2 mb-3">
+{% macro form_fields(fields) %}
+    {% for field in fields %}
+        <div class="{{ field.col_class }}">
+            {{ field_input(field, field.form_value(obj, form_values) , tab_ctx.choices, obj=obj, form_values=form_values) }}
+        </div>
+    {% endfor %}
+{% endmacro %}
+
+{% macro save_button() %}
+    <div class="d-flex flex-wrap justify-content-end gap-2">
         <button class="btn btn-warning d-flex gap-2 align-items-center"
                 type="submit"
                 form="{{ tab.form_id }}">
@@ -9,16 +17,30 @@
             Save changes
         </button>
     </div>
+{% endmacro %}
+
+{% if tab.has_editable %}
+    <div class="mb-3">{{ save_button() }}</div>
 {% endif %}
 
 <form id="{{ tab.form_id }}"
       method="post"
+      enctype="multipart/form-data"
       action="{{ view.url('tab', id_=obj.id, tab_key=tab.key) }}">
     <div class="row g-3">
-        {% for field in tab_ctx.fields %}
-            <div class="{{ field.col_class }}">
-                {{ field_input(field, field.form_value(obj, form_values) , tab_ctx.choices, obj=obj) }}
-            </div>
-        {% endfor %}
+        {% if tab_ctx.sections %}
+            {% for section in tab_ctx.sections %}
+                <div class="col-12">
+                    <h3 class="fs-6 fw-semibold mb-0">{{ section.label }}</h3>
+                </div>
+                {{ form_fields(section.fields) }}
+            {% endfor %}
+        {% else %}
+            {{ form_fields(tab_ctx.fields) }}
+        {% endif %}
     </div>
 </form>
+
+{% if tab.has_editable and tab_ctx.sections %}
+    <div class="mt-4">{{ save_button() }}</div>
+{% endif %}

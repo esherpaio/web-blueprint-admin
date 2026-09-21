@@ -1,8 +1,8 @@
-{% macro field_input(field, value, choices={}, name=None, editable=None, obj=None) %}
+{% macro field_input(field, value, choices={}, name=None, editable=None, obj=None, form_values={}) %}
     {% set fname = name or field.name %}
     {% set is_readonly = field.is_readonly(editable) %}
     {% if field.input_type == InputType.ATTRIBUTES %}
-        {{ attributes_editor(field, value) }}
+        {{ attributes_editor(field, value, name=fname, editable=editable, form_values=form_values) }}
     {% elif field.input_type == InputType.HTML %}
         <label class="form-label fw-semibold">{{ field.label|capfirst }}</label>
         <input type="hidden" name="{{ fname }}">
@@ -14,7 +14,7 @@
     {% elif field.input_type == InputType.CHECKBOX %}
         <div class="input-group">
             <span class="input-group-text">{{ field.label|capfirst }}</span>
-            <div class="input-group-text">
+            <div class="input-group-text flex-grow-1 justify-content-end">
                 <input class="form-check-input mt-0"
                        type="checkbox"
                        name="{{ fname }}"
@@ -89,7 +89,9 @@
     {% set field = column.field %}
     {% set name = column.input_name(obj.id) %}
     {% set value = column.cell_value(obj, form_values) %}
-    {% if field.input_type == InputType.CHECKBOX %}
+    {% if field.input_type == InputType.ATTRIBUTES %}
+        {{ attributes_editor(field, value, name=name, editable=true, show_label=false, form_values=form_values) }}
+    {% elif field.input_type == InputType.CHECKBOX %}
         <input class="form-check-input"
                type="checkbox"
                name="{{ name }}"
@@ -104,6 +106,13 @@
                 </option>
             {% endfor %}
         </select>
+    {% elif field.input_type == InputType.TEXTAREA %}
+        <textarea class="form-control form-control-sm"
+                  name="{{ name }}"
+                  rows="{{ field.rows }}"
+                  {% if field.placeholder %}placeholder="{{ field.placeholder }}"{% endif %}
+                  {% if field.required %}required{% endif %}
+                  {% for key, attr_value in field.attrs.items() %}{{ key }}="{{ attr_value }}"{% endfor %}>{{ value if value is not none else "" }}</textarea>
     {% elif field.suffix_for(obj) %}
         <div class="input-group input-group-sm">
             <input class="form-control"
@@ -154,40 +163,49 @@
     {% endif %}
 {% endmacro %}
 
-{% macro attributes_editor(field, data) %}
-    <div class="admin-attributes" data-attributes>
-        <label class="form-label fw-semibold">{{ field.label|capfirst }}</label>
+{% macro attributes_editor(field, data, name=None, editable=None, show_label=true, form_values={}) %}
+    {% set is_readonly = field.is_readonly(editable) %}
+    <div class="admin-attributes"
+         data-attributes
+         {% for key, attr_value in field.attrs.items() %}{{ key }}="{{ attr_value }}"{% endfor %}>
+        {% if show_label %}<label class="form-label fw-semibold">{{ field.label|capfirst }}</label>{% endif %}
+        {% if not is_readonly %}
+            <input type="hidden"
+                   name="{{ field.attribute_input_name('present', name) }}"
+                   value="1">
+        {% endif %}
         <div data-attributes-rows class="row g-2">
-            {% for row in field.rows_from(data) %}
-                {{ attribute_row(field, row.key, row.type, row.value) }}
+            {% for row in field.rows_from(data, form_values, name) %}
+                {{ attribute_row(field, row.key, row.type, row.value, name, editable) }}
             {% endfor %}
         </div>
-        {% if not field.readonly %}
+        {% if not is_readonly %}
             <button type="button"
                     class="btn btn-sm btn-light mt-2 d-flex gap-2 align-items-center"
                     data-attributes-add>
                 <i class="bi bi-plus-square"></i>
                 Add attribute
             </button>
-            <template data-attributes-template>{{ attribute_row(field, "", "text", "") }}</template>
+            <template data-attributes-template>{{ attribute_row(field, "", "text", "", name, editable) }}</template>
         {% endif %}
     </div>
 {% endmacro %}
 
-{% macro attribute_row(field, key, type, value) %}
+{% macro attribute_row(field, key, type, value, name=None, editable=None) %}
+    {% set is_readonly = field.is_readonly(editable) %}
     <div class="col-12 admin-attribute-row">
         <div class="input-group">
             <input class="form-control"
                    style="max-width:14rem"
                    type="text"
-                   name="attr-key"
+                   name="{{ field.attribute_input_name('key', name) }}"
                    placeholder="Key"
                    value="{{ key }}"
-                   {% if field.readonly %}disabled{% endif %}>
+                   {% if is_readonly %}disabled{% endif %}>
             <select class="form-select"
                     style="max-width:9rem"
-                    name="attr-type"
-                    {% if field.readonly %}disabled{% endif %}>
+                    name="{{ field.attribute_input_name('type', name) }}"
+                    {% if is_readonly %}disabled{% endif %}>
                 {% for attr_type in AttrType %}
                     <option value="{{ attr_type }}" {% if attr_type == type %}selected{% endif %}>
                         {{ attr_type.label }}
@@ -196,11 +214,11 @@
             </select>
             <input class="form-control"
                    type="text"
-                   name="attr-value"
+                   name="{{ field.attribute_input_name('value', name) }}"
                    placeholder="Value"
                    value="{{ value }}"
-                   {% if field.readonly %}disabled{% endif %}>
-            {% if not field.readonly %}
+                   {% if is_readonly %}disabled{% endif %}>
+            {% if not is_readonly %}
                 <button type="button" class="btn btn-danger" data-attributes-remove>
                     <i class="bi bi-trash"></i>
                 </button>
@@ -221,15 +239,13 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    {% if error %}
-                        <div class="alert alert-danger" role="alert">{{ error }}</div>
-                    {% endif %}
+                    {% if error %}<div class="alert alert-danger" role="alert">{{ error }}</div>{% endif %}
                     {% for key, hidden_value in hidden.items() %}
                         <input type="hidden" name="{{ key }}" value="{{ hidden_value }}">
                     {% endfor %}
                     <div class="row g-2">
                         {% for field in fields %}
-                            <div class="col-12">{{ field_input(field, values.get(field.name) , choices, editable=true) }}</div>
+                            <div class="col-12">{{ field_input(field, values.get(field.name) , choices, editable=true, form_values=values) }}</div>
                         {% endfor %}
                     </div>
                 </div>
@@ -250,9 +266,7 @@
                 type="button"
                 data-bs-toggle="modal"
                 data-bs-target="#{{ action.modal_id }}">
-            {% if action.icon %}
-                <i class="bi {{ action.icon }}"></i>
-            {% endif %}
+            {% if action.icon %}<i class="bi {{ action.icon }}"></i>{% endif %}
             {{ action.label }}
         </button>
     {% elif action.is_api %}
@@ -273,9 +287,7 @@
             <button class="{{ button_class(action.style) }} d-inline-flex gap-2"
                     type="submit"
                     {% if action.confirm %}data-confirm="{{ action.confirm }}"{% endif %}>
-                {% if action.icon %}
-                    <i class="bi {{ action.icon }}"></i>
-                {% endif %}
+                {% if action.icon %}<i class="bi {{ action.icon }}"></i>{% endif %}
                 {{ action.label }}
             </button>
         </form>

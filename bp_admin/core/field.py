@@ -407,15 +407,24 @@ class HiddenField(Field):
 class JsonField(Field):
     input_type = InputType.TEXT
 
-    def __init__(self, *args: Any, empty: Any = None, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        *args: Any,
+        empty: Any = None,
+        rows: int | None = None,
+        **kwargs: Any,
+    ) -> None:
         super().__init__(*args, **kwargs)
         self._empty = empty
+        self.rows = rows
+        if rows is not None:
+            self.input_type = InputType.TEXTAREA
 
     def value_from_obj(self, obj: Any) -> str:
         value = resolve_path(obj, self.name)
         if value is None:
             return ""
-        return json.dumps(value, ensure_ascii=False)
+        return json.dumps(value, ensure_ascii=False, indent=2 if self.rows else None)
 
     def _coerce(self, raw: Any) -> Any:
         if raw is None:
@@ -438,8 +447,25 @@ class JsonAttributesField(Field):
         label: str = "Attributes",
         *,
         readonly: bool = True,
+        **kwargs: Any,
     ) -> None:
-        super().__init__(name, label, readonly=readonly)
+        super().__init__(name, label, readonly=readonly, **kwargs)
+
+    def attribute_input_name(self, part: str, name: str | None = None) -> str:
+        return f"{name or self.name}-{part}"
+
+    def submitted_rows(
+        self,
+        form: Any,
+        name: str | None = None,
+    ) -> list[dict[str, str]]:
+        keys = form.getlist(self.attribute_input_name("key", name))
+        types = form.getlist(self.attribute_input_name("type", name))
+        values = form.getlist(self.attribute_input_name("value", name))
+        return [
+            {"key": key, "type": type_, "value": value}
+            for key, type_, value in zip(keys, types, values)
+        ]
 
     @staticmethod
     def type_of(value: Any) -> AttrType:
@@ -457,7 +483,17 @@ class JsonAttributesField(Field):
             return AttrType.DICT
         return AttrType.TEXT
 
-    def rows_from(self, data: Any) -> list[dict[str, Any]]:
+    def rows_from(
+        self,
+        data: Any,
+        form_values: Any = None,
+        name: str | None = None,
+    ) -> list[dict[str, Any]]:
+        if (
+            form_values is not None
+            and self.attribute_input_name("present", name) in form_values
+        ):
+            return self.submitted_rows(form_values, name)
         data = data or {}
         result = []
         for key, value in data.items():
@@ -478,15 +514,12 @@ class JsonAttributesField(Field):
         return str(value)
 
     def parse(self, form: Any, files: Any = None, name: str | None = None) -> dict:
-        keys = form.getlist("attr-key")
-        types = form.getlist("attr-type")
-        values = form.getlist("attr-value")
         result: dict[str, Any] = {}
-        for key, type_, value in zip(keys, types, values):
-            key = key.strip()
+        for row in self.submitted_rows(form, name):
+            key = row["key"].strip()
             if not key:
                 continue
-            result[key] = self._coerce_value(key, type_, value)
+            result[key] = self._coerce_value(key, row["type"], row["value"])
         return result
 
     @staticmethod

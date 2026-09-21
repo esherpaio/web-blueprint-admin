@@ -43,6 +43,7 @@ class Column:
         row_format: Callable[[Any], Any] | None = None,
         suffix: str | Callable[[Any], Any] | None = None,
         align: Align | str | None = None,
+        width: str | None = None,
     ) -> None:
         self.name = name
         self.label = label if label is not None else default_label(name)
@@ -52,6 +53,7 @@ class Column:
         self.row_format = row_format
         self.suffix = suffix
         self.align = align
+        self.width = width
 
     @property
     def format_name(self) -> str | None:
