@@ -135,7 +135,9 @@
                                 {% endif %}
                                 {% if view.can_delete %}
                                     <th style="width:2.5rem">
-                                        <input class="form-check-input" type="checkbox" data-select-all>
+                                        <input class="form-check-input"
+                                               type="checkbox"
+                                               data-select-all>
                                     </th>
                                 {% endif %}
                                 {% for column in view.columns %}
@@ -197,11 +199,12 @@
                         {% for number in pagination.numbers() %}
                             {% if number is none %}
                                 <li class="page-item disabled">
-                                    <span class="page-link">&hellip;</span>
+                                    <span class="page-link">…</span>
                                 </li>
                             {% else %}
                                 <li class="page-item {{ 'active' if number == pagination.page }}">
-                                    <a class="page-link" href="{{ view.url(p=number, **query_args) }}">{{ number }}</a>
+                                    <a class="page-link"
+                                       href="{{ view.url(p=number, **query_args) }}">{{ number }}</a>
                                 </li>
                             {% endif %}
                         {% endfor %}

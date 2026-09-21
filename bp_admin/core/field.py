@@ -246,7 +246,10 @@ class SelectField(Field):
             if where is not None:
                 query = query.filter(where)
             if order_by is not None:
-                query = query.order_by(order_by)
+                columns = (
+                    order_by if isinstance(order_by, (list, tuple)) else [order_by]
+                )
+                query = query.order_by(*columns)
             rows = query.all()
             if label_fn is not None:
                 return [(getattr(row, value_attr), label_fn(row)) for row in rows]
@@ -311,7 +314,10 @@ class MultiSelectField(SelectField):
             if where is not None:
                 query = query.filter(where)
             if order_by is not None:
-                query = query.order_by(order_by)
+                columns = (
+                    order_by if isinstance(order_by, (list, tuple)) else [order_by]
+                )
+                query = query.order_by(*columns)
             rows = query.all()
             if label_fn is not None:
                 return [(getattr(row, value_attr), label_fn(row)) for row in rows]

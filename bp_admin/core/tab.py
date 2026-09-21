@@ -52,9 +52,19 @@ class Tab:
 
 
 class FormSection:
-    def __init__(self, label: str, fields: list[Field]) -> None:
+    def __init__(
+        self,
+        label: str,
+        fields: list[Field],
+        *,
+        visible: Callable[[Any], bool] | None = None,
+    ) -> None:
         self.label = label
         self.fields = fields
+        self._visible = visible
+
+    def is_visible(self, obj: Any) -> bool:
+        return self._visible(obj) if self._visible is not None else True
 
 
 class FormTab(Tab):
@@ -82,11 +92,23 @@ class FormTab(Tab):
     def has_editable(self) -> bool:
         return any(not field.readonly for field in self.fields)
 
+    def visible_sections(self, obj: Any) -> list[FormSection]:
+        return [section for section in self.sections if section.is_visible(obj)]
+
+    def visible_fields(self, obj: Any) -> list[Field]:
+        if not self.sections:
+            return self.fields
+        return [
+            field for section in self.visible_sections(obj) for field in section.fields
+        ]
+
     def context(self, view: Any, s: Session, obj: Any) -> dict[str, Any]:
+        fields = self.visible_fields(obj)
         return {
-            "fields": self.fields,
-            "sections": self.sections,
-            "choices": resolve_choices(s, self.fields),
+            "fields": fields,
+            "sections": self.visible_sections(obj),
+            "choices": resolve_choices(s, fields),
+            "has_editable": any(not field.readonly for field in fields),
         }
 
     def handle_post(
@@ -97,7 +119,7 @@ class FormTab(Tab):
         form: Any,
         files: Any,
     ) -> None:
-        apply_fields(obj, self.fields, form, files)
+        apply_fields(obj, self.visible_fields(obj), form, files)
         s.flush()
         view.after_write(s, obj)
 

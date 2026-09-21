@@ -19,7 +19,7 @@
     </div>
 {% endmacro %}
 
-{% if tab.has_editable %}
+{% if tab_ctx.has_editable %}
     <div class="mb-3">{{ save_button() }}</div>
 {% endif %}
 
@@ -41,6 +41,6 @@
     </div>
 </form>
 
-{% if tab.has_editable and tab_ctx.sections %}
+{% if tab_ctx.has_editable and tab_ctx.sections %}
     <div class="mt-4">{{ save_button() }}</div>
 {% endif %}

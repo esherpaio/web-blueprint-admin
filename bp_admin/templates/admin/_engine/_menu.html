@@ -12,7 +12,8 @@
                 <ul class="dropdown-menu ms-auto">
                     {% for child in item.items %}
                         <li>
-                            <a class="dropdown-item" href="{{ url_for(child.endpoint) }}">{{ child.label|capfirst }}</a>
+                            <a class="dropdown-item"
+                               href="{{ url_for(child.endpoint) }}">{{ child.label|capfirst }}</a>
                         </li>
                     {% endfor %}
                 </ul>

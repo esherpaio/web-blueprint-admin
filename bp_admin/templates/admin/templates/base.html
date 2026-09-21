@@ -13,14 +13,10 @@
         <link rel="stylesheet"
               href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css">
         {% if current_blueprint and current_blueprint.css_path %}
-            <link type="text/css"
-                  rel="stylesheet"
-                  href="{{ cdn_url(current_blueprint.css_path) }}">
+            <link rel="stylesheet" href="{{ cdn_url(current_blueprint.css_path) }}">
         {% endif %}
         {% if current_route and current_route.css_path %}
-            <link type="text/css"
-                  rel="stylesheet"
-                  href="{{ cdn_url(current_route.css_path) }}">
+            <link rel="stylesheet" href="{{ cdn_url(current_route.css_path) }}">
         {% endif %}
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
@@ -67,7 +63,9 @@
                        data-bs-target="#sidebar">
                         <i class="bi bi-layout-sidebar-inset"></i>
                     </a>
-                    <a href="/" class="navbar-brand fw-semibold" target="_blank">{{ config.META_WEBSITE_NAME }}</a>
+                    <a href="/"
+                       class="navbar-brand fw-semibold"
+                       target="_blank">{{ config.META_WEBSITE_NAME }}</a>
                     <div class="position-relative">
                         <a class="d-block d-md-none text-white fs-2"
                            href="#"
@@ -87,7 +85,8 @@
                                     <form data-api-method="{{ action.method }}"
                                           data-api-url="{{ action.api_url(none) }}"
                                           {% if action.redirect %}data-api-redirect="{{ action.redirect }}"{% endif %}>
-                                        <button class="dropdown-item d-flex gap-2 align-items-center" type="submit">
+                                        <button class="dropdown-item d-flex gap-2 align-items-center"
+                                                type="submit">
                                             {% if action.icon %}
                                                 <i class="bi {{ action.icon }}"></i>
                                             {% endif %}
