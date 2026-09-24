@@ -11,7 +11,7 @@ from werkzeug import Response
 from . import handlers
 from .action import Action, ApiAction
 from .enums import ActionScope, AttrType, InputType, Op
-from .menu import AdminMenu, build_menu
+from .menu import MenuLink, build_menu
 from .utils import button_class, capfirst
 from .view import ActionView, ModelView, TemplateView, UrlView
 
@@ -272,7 +272,7 @@ class AdminSite:
     # Menu
     #
 
-    def build_menu(self) -> AdminMenu:
+    def build_menu(self) -> list[MenuLink]:
         current = self._menu_current()
         sources = []
         for view in self.views:

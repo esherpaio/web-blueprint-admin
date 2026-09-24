@@ -30,26 +30,24 @@
     </head>
     <body class="h-100 w-100 d-flex flex-row">
         {% from "admin/_engine/_menu.html" import nav_items %}
-        <nav id="sidebar" class="offcanvas offcanvas-start" tabindex="-1">
-            <div class="offcanvas-body text-bg-light">
-                <div class="d-flex flex-column justify-content-between h-100 gap-2">
-                    <div class="nav nav-pills w-100 flex-column gap-2">{{ nav_items(admin_menu.main) }}</div>
-                    <div>
-                        <div class="nav nav-pills w-100 flex-column gap-2">{{ nav_items(admin_menu.bottom) }}</div>
-                        <hr class="text-secondary">
-                        <div class="d-flex flex-column align-items-center justify-content-center gap-0">
-                            <span class="text-body-secondary small">Powered by</span>
-                            <a class="text-decoration-none text-body-secondary small"
-                               href="https://esherpa.io/en-nl"
-                               target="_blank"
-                               rel="noopener">
-                                eSherpa
-                                <img src="https://cdn.esherpa.io/esherpa/logo_esherpa.png"
-                                     alt="eSherpa"
-                                     height="18">
-                            </a>
-                        </div>
-                    </div>
+        <nav id="sidebar"
+             class="offcanvas offcanvas-start text-bg-light"
+             tabindex="-1">
+            <div class="offcanvas-body">
+                <div class="nav nav-pills w-100 flex-column gap-2">{{ nav_items(admin_menu) }}</div>
+            </div>
+            <div class="flex-shrink-0 px-3 py-3">
+                <div class="d-flex flex-column align-items-center justify-content-center gap-0">
+                    <span class="text-body-secondary small">Powered by</span>
+                    <a class="text-decoration-none text-body-secondary small"
+                       href="https://esherpa.io/en-nl"
+                       target="_blank"
+                       rel="noopener">
+                        eSherpa
+                        <img src="https://cdn.esherpa.io/esherpa/logo_esherpa.png"
+                             alt="eSherpa"
+                             height="18">
+                    </a>
                 </div>
             </div>
         </nav>

@@ -307,7 +307,13 @@ def action_endpoint(view: ModelView, id_: Any, name: str) -> Response | str:
 def delete_endpoint(view: ModelView, id_: Any) -> Response:
     try:
         with conn.begin() as s:
-            delete_objects(s, view.model, [id_], soft_delete=view.soft_delete)
+            delete_objects(
+                s,
+                view.model,
+                [id_],
+                soft_delete=view.soft_delete,
+                base_query=view.get_query(s),
+            )
             view.after_write(s, None)
     except WriteError:
         return _redirect(

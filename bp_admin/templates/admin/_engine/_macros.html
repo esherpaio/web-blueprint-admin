@@ -4,7 +4,6 @@
     {% if field.input_type == InputType.ATTRIBUTES %}
         {{ attributes_editor(field, value, name=fname, editable=editable, form_values=form_values) }}
     {% elif field.input_type == InputType.HTML %}
-        <label class="form-label fw-semibold">{{ field.label|capfirst }}</label>
         <input type="hidden" name="{{ fname }}">
         <div data-html-editor
              data-target="{{ fname }}"
@@ -90,7 +89,7 @@
     {% set name = column.input_name(obj.id) %}
     {% set value = column.cell_value(obj, form_values) %}
     {% if field.input_type == InputType.ATTRIBUTES %}
-        {{ attributes_editor(field, value, name=name, editable=true, show_label=false, form_values=form_values) }}
+        {{ attributes_editor(field, value, name=name, editable=true, form_values=form_values) }}
     {% elif field.input_type == InputType.CHECKBOX %}
         <input class="form-check-input"
                type="checkbox"
@@ -163,12 +162,11 @@
     {% endif %}
 {% endmacro %}
 
-{% macro attributes_editor(field, data, name=None, editable=None, show_label=true, form_values={}) %}
+{% macro attributes_editor(field, data, name=None, editable=None, form_values={}) %}
     {% set is_readonly = field.is_readonly(editable) %}
     <div class="admin-attributes"
          data-attributes
          {% for key, attr_value in field.attrs.items() %}{{ key }}="{{ attr_value }}"{% endfor %}>
-        {% if show_label %}<label class="form-label fw-semibold">{{ field.label|capfirst }}</label>{% endif %}
         {% if not is_readonly %}
             <input type="hidden"
                    name="{{ field.attribute_input_name('present', name) }}"

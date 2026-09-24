@@ -79,9 +79,3 @@ class AttrType(StrEnum):
     @property
     def label(self) -> str:
         return self.capitalize()
-
-
-class MenuSection(StrEnum):
-    MAIN = "main"
-    BOTTOM = "bottom"
-    HIDDEN = "hidden"

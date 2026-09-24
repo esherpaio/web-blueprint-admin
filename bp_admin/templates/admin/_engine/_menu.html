@@ -1,24 +1,9 @@
 {% macro nav_items(items) %}
     {% for item in items %}
-        {% if item.is_group %}
-            <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle {{ 'active' if item.active }} d-flex gap-2 align-items-center"
-                   href="#"
-                   role="button"
-                   data-bs-toggle="dropdown">
-                    {% if item.icon %}<i class="bi {{ item.icon }}"></i>{% endif %}
-                    {{ item.label|capfirst }}
-                </a>
-                <ul class="dropdown-menu ms-auto">
-                    {% for child in item.items %}
-                        <li>
-                            <a class="dropdown-item"
-                               href="{{ url_for(child.endpoint) }}">{{ child.label|capfirst }}</a>
-                        </li>
-                    {% endfor %}
-                </ul>
-            </li>
-        {% elif item.is_action %}
+        {% if loop.changed(item.category) and item.category %}
+            <h2 class="small fw-semibold text-body-secondary px-1 py-1 mb-0">{{ item.category|capfirst }}</h2>
+        {% endif %}
+        {% if item.is_action %}
             <li class="nav-item">
                 <form method="post"
                       action="{{ url_for(item.endpoint) }}"

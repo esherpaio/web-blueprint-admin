@@ -1,20 +1,17 @@
 from collections.abc import Iterable
-from dataclasses import dataclass, field
-
-from .enums import MenuSection
+from dataclasses import dataclass
 
 
 @dataclass
 class NavSource:
-    section: MenuSection
     label: str
     endpoint: str
     match: str
     order: int = 100
     icon: str | None = None
-    group: str | None = None
     is_action: bool = False
     confirm: str | None = None
+    category: str | None = None
 
 
 @dataclass
@@ -25,39 +22,14 @@ class MenuLink:
     icon: str | None = None
     order: int = 100
     active: bool = False
-    is_group: bool = False
     is_action: bool = False
     confirm: str | None = None
+    category: str | None = None
 
 
-@dataclass
-class MenuGroup:
-    label: str
-    icon: str | None = None
-    order: int = 100
-    items: list[MenuLink] = field(default_factory=list)
-    active: bool = False
-    is_group: bool = True
-
-
-@dataclass
-class AdminMenu:
-    main: list[MenuLink | MenuGroup] = field(default_factory=list)
-    bottom: list[MenuLink | MenuGroup] = field(default_factory=list)
-
-
-def build_menu(sources: Iterable[NavSource], current: str) -> AdminMenu:
-    menu = AdminMenu()
-    buckets: dict[MenuSection, list[MenuLink | MenuGroup]] = {
-        MenuSection.MAIN: menu.main,
-        MenuSection.BOTTOM: menu.bottom,
-    }
-    groups: dict[tuple[MenuSection, str], MenuGroup] = {}
-
-    for source in sources:
-        bucket = buckets.get(source.section)
-        if bucket is None:
-            continue
+def build_menu(sources: Iterable[NavSource], current: str) -> list[MenuLink]:
+    categories: dict[str | None, list[MenuLink]] = {}
+    for source in sorted(sources, key=lambda source: (source.order, source.label)):
         link = MenuLink(
             label=source.label,
             endpoint=source.endpoint,
@@ -67,23 +39,7 @@ def build_menu(sources: Iterable[NavSource], current: str) -> AdminMenu:
             active=current.startswith(source.match),
             is_action=source.is_action,
             confirm=source.confirm,
+            category=source.category,
         )
-        if source.group is None:
-            bucket.append(link)
-            continue
-        key = (source.section, source.group)
-        group = groups.get(key)
-        if group is None:
-            group = MenuGroup(label=source.group, icon=source.icon, order=source.order)
-            groups[key] = group
-            bucket.append(group)
-        group.items.append(link)
-
-    for bucket in (menu.main, menu.bottom):
-        bucket.sort(key=lambda item: (item.order, item.label))
-        for item in bucket:
-            if isinstance(item, MenuGroup):
-                item.active = any(child.active for child in item.items)
-                item.items.sort(key=lambda child: (child.order, child.label))
-
-    return menu
+        categories.setdefault(source.category, []).append(link)
+    return [item for items in categories.values() for item in items]

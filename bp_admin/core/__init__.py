@@ -7,7 +7,6 @@ from .enums import (
     CellFormat,
     InputType,
     LinkMode,
-    MenuSection,
     Notice,
     Op,
     Size,

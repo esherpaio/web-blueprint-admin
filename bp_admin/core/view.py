@@ -14,7 +14,7 @@ from werkzeug import Response
 from .action import Action
 from .column import Column, row_input_name
 from .db import apply_fields, next_order, supports_soft_delete
-from .enums import MenuSection, Notice
+from .enums import Notice
 from .field import Field
 from .filter import Filter
 from .menu import NavSource
@@ -30,13 +30,14 @@ class ModelView:
 
     # Menu placement
     icon: str | None = None
-    menu_group: str | None = None
-    menu_section: MenuSection = MenuSection.MAIN
+    menu_category: str | None = None
+    menu_hidden: bool = False
     menu_match: str | None = None
     order: int = 100
     is_home: bool = False
 
     # List page
+    list_notice: str | None = None
     columns: list[Column] = []
     searchable: list[str] = []
     search_placeholder: str | None = None
@@ -94,16 +95,15 @@ class ModelView:
 
     @property
     def nav_source(self) -> NavSource | None:
-        if self.menu_section is MenuSection.HIDDEN:
+        if self.menu_hidden:
             return None
         return NavSource(
-            section=self.menu_section,
             label=self.name_plural or self.name,
             endpoint=self.route,
             match=self.route,
             order=self.order,
             icon=self.icon,
-            group=self.menu_group,
+            category=self.menu_category,
         )
 
     def url(self, suffix: str = "", **values: Any) -> str:
@@ -258,8 +258,8 @@ class UrlView:
     cache: bool = False
     icon: str | None = None
     order: int = 100
-    menu_section: MenuSection = MenuSection.BOTTOM
-    menu_group: str | None = None
+    menu_hidden: bool = False
+    menu_category: str | None = None
 
     def __init__(self) -> None:
         self._cached: str | None = None
@@ -270,16 +270,15 @@ class UrlView:
 
     @property
     def nav_source(self) -> NavSource | None:
-        if self.menu_section is MenuSection.HIDDEN:
+        if self.menu_hidden:
             return None
         return NavSource(
-            section=self.menu_section,
             label=self.label,
             endpoint=self.route,
             match=self.route,
             order=self.order,
             icon=self.icon,
-            group=self.menu_group,
+            category=self.menu_category,
         )
 
     def fetch(self) -> str:
@@ -317,8 +316,8 @@ class TemplateView:
     path: str | None = None
     icon: str | None = None
     order: int = 100
-    menu_section: MenuSection = MenuSection.HIDDEN
-    menu_group: str | None = None
+    menu_hidden: bool = True
+    menu_category: str | None = None
     menu_match: str | None = None
     accepts_post: bool = False
 
@@ -332,16 +331,15 @@ class TemplateView:
 
     @property
     def nav_source(self) -> NavSource | None:
-        if self.menu_section is MenuSection.HIDDEN:
+        if self.menu_hidden:
             return None
         return NavSource(
-            section=self.menu_section,
             label=self.label,
             endpoint=self.route,
             match=self.route,
             order=self.order,
             icon=self.icon,
-            group=self.menu_group,
+            category=self.menu_category,
         )
 
     def context(self) -> dict[str, Any]:
@@ -364,8 +362,8 @@ class ActionView:
     label: str = ""
     icon: str | None = None
     order: int = 100
-    menu_section: MenuSection = MenuSection.BOTTOM
-    menu_group: str | None = None
+    menu_hidden: bool = False
+    menu_category: str | None = None
     confirm: str | None = None
     redirect_endpoint: str | None = None
 
@@ -379,16 +377,15 @@ class ActionView:
 
     @property
     def nav_source(self) -> NavSource | None:
-        if self.menu_section is MenuSection.HIDDEN:
+        if self.menu_hidden:
             return None
         return NavSource(
-            section=self.menu_section,
             label=self.label,
             endpoint=self.route,
             match=self.route,
             order=self.order,
             icon=self.icon,
-            group=self.menu_group,
+            category=self.menu_category,
             is_action=True,
             confirm=self.confirm,
         )
