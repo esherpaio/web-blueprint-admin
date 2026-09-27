@@ -138,7 +138,7 @@
                                 {% if view.reorderable %}
                                     <th style="width:2rem"></th>
                                 {% endif %}
-                                {% if view.can_delete %}
+                                {% if view.has_selection %}
                                     <th style="width:2.5rem">
                                         <input class="form-check-input"
                                                type="checkbox"
@@ -166,7 +166,7 @@
                                                    value="{{ obj|attr(view.order_field) }}">
                                         </td>
                                     {% endif %}
-                                    {% if view.can_delete %}
+                                    {% if view.has_selection %}
                                         <td>
                                             <input class="form-check-input"
                                                    type="checkbox"

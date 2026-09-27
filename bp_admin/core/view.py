@@ -145,6 +145,12 @@ class ModelView:
     def has_bulk_edit(self) -> bool:
         return self.reorderable or any(column.editable for column in self.columns)
 
+    @property
+    def has_selection(self) -> bool:
+        return self.can_delete or any(
+            action.selection and action.is_visible(None) for action in self.actions
+        )
+
     def tab_by_key(self, key: str) -> Tab | None:
         for tab in self.tabs:
             if tab.key == key:

@@ -262,14 +262,23 @@
 {% macro action_button(view, obj, action) %}
     {% if action.is_link %}
         {{ anchor(action.href(obj) , action.label, action.mode, action.style, action.size, action.icon, action.target, action.download) }}
+    {% elif action.selection %}
+        <button class="{{ button_class(action.style) }} d-inline-flex gap-2"
+                type="submit"
+                form="bulk-form"
+                formaction="{{ view.url('list_action', name=action.name) }}"
+                {% if action.confirm %}data-confirm="{{ action.confirm }}"{% endif %}>
+            {% if action.icon %}
+                <i class="bi {{ action.icon }}"></i>
+            {% endif %}
+            {{ action.label }}
+        </button>
     {% elif action.has_modal %}
         <button class="btn {{ button_class(action.style) }} d-inline-flex gap-2"
                 type="button"
                 data-bs-toggle="modal"
                 data-bs-target="#{{ action.modal_id }}">
-            {% if action.icon %}
-                <i class="bi {{ action.icon }}"></i>
-            {% endif %}
+            {% if action.icon %}<i class="bi {{ action.icon }}"></i>{% endif %}
             {{ action.label }}
         </button>
     {% elif action.is_api %}

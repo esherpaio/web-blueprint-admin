@@ -25,6 +25,7 @@ class Action:
         visible: Callable[[Any], bool] | None = None,
         tab: str | None = None,
         scope: ActionScope = ActionScope.DETAIL,
+        selection: bool = False,
     ) -> None:
         self.name = name
         self.scope = ActionScope(scope)
@@ -39,6 +40,7 @@ class Action:
         self.irreversible = irreversible
         self._visible = visible
         self.tab = tab
+        self.selection = selection
 
     @property
     def modal_id(self) -> str:
@@ -66,7 +68,10 @@ class Action:
         return self._visible(obj) if self._visible is not None else True
 
     def parse(self, form: Any, files: Any = None) -> dict[str, Any]:
-        return {field.name: field.parse(form, files) for field in self.fields}
+        data = {field.name: field.parse(form, files) for field in self.fields}
+        if self.selection:
+            data["selected_ids"] = form.getlist("select")
+        return data
 
     def run(self, s: Session, obj: Any, data: dict[str, Any]) -> None:
         if self.handler is not None:
