@@ -61,7 +61,7 @@
                             Delete selected
                         </button>
                     {% endif %}
-                    {% for action in view.actions if action.is_link or (action.scope == ActionScope.LIST and action.is_visible(none)) %}
+                    {% for action in view.actions if action.scope == ActionScope.LIST and action.is_visible(none) %}
                         {{ action_button(view, none, action) }}
                     {% endfor %}
                 </div>

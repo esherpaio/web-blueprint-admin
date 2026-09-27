@@ -19,7 +19,7 @@ class Action:
         style: Style | str = Style.PRIMARY,
         size: Size | str | None = None,
         icon: str | None = None,
-        confirm: str | None = None,
+        confirm: bool | str | None = None,
         text: str | None = None,
         irreversible: bool = False,
         visible: Callable[[Any], bool] | None = None,
@@ -35,6 +35,8 @@ class Action:
         self.style = style
         self.size = size
         self.icon = icon
+        if isinstance(confirm, bool):
+            confirm = f"Please confirm: {label}."
         self.confirm = confirm
         self.text = text
         self.irreversible = irreversible
@@ -89,7 +91,7 @@ class ApiAction(Action):
         fields: list[Field] | None = None,
         style: Style | str = Style.PRIMARY,
         icon: str | None = None,
-        confirm: str | None = None,
+        confirm: bool | str | None = None,
         text: str | None = None,
         irreversible: bool = False,
         redirect: str | None = None,
@@ -139,6 +141,7 @@ class LinkAction(Action):
         mode: LinkMode | str = LinkMode.BUTTON,
         visible: Callable[[Any], bool] | None = None,
         tab: str | None = None,
+        scope: ActionScope = ActionScope.LIST,
     ) -> None:
         super().__init__(
             name,
@@ -148,6 +151,7 @@ class LinkAction(Action):
             icon=icon,
             visible=visible,
             tab=tab,
+            scope=scope,
         )
         self.endpoint = endpoint
         self.url = url
