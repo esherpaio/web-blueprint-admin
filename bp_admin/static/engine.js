@@ -203,9 +203,12 @@
 
     function initCleanUrl() {
         const url = new URL(window.location.href);
-        if (url.searchParams.has("saved")) {
-            url.searchParams.delete("saved");
-            const query = url.searchParams.toString();
+        const query = new URLSearchParams(
+            Array.from(url.searchParams).filter(function ([name, value]) {
+                return name !== "saved" && value !== "";
+            }),
+        ).toString();
+        if (query !== url.searchParams.toString()) {
             window.history.replaceState(
                 {},
                 "",
