@@ -1,3 +1,4 @@
+from datetime import date
 from typing import Any, Callable
 
 from sqlalchemy.orm.session import Session
@@ -9,6 +10,7 @@ FilterOption = tuple[str, str]
 
 class Filter:
     is_divider: bool = False
+    is_date: bool = False
 
     def __init__(self, label: str, *, key: str | None = None) -> None:
         self.label = label
@@ -19,6 +21,23 @@ class Filter:
 
     def apply(self, query: Any, value: str) -> Any:
         return query
+
+
+class DateFilter(Filter):
+    is_date = True
+
+    def __init__(
+        self,
+        label: str,
+        *,
+        condition: Callable[[date], Any],
+        key: str | None = None,
+    ) -> None:
+        super().__init__(label, key=key)
+        self.condition = condition
+
+    def apply(self, query: Any, value: str) -> Any:
+        return query.filter(self.condition(date.fromisoformat(value)))
 
 
 class FilterDivider(Filter):

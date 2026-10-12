@@ -28,17 +28,38 @@
 
     window.adminFlash = showFlash;
 
-    function initSelectAll() {
+    function initSelection() {
         document.querySelectorAll("[data-select-all]").forEach(function (master) {
             const table = master.closest("table");
             if (!table) return;
-            master.addEventListener("change", function () {
-                table
-                    .querySelectorAll("[data-select-row]")
-                    .forEach(function (checkbox) {
-                        checkbox.checked = master.checked;
-                    });
+            const checkboxes = Array.from(table.querySelectorAll("[data-select-row]"));
+            const form = master.form;
+            const buttons = Array.from(form ? form.elements : []).filter(function (element) {
+                return element.hasAttribute("data-requires-selection");
             });
+
+            function updateSelection() {
+                const selectedCount = checkboxes.filter(function (checkbox) {
+                    return checkbox.checked;
+                }).length;
+                master.checked = selectedCount > 0 && selectedCount === checkboxes.length;
+                master.indeterminate = selectedCount > 0 && selectedCount < checkboxes.length;
+                buttons.forEach(function (button) {
+                    button.disabled = selectedCount === 0;
+                });
+            }
+
+            master.addEventListener("change", function () {
+                checkboxes.forEach(function (checkbox) {
+                    checkbox.checked = master.checked;
+                });
+                updateSelection();
+            });
+            checkboxes.forEach(function (checkbox) {
+                checkbox.addEventListener("change", updateSelection);
+            });
+            window.addEventListener("pageshow", updateSelection);
+            updateSelection();
         });
     }
 
@@ -52,36 +73,37 @@
         });
     }
 
+    function getApiData(form) {
+        const data = {};
+        form.querySelectorAll("[name]").forEach(function (input) {
+            if (input.disabled) return;
+            let value = input.value;
+            if (input.type === "checkbox") value = input.checked;
+            else if (value === "") value = null;
+            data[input.name] = value;
+        });
+        return Object.keys(data).length ? data : null;
+    }
+
     function initApiActions() {
         document.querySelectorAll("form[data-api-url]").forEach(function (form) {
-            form.addEventListener("submit", function (event) {
+            form.addEventListener("submit", async function (event) {
                 event.preventDefault();
                 const method = form.dataset.apiMethod;
                 const url = form.dataset.apiUrl;
                 const redirect = form.dataset.apiRedirect;
                 const button = form.querySelector('[type="submit"]');
-                const body = {};
-                let hasBody = false;
-                form.querySelectorAll("[name]").forEach(function (input) {
-                    if (input.disabled) return;
-                    hasBody = true;
-                    let value = input.value;
-                    if (input.type === "checkbox") value = input.checked;
-                    else if (value === "") value = null;
-                    body[input.name] = value;
-                });
-                const data = hasBody ? body : null;
-                const contentType = hasBody ? "application/json" : null;
+                const data = getApiData(form);
+                const contentType = data ? "application/json" : null;
                 setButtonLoading(button, true);
-                callApi(method, url, data, contentType)
-                    .then(function () {
-                        if (redirect) window.location.href = redirect;
-                        else window.location.reload();
-                    })
-                    .catch(function (error) {
-                        setButtonLoading(button, false);
-                        showFlash(error.message);
-                    });
+                try {
+                    await callApi(method, url, data, contentType);
+                    if (redirect) window.location.href = redirect;
+                    else window.location.reload();
+                } catch (error) {
+                    setButtonLoading(button, false);
+                    showFlash(error.message);
+                }
             });
         });
     }
@@ -137,7 +159,7 @@
             const field = body.dataset.sortField || "order";
             let dragItem = null;
 
-            Array.prototype.forEach.call(body.children, function (item) {
+            Array.from(body.children).forEach(function (item) {
                 const handle = item.querySelector("[data-drag-handle]");
                 if (!handle) return;
 
@@ -177,11 +199,9 @@
         });
     }
 
-    // Assign sequential positions so the visual order is authoritative. Using
-    // 1..N guarantees unique values and self-heals duplicate/NULL order data.
     function renumber(body, field) {
         let position = 0;
-        Array.prototype.forEach.call(body.children, function (item) {
+        Array.from(body.children).forEach(function (item) {
             const input = item.querySelector('input[name$="-' + field + '"]');
             if (!input) return;
             position += 1;
@@ -242,7 +262,7 @@
     }
 
     window.addEventListener("load", function () {
-        initSelectAll();
+        initSelection();
         initConfirm();
         initShowModal();
         initSearchFocus();

@@ -267,6 +267,8 @@
                 type="submit"
                 form="bulk-form"
                 formaction="{{ view.url('list_action', name=action.name) }}"
+                data-requires-selection
+                disabled
                 {% if action.confirm %}data-confirm="{{ action.confirm }}"{% endif %}>
             {% if action.icon %}
                 <i class="bi {{ action.icon }}"></i>

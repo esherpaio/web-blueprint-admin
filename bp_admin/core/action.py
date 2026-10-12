@@ -2,10 +2,13 @@ from typing import Any, Callable
 
 from markupsafe import Markup
 from sqlalchemy.orm.session import Session
+from werkzeug import Response
 
 from .enums import ActionScope, LinkMode, Size, Style
 from .field import Field
 from .utils import resolve_href
+
+ActionHandler = Callable[[Session, Any, dict[str, Any]], Response | None]
 
 
 class Action:
@@ -13,7 +16,7 @@ class Action:
         self,
         name: str,
         label: str,
-        handler: Callable[[Session, Any, dict[str, Any]], None] | None = None,
+        handler: ActionHandler | None = None,
         *,
         fields: list[Field] | None = None,
         style: Style | str = Style.PRIMARY,
@@ -75,9 +78,10 @@ class Action:
             data["selected_ids"] = form.getlist("select")
         return data
 
-    def run(self, s: Session, obj: Any, data: dict[str, Any]) -> None:
+    def run(self, s: Session, obj: Any, data: dict[str, Any]) -> Response | None:
         if self.handler is not None:
-            self.handler(s, obj, data)
+            return self.handler(s, obj, data)
+        return None
 
 
 class ApiAction(Action):

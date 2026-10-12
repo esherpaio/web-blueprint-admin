@@ -31,6 +31,7 @@ from .field import (
 )
 from .filter import (
     BoolFilter,
+    DateFilter,
     Filter,
     FilterDivider,
     FkFilter,

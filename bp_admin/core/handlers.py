@@ -281,12 +281,16 @@ def action_endpoint(view: ModelView, id_: Any, name: str) -> Response | str:
             if scope is ActionScope.LIST and not action.is_visible(None):
                 abort(404)
             data = action.parse(request.form, request.files)
-            action.run(s, obj, data)
+            response = action.run(s, obj, data)
+            if response is not None:
+                return response
             view.after_write(s, obj)
     except WriteError as error:
         if scope is ActionScope.LIST:
             return render_list(
-                view, error=error_message(error), form_values=request.form
+                view,
+                error=error_message(error),
+                form_values=request.form,
             )
         return render_detail(
             view,

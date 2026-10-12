@@ -100,15 +100,26 @@
                                 <div class="w-100 m-0"></div>
                             {% else %}
                                 <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-                                    <label class="form-label mb-1 small">{{ flt.label|capfirst }}</label>
-                                    <select class="form-select" name="{{ flt.key }}">
-                                        <option value="">All</option>
-                                        {% for value, label in filter_options.get(flt.key, []) %}
-                                            <option value="{{ value }}"
-                                                    {{ 'selected' if filter_values.get(flt.key) == value }}>{{ label }}
-                                            </option>
-                                        {% endfor %}
-                                    </select>
+                                    <label class="form-label mb-1 small"
+                                           for="filter-{{ flt.key }}">{{ flt.label|capfirst }}</label>
+                                    {% if flt.is_date %}
+                                        <input class="form-control"
+                                               type="date"
+                                               id="filter-{{ flt.key }}"
+                                               name="{{ flt.key }}"
+                                               value="{{ filter_values.get(flt.key, '') }}">
+                                    {% else %}
+                                        <select class="form-select"
+                                                id="filter-{{ flt.key }}"
+                                                name="{{ flt.key }}">
+                                            <option value="">All</option>
+                                            {% for value, label in filter_options.get(flt.key, []) %}
+                                                <option value="{{ value }}"
+                                                        {{ 'selected' if filter_values.get(flt.key) == value }}>{{ label }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    {% endif %}
                                 </div>
                             {% endif %}
                         {% endfor %}
