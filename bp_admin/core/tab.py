@@ -15,6 +15,7 @@ from .db import (
     apply_fields,
     delete_objects,
     next_order,
+    parse_ids,
     resolve_choices,
     supports_soft_delete,
 )
@@ -357,25 +358,31 @@ class MediaTab(Tab):
                 s.flush()
 
     def _save(self, s: Session, obj: Any, form: Any) -> None:
-        rows = {str(r.id): r for r in self.base_query(s, obj).all()}
-        for row_id in form.getlist("row-id"):
-            row = rows.get(str(row_id))
-            if row is None:
-                continue
-            order = form.get(self.order_input_name(row_id))
-            if order not in (None, ""):
-                try:
-                    setattr(row, self.order_field, int(order))
-                except (TypeError, ValueError):
-                    pass
+        raw_ids = form.getlist("row-id")
+        if not raw_ids:
+            return
+        input_ids = dict(zip(parse_ids(self.model, raw_ids), raw_ids))
+        rows = self.base_query(s, obj).filter(self.model.id.in_(input_ids.keys())).all()
+        for row in rows:
+            raw_id = input_ids[row.id]
+            try:
+                order = int(form.get(self.order_input_name(raw_id)))
+                setattr(row, self.order_field, order)
+            except (TypeError, ValueError):
+                pass
             file_ = getattr(row, self.file_rel)
             if file_ is not None:
                 file_.description = (
-                    form.get(self.description_input_name(row_id)) or None
+                    form.get(self.description_input_name(raw_id)) or None
                 )
 
     def _delete(self, s: Session, obj: Any, ids: list[Any]) -> None:
+        ids = parse_ids(self.model, ids)
+        if not ids:
+            return
         rows = self.base_query(s, obj).filter(self.model.id.in_(ids)).all()
+        if not rows:
+            return
         with Client.connect() as c:
             for row in rows:
                 file_ = getattr(row, self.file_rel)

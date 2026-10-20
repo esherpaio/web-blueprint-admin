@@ -1,5 +1,3 @@
-"""Database helpers for the admin engine: introspection, choices and writes."""
-
 from .choices import resolve_choices
 from .introspection import supports_soft_delete
 from .persistence import (
@@ -7,6 +5,7 @@ from .persistence import (
     apply_fields,
     delete_objects,
     next_order,
+    parse_ids,
 )
 
 __all__ = [
@@ -14,6 +13,7 @@ __all__ = [
     "apply_fields",
     "delete_objects",
     "next_order",
+    "parse_ids",
     "resolve_choices",
     "supports_soft_delete",
 ]

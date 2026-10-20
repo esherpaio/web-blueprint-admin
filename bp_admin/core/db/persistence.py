@@ -1,10 +1,16 @@
 from typing import Any, Iterable
 
 from sqlalchemy import func
+from sqlalchemy import inspect as sa_inspect
 from sqlalchemy.orm.session import Session
 
 from ..column import Column, row_input_name
 from ..field import Field
+
+
+def parse_ids(model: Any, values: Iterable[Any]) -> list[Any]:
+    python_type = sa_inspect(model).columns["id"].type.python_type
+    return [python_type(value) for value in values]
 
 
 def next_order(query: Any, order_column: Any) -> int:
@@ -36,26 +42,26 @@ def apply_bulk_fields(
     order_field: str | None = None,
 ) -> int:
     editable = [c for c in columns if c.editable]
-    row_ids = form.getlist("row-id")
-    if not row_ids or (not editable and order_field is None):
+
+    raw_ids = form.getlist("row-id")
+    if not raw_ids or (not editable and order_field is None):
         return 0
+
+    input_ids = dict(zip(parse_ids(model, raw_ids), raw_ids))
     query = base_query if base_query is not None else s.query(model)
-    rows = {str(row.id): row for row in query.filter(model.id.in_(row_ids)).all()}
-    for row_id in row_ids:
-        row = rows.get(str(row_id))
-        if row is None:
-            continue
+    rows = query.filter(model.id.in_(input_ids.keys())).all()
+    for row in rows:
+        raw_id = input_ids[row.id]
         for column in editable:
-            value = column.field.parse(form, name=row_input_name(row_id, column.name))
+            value = column.field.parse(form, name=column.input_name(raw_id))
             column.field.apply(row, value)
         if order_field is not None:
-            raw = form.get(row_input_name(row_id, order_field))
-            if raw not in (None, ""):
-                try:
-                    setattr(row, order_field, int(raw))
-                except (TypeError, ValueError):
-                    pass
-    return len(row_ids)
+            try:
+                order = int(form.get(row_input_name(raw_id, order_field)))
+                setattr(row, order_field, order)
+            except (TypeError, ValueError):
+                pass
+    return len(rows)
 
 
 def delete_objects(
@@ -69,6 +75,7 @@ def delete_objects(
     ids = [i for i in ids if i not in (None, "")]
     if not ids:
         return 0
+    ids = parse_ids(model, ids)
     query = base_query if base_query is not None else s.query(model)
     rows = query.filter(model.id.in_(ids)).all()
     for row in rows:
