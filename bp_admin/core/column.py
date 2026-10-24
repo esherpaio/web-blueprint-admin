@@ -2,15 +2,14 @@ from typing import Any, Callable
 
 from markupsafe import Markup, escape
 from web.cache import cache
-from web.locale import current_locale
 from web.setup import config
 from web.utils.generators import format_decimal
 
 from .enums import Align, CellFormat, LinkMode, Size, Style
 from .field import Field, StringField
 from .utils import (
-    business_datetime,
     default_label,
+    format_datetime,
     resolve_href,
     resolve_path,
     resolve_value,
@@ -105,7 +104,7 @@ class Column:
             value = self.value(obj)
             if value is None:
                 return Markup("")
-            return escape(current_locale.format_datetime(business_datetime(value)))
+            return escape(format_datetime(value))
         if kind == CellFormat.BOOL:
             icon = (
                 "bi-check-circle-fill text-success"

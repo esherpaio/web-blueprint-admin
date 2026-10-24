@@ -83,15 +83,17 @@ class Field:
     #
 
     def value_from_obj(self, obj: Any) -> Any:
-        if callable(self._value):
-            raw = self._value(obj)
-        elif isinstance(self._value, str):
-            raw = resolve_path(obj, self._value)
-        else:
-            raw = resolve_path(obj, self.name)
+        raw = self._raw_value(obj)
         if self._format is not None and raw is not None:
             return self._format(raw)
         return raw
+
+    def _raw_value(self, obj: Any) -> Any:
+        if callable(self._value):
+            return self._value(obj)
+        if isinstance(self._value, str):
+            return resolve_path(obj, self._value)
+        return resolve_path(obj, self.name)
 
     def form_value(self, obj: Any, form_values: Any) -> Any:
         submitted = form_values.get(self.name)
@@ -395,10 +397,13 @@ class DateTimeField(Field):
     input_type = InputType.DATETIME
 
     def value_from_obj(self, obj: Any) -> Any:
-        value = super().value_from_obj(obj)
-        if isinstance(value, datetime):
-            return business_datetime(value).strftime("%Y-%m-%dT%H:%M")
-        return value
+        raw = self._raw_value(obj)
+        if not isinstance(raw, datetime):
+            return raw
+        value = business_datetime(raw)
+        if self._format is not None:
+            return self._format(value)
+        return value.strftime("%Y-%m-%dT%H:%M")
 
     def _coerce(self, raw: Any) -> datetime | None:
         if raw is None or raw == "":

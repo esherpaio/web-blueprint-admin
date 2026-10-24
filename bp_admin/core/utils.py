@@ -3,6 +3,7 @@ from typing import Any, Callable
 from zoneinfo import ZoneInfo
 
 from web.app.urls import url_for
+from web.locale import current_locale
 from web.setup import config
 
 from .enums import Style
@@ -55,6 +56,10 @@ def business_datetime(value: datetime) -> datetime:
     if value.tzinfo is None:
         value = value.replace(tzinfo=timezone.utc)
     return value.astimezone(business_timezone())
+
+
+def format_datetime(value: datetime) -> str:
+    return current_locale.format_datetime(business_datetime(value))
 
 
 def button_class(style: str | None = Style.PRIMARY, size: str | None = None) -> str:
