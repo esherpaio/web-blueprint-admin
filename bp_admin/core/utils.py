@@ -1,6 +1,9 @@
+from datetime import datetime, timezone
 from typing import Any, Callable
+from zoneinfo import ZoneInfo
 
 from web.app.urls import url_for
+from web.setup import config
 
 from .enums import Style
 
@@ -42,6 +45,16 @@ def capfirst(text: str | None) -> str:
 def default_label(name: str) -> str:
     base = name[:-3] if name.endswith("_id") else name
     return capfirst(base.replace("_", " ").strip())
+
+
+def business_timezone() -> ZoneInfo:
+    return ZoneInfo(config.BUSINESS_TIMEZONE)
+
+
+def business_datetime(value: datetime) -> datetime:
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=timezone.utc)
+    return value.astimezone(business_timezone())
 
 
 def button_class(style: str | None = Style.PRIMARY, size: str | None = None) -> str:

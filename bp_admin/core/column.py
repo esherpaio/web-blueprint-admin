@@ -8,7 +8,13 @@ from web.utils.generators import format_decimal
 
 from .enums import Align, CellFormat, LinkMode, Size, Style
 from .field import Field, StringField
-from .utils import default_label, resolve_href, resolve_path, resolve_value
+from .utils import (
+    business_datetime,
+    default_label,
+    resolve_href,
+    resolve_path,
+    resolve_value,
+)
 
 
 def row_input_name(row_id: Any, name: str) -> str:
@@ -99,7 +105,7 @@ class Column:
             value = self.value(obj)
             if value is None:
                 return Markup("")
-            return escape(current_locale.format_datetime(value))
+            return escape(current_locale.format_datetime(business_datetime(value)))
         if kind == CellFormat.BOOL:
             icon = (
                 "bi-check-circle-fill text-success"

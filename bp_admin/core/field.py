@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, timezone
+from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from enum import Enum
 from typing import Any, Callable, Final, Literal, Sequence
@@ -10,7 +10,7 @@ from sqlalchemy.orm.session import Session
 from web.error import WebError
 
 from .enums import AttrType, InputType
-from .utils import default_label, resolve_path
+from .utils import business_datetime, business_timezone, default_label, resolve_path
 
 Choice = tuple[Any, str]
 ChoiceProvider = Sequence[Choice] | Callable[[Session], Sequence[Choice]]
@@ -394,6 +394,12 @@ class ListTextAreaField(TextAreaField):
 class DateTimeField(Field):
     input_type = InputType.DATETIME
 
+    def value_from_obj(self, obj: Any) -> Any:
+        value = super().value_from_obj(obj)
+        if isinstance(value, datetime):
+            return business_datetime(value).strftime("%Y-%m-%dT%H:%M")
+        return value
+
     def _coerce(self, raw: Any) -> datetime | None:
         if raw is None or raw == "":
             return None
@@ -402,7 +408,7 @@ class DateTimeField(Field):
         except (TypeError, ValueError):
             return None
         if value.tzinfo is None:
-            value = value.replace(tzinfo=timezone.utc)
+            value = value.replace(tzinfo=business_timezone())
         return value
 
 
