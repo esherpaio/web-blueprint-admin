@@ -235,13 +235,16 @@ class InlineTableTab(Tab):
             abort(400)
         if op is Op.ADD and self.can_create:
             child = self.model()
-            setattr(child, self.fk, obj.id)
-            apply_fields(child, self.create_fields, form, files, respect_readonly=False)
-            if self.reorderable and getattr(child, self.order_field, None) is None:
-                order_column = getattr(self.model, self.order_field)
-                order = next_order(self.base_query(s, obj), order_column)
-                setattr(child, self.order_field, order)
             s.add(child)
+            with s.no_autoflush:
+                setattr(child, self.fk, obj.id)
+                apply_fields(
+                    child, self.create_fields, form, files, respect_readonly=False
+                )
+                if self.reorderable and getattr(child, self.order_field, None) is None:
+                    order_column = getattr(self.model, self.order_field)
+                    order = next_order(self.base_query(s, obj), order_column)
+                    setattr(child, self.order_field, order)
             s.flush()
         elif op is Op.DELETE and self.can_delete:
             delete_objects(

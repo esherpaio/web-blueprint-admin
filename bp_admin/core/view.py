@@ -224,13 +224,14 @@ class ModelView:
 
     def create(self, s: Session, form: Any, files: Any) -> Any:
         obj = self.model()
-        apply_fields(obj, self.create_fields, form, files, respect_readonly=False)
-        if self.reorderable and getattr(obj, self.order_field, None) is None:
-            order_column = getattr(self.model, self.order_field)
-            setattr(
-                obj, self.order_field, next_order(s.query(self.model), order_column)
-            )
         s.add(obj)
+        with s.no_autoflush:
+            apply_fields(obj, self.create_fields, form, files, respect_readonly=False)
+            if self.reorderable and getattr(obj, self.order_field, None) is None:
+                order_column = getattr(self.model, self.order_field)
+                setattr(
+                    obj, self.order_field, next_order(s.query(self.model), order_column)
+                )
         s.flush()
         self.after_write(s, obj)
         return obj
