@@ -39,6 +39,40 @@
                 {% endfor %}
             </select>
         </div>
+    {% elif field.input_type == InputType.MULTISELECT and field.grouped %}
+        {% set selected = (value or [])|map('string')|list %}
+        <div class="input-group">
+            <span class="input-group-text">{{ field.label|capfirst }}</span>
+            <div class="form-control p-0 overflow-auto check-groups">
+                {% for group, group_options in choices.get(field.name, [])|groupby(2) %}
+                    <details data-check-group>
+                        <summary class="d-flex align-items-center gap-2 px-2 py-1">
+                            <i class="bi bi-chevron-right"></i>
+                            <input class="form-check-input mt-0"
+                                   type="checkbox"
+                                   data-check-group-all
+                                   {% if is_readonly %}disabled{% endif %}>
+                            <span class="flex-grow-1">{{ group }}</span>
+                            <span class="small text-body-secondary" data-check-group-count></span>
+                        </summary>
+                        <div class="check-group-options px-2 pb-2">
+                            {% for option in group_options %}
+                                <label class="form-check mb-0">
+                                    <input class="form-check-input"
+                                           type="checkbox"
+                                           name="{{ fname }}"
+                                           value="{{ option[0] }}"
+                                           data-check-group-option
+                                           {% if option[0]|string in selected %}checked{% endif %}
+                                           {% if is_readonly %}disabled{% endif %}>
+                                    <span class="form-check-label">{{ option[1] }}</span>
+                                </label>
+                            {% endfor %}
+                        </div>
+                    </details>
+                {% endfor %}
+            </div>
+        </div>
     {% elif field.input_type == InputType.MULTISELECT %}
         {% set selected = (value or [])|map('string')|list %}
         <div class="input-group">

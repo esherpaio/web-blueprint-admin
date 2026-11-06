@@ -12,7 +12,7 @@ from web.error import WebError
 from .enums import AttrType, InputType
 from .utils import business_datetime, business_timezone, default_label, resolve_path
 
-Choice = tuple[Any, str]
+Choice = tuple[Any, str] | tuple[Any, str, str]
 ChoiceProvider = Sequence[Choice] | Callable[[Session], Sequence[Choice]]
 
 
@@ -291,11 +291,13 @@ class MultiSelectField(SelectField):
         *,
         model: Any = None,
         value_attr: str = "id",
+        grouped: bool = False,
         **kwargs: Any,
     ) -> None:
         super().__init__(name, label, **kwargs)
         self._model = model
         self._value_attr = value_attr
+        self.grouped = grouped
 
     @classmethod
     def from_model(
@@ -306,6 +308,7 @@ class MultiSelectField(SelectField):
         label_attr: str = "name",
         value_attr: str = "id",
         label_fn: Callable[[Any], str] | None = None,
+        group_fn: Callable[[Any], str] | None = None,
         order_by: Any = None,
         where: Any = None,
         coerce: CoerceArg = COERCE_INFER,
@@ -320,13 +323,18 @@ class MultiSelectField(SelectField):
                     order_by if isinstance(order_by, (list, tuple)) else [order_by]
                 )
                 query = query.order_by(*columns)
-            rows = query.all()
-            if label_fn is not None:
-                return [(getattr(row, value_attr), label_fn(row)) for row in rows]
-            return [
-                (getattr(row, value_attr), str(getattr(row, label_attr)))
-                for row in rows
-            ]
+            choices: list[Choice] = []
+            for row in query.all():
+                value = getattr(row, value_attr)
+                if label_fn is not None:
+                    label = label_fn(row)
+                else:
+                    label = str(getattr(row, label_attr))
+                if group_fn is not None:
+                    choices.append((value, label, str(group_fn(row))))
+                else:
+                    choices.append((value, label))
+            return choices
 
         if coerce is COERCE_INFER:
             coerce = cls.infer_coerce(model, value_attr)
@@ -336,6 +344,7 @@ class MultiSelectField(SelectField):
             coerce=coerce,
             model=model,
             value_attr=value_attr,
+            grouped=group_fn is not None,
             **kwargs,
         )
 

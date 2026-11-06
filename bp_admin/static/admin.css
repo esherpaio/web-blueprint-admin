@@ -19,8 +19,16 @@ table td .input-group {
 }
 
 table td .form-control,
-table td .form-select {
+table td .form-select,
+table td .input-group > .form-control,
+table td .input-group > .form-select {
     min-width: 6rem;
+}
+
+table td .cell-wrap {
+    display: block;
+    max-width: 40rem;
+    white-space: normal;
 }
 
 /* nav link colors */
@@ -101,4 +109,27 @@ table td .form-select {
 
 .ql-editor {
     min-height: 300px;
+}
+
+/* check groups */
+
+.check-groups {
+    max-height: 20rem;
+}
+
+.check-groups details + details {
+    border-top: var(--bs-border-width) solid var(--bs-border-color);
+}
+
+.check-groups summary {
+    cursor: pointer;
+}
+
+.check-groups details[open] > summary .bi-chevron-right {
+    transform: rotate(90deg);
+}
+
+.check-group-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
 }

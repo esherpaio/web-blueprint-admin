@@ -261,8 +261,38 @@
         });
     }
 
+    function initCheckGroups() {
+        document.querySelectorAll("[data-check-group]").forEach(function (group) {
+            const master = group.querySelector("[data-check-group-all]");
+            const count = group.querySelector("[data-check-group-count]");
+            const checkboxes = Array.from(group.querySelectorAll("[data-check-group-option]"));
+
+            function update() {
+                const checkedCount = checkboxes.filter(function (checkbox) {
+                    return checkbox.checked;
+                }).length;
+                master.checked = checkedCount > 0 && checkedCount === checkboxes.length;
+                master.indeterminate = checkedCount > 0 && checkedCount < checkboxes.length;
+                count.textContent = checkedCount + " / " + checkboxes.length;
+            }
+
+            master.addEventListener("change", function () {
+                checkboxes.forEach(function (checkbox) {
+                    checkbox.checked = master.checked;
+                });
+                update();
+            });
+            checkboxes.forEach(function (checkbox) {
+                checkbox.addEventListener("change", update);
+            });
+            window.addEventListener("pageshow", update);
+            update();
+        });
+    }
+
     window.addEventListener("load", function () {
         initSelection();
+        initCheckGroups();
         initConfirm();
         initShowModal();
         initSearchFocus();
