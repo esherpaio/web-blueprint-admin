@@ -1,7 +1,6 @@
 from typing import Any, Callable
 
 from markupsafe import Markup, escape
-from web.cache import cache
 from web.setup import config
 from web.utils.generators import format_decimal
 
@@ -21,17 +20,7 @@ def row_input_name(row_id: Any, name: str) -> str:
 
 
 def base_currency_code(obj: Any = None) -> str:
-    country = next(
-        (c for c in cache.countries if c.code == config.LOCALE_COUNTRY_CODE),
-        None,
-    )
-    if country is None:
-        return ""
-    currency = next(
-        (c for c in cache.currencies if c.id == country.currency_id),
-        None,
-    )
-    return currency.code if currency else ""
+    return config.BASE_CURRENCY_CODE
 
 
 class Column:
