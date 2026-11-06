@@ -44,7 +44,7 @@
                     {% endif %}
                     {% if file and file.is_image %}
                         <img class="card-img-top bg-light border-bottom object-fit-contain"
-                             src="{{ cdn_url(file.path) }}?class=medium"
+                             src="{{ cdn_url(file.path) }}?width=600&height=320"
                              alt="{{ file.description if file.description }}"
                              loading="lazy"
                              draggable="false"
