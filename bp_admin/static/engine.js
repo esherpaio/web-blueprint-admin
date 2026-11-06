@@ -29,32 +29,45 @@
     window.adminFlash = showFlash;
 
     function initSelection() {
-        document.querySelectorAll("[data-select-all]").forEach(function (master) {
-            const table = master.closest("table");
-            if (!table) return;
-            const checkboxes = Array.from(table.querySelectorAll("[data-select-row]"));
-            const form = master.form;
-            const buttons = Array.from(form ? form.elements : []).filter(function (element) {
+        const forms = new Set();
+        document
+            .querySelectorAll("[data-select-row], [data-requires-selection]")
+            .forEach(function (element) {
+                if (element.form) forms.add(element.form);
+            });
+        forms.forEach(function (form) {
+            const elements = Array.from(form.elements);
+            const checkboxes = elements.filter(function (element) {
+                return element.hasAttribute("data-select-row");
+            });
+            const buttons = elements.filter(function (element) {
                 return element.hasAttribute("data-requires-selection");
+            });
+            const master = elements.find(function (element) {
+                return element.hasAttribute("data-select-all");
             });
 
             function updateSelection() {
                 const selectedCount = checkboxes.filter(function (checkbox) {
                     return checkbox.checked;
                 }).length;
-                master.checked = selectedCount > 0 && selectedCount === checkboxes.length;
-                master.indeterminate = selectedCount > 0 && selectedCount < checkboxes.length;
+                if (master) {
+                    master.checked = selectedCount > 0 && selectedCount === checkboxes.length;
+                    master.indeterminate = selectedCount > 0 && selectedCount < checkboxes.length;
+                }
                 buttons.forEach(function (button) {
                     button.disabled = selectedCount === 0;
                 });
             }
 
-            master.addEventListener("change", function () {
-                checkboxes.forEach(function (checkbox) {
-                    checkbox.checked = master.checked;
+            if (master) {
+                master.addEventListener("change", function () {
+                    checkboxes.forEach(function (checkbox) {
+                        checkbox.checked = master.checked;
+                    });
+                    updateSelection();
                 });
-                updateSelection();
-            });
+            }
             checkboxes.forEach(function (checkbox) {
                 checkbox.addEventListener("change", updateSelection);
             });

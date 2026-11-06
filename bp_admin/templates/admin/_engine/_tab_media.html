@@ -1,3 +1,5 @@
+{% from "admin/_engine/_macros.html" import selection_button %}
+
 {% set tab_action = view.url('tab', id_=obj.id, tab_key=tab.key) %}
 
 <div class="d-flex flex-wrap justify-content-end gap-2 mb-3">
@@ -17,15 +19,7 @@
         Save changes
     </button>
     {% if tab.can_delete %}
-        <button class="btn btn-danger d-flex gap-2 align-items-center"
-                type="submit"
-                form="{{ tab.form_id }}"
-                name="_op"
-                value="{{ Op.DELETE }}"
-                data-confirm="Delete the selected media?">
-            <i class="bi bi-trash-fill"></i>
-            Delete selected
-        </button>
+        {{ selection_button("Delete selected", "bi-trash-fill", "danger", form=tab.form_id, op=Op.DELETE, confirm="Delete the selected media?") }}
     {% endif %}
 </div>
 
@@ -45,6 +39,7 @@
                                type="checkbox"
                                name="select"
                                value="{{ media.id }}"
+                               data-select-row
                                aria-label="Select media">
                     {% endif %}
                     {% if file and file.is_image %}

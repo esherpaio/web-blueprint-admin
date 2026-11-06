@@ -1,4 +1,4 @@
-{% from "admin/_engine/_macros.html" import cell_input, display_cell, form_modal, action_button %}
+{% from "admin/_engine/_macros.html" import cell_input, display_cell, form_modal, action_button, selection_button %}
 
 {% set tab_action = view.url('tab', id_=obj.id, tab_key=tab.key) %}
 
@@ -24,15 +24,7 @@
             </button>
         {% endif %}
         {% if tab.can_delete %}
-            <button class="btn btn-danger d-flex gap-2 align-items-center"
-                    type="submit"
-                    form="{{ tab.form_id }}"
-                    name="_op"
-                    value="{{ Op.DELETE }}"
-                    data-confirm="Delete the selected records?">
-                <i class="bi bi-trash-fill"></i>
-                Delete selected
-            </button>
+            {{ selection_button("Delete selected", "bi-trash-fill", "danger", form=tab.form_id, op=Op.DELETE, confirm="Delete the selected records?") }}
         {% endif %}
         {% for action in tab_ctx.actions %}{{ action_button(view, obj, action) }}{% endfor %}
     </div>
