@@ -186,26 +186,3 @@ class RelationFilter(Filter):
     def apply(self, query: Any, value: str) -> Any:
         condition = self.relationship.any(self.target == self.coerce(value))
         return query.filter(~condition if self.negate else condition)
-
-
-class RelationBoolFilter(Filter):
-    def __init__(
-        self,
-        relationship: Any,
-        field: Any,
-        label: str | None = None,
-        *,
-        key: str | None = None,
-    ) -> None:
-        if label is None:
-            label = default_label(relationship.key)
-        super().__init__(label, key=key)
-        self.relationship = relationship
-        self.field = field
-
-    def options(self, s: Session) -> list[FilterOption]:
-        return [("1", "Yes"), ("0", "No")]
-
-    def apply(self, query: Any, value: str) -> Any:
-        condition = self.relationship.any(self.field)
-        return query.filter(condition if value == "1" else ~condition)

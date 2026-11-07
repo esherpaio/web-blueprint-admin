@@ -426,10 +426,6 @@ class DateTimeField(Field):
         return value
 
 
-class HiddenField(Field):
-    input_type = InputType.HIDDEN
-
-
 class JsonField(Field):
     input_type = InputType.TEXT
 
