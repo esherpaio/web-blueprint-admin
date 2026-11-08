@@ -250,30 +250,6 @@
         }
     }
 
-    function initHtmlEditors() {
-        const toolbar = [
-            [{ header: [2, 3, 4, false] }],
-            ["bold", "italic", "underline", "strike"],
-            ["link"],
-            [{ list: "ordered" }, { list: "bullet" }],
-            ["clean"],
-        ];
-        document.querySelectorAll("[data-html-editor]").forEach(function (el) {
-            const input = document.getElementsByName(el.dataset.target)[0];
-            const readonly = el.hasAttribute("data-readonly");
-            const quill = new Quill(el, {
-                theme: "snow",
-                readOnly: readonly,
-                modules: { toolbar: readonly ? false : toolbar },
-            });
-            if (!input) return;
-            input.value = quill.root.innerHTML;
-            quill.on("text-change", function () {
-                input.value = quill.root.innerHTML;
-            });
-        });
-    }
-
     function initCheckGroups() {
         document.querySelectorAll("[data-check-group]").forEach(function (group) {
             const master = group.querySelector("[data-check-group-all]");
@@ -313,7 +289,6 @@
         initSortable();
         initAlertDismiss();
         initCleanUrl();
-        initHtmlEditors();
         initBack();
         initApiActions();
     });

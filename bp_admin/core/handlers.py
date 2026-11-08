@@ -1,6 +1,7 @@
+from dataclasses import asdict
 from typing import Any
 
-from flask import abort, redirect, render_template, request
+from flask import abort, jsonify, redirect, render_template, request
 from sqlalchemy.exc import IntegrityError
 from web.app.urls import url_for
 from web.database import conn
@@ -11,6 +12,7 @@ from werkzeug import Response
 from .db import apply_bulk_fields, delete_objects, resolve_choices
 from .enums import ActionScope, Notice, Op
 from .pagination import Pagination
+from .tab import ContentTab
 from .view import ModelView
 
 WriteError = (WebError, IntegrityError)
@@ -266,6 +268,28 @@ def tab_endpoint(view: ModelView, id_: Any, tab_key: str) -> Response | str:
         tab=tab_key,
         saved=Notice.SAVED,
     )
+
+
+def tab_upload_endpoint(
+    view: ModelView,
+    id_: Any,
+    tab_key: str,
+) -> Response | tuple[Response, int]:
+    tab = view.tab_by_key(tab_key)
+    if not isinstance(tab, ContentTab) or tab.model is None:
+        abort(404)
+    upload = request.files.get("file")
+    if upload is None:
+        abort(400)
+    try:
+        with conn.begin() as s:
+            obj = view.get_object(s, id_)
+            if obj is None:
+                abort(404)
+            file_ref = tab.upload(s, obj, upload)
+    except WebError as error:
+        return jsonify(success=0, message=str(error)), 400
+    return jsonify(success=1, file=asdict(file_ref))
 
 
 def action_endpoint(view: ModelView, id_: Any, name: str) -> Response | str:

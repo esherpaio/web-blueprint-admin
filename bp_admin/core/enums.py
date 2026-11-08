@@ -28,7 +28,6 @@ class InputType(StrEnum):
     MULTISELECT = "multiselect"
     TEXTAREA = "textarea"
     ATTRIBUTES = "attributes"
-    HTML = "html"
     DATETIME = "datetime"
     HIDDEN = "hidden"
 

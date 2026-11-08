@@ -56,11 +56,7 @@ class Field:
     def col_class(self) -> str:
         if self._col_class is not None:
             return self._col_class
-        if self.input_type in (
-            InputType.TEXTAREA,
-            InputType.ATTRIBUTES,
-            InputType.HTML,
-        ):
+        if self.input_type in (InputType.TEXTAREA, InputType.ATTRIBUTES):
             return "col-12"
         return "col-12 col-lg-6"
 
@@ -134,10 +130,6 @@ class TextAreaField(Field):
     def __init__(self, *args: Any, rows: int = 3, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.rows = rows
-
-
-class HtmlField(Field):
-    input_type = InputType.HTML
 
 
 class IntegerField(Field):

@@ -12,6 +12,7 @@ from . import handlers
 from .action import Action, ApiAction
 from .enums import ActionScope, AttrType, InputType, Op
 from .menu import MenuLink, build_menu
+from .tab import ContentTab
 from .utils import button_class, capfirst
 from .view import ActionView, ModelView, TemplateView, UrlView
 
@@ -217,6 +218,13 @@ class AdminSite:
                 view_func=self._bind_tab(handlers.tab_endpoint, view),
                 methods=["POST"],
             )
+            if any(isinstance(tab, ContentTab) for tab in view.tabs):
+                bp.add_url_rule(
+                    f"/admin/{slug}/<int:id_>/tab/<tab_key>/upload",
+                    endpoint=f"{e}_tab_upload",
+                    view_func=self._bind_tab(handlers.tab_upload_endpoint, view),
+                    methods=["POST"],
+                )
             if view.actions:
                 bp.add_url_rule(
                     f"/admin/{slug}/<int:id_>/action/<name>",
