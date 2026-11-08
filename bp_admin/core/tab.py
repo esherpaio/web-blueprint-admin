@@ -465,6 +465,8 @@ class ContentTab(Tab):
         view.after_write(s, obj)
 
     def upload(self, s: Session, obj: Any, upload: FileStorage) -> FileRef:
+        assert self.path_prefix is not None
+        assert self.fk is not None
         stem, extension = os.path.splitext(upload.filename or "")
         extension = extension.lstrip(".").lower()
         type_id = _file_type(extension, (FileTypeId.IMAGE, FileTypeId.DOCUMENT))
@@ -490,6 +492,7 @@ class ContentTab(Tab):
     def _sync_files(self, s: Session, obj: Any, content: Content) -> None:
         if self.model is None:
             return
+        assert self.fk is not None
         medias = {
             media.file_id: media
             for media in s.query(self.model).filter(
