@@ -72,6 +72,16 @@ class Action:
     def is_visible(self, obj: Any) -> bool:
         return self._visible(obj) if self._visible is not None else True
 
+    def selection_form_id(self, view: Any) -> str:
+        if self.scope is ActionScope.DETAIL and self.tab:
+            return view.tab_by_key(self.tab).form_id
+        return "bulk-form"
+
+    def post_url(self, view: Any, obj: Any = None) -> str:
+        if self.scope is ActionScope.LIST:
+            return view.url("list_action", name=self.name)
+        return view.url("action", id_=obj.id, name=self.name)
+
     def parse(self, form: Any, files: Any = None) -> dict[str, Any]:
         data = {field.name: field.parse(form, files) for field in self.fields}
         if self.selection:

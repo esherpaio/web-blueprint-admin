@@ -304,7 +304,7 @@
     {% if action.is_link %}
         {{ anchor(action.href(obj) , action.label, action.mode, action.style, action.size, action.icon, action.target, action.download) }}
     {% elif action.selection %}
-        {{ selection_button(action.label, action.icon, action.style, form="bulk-form", formaction=view.url('list_action', name=action.name), confirm=action.confirm) }}
+        {{ selection_button(action.label, action.icon, action.style, form=action.selection_form_id(view), formaction=action.post_url(view, obj), confirm=action.confirm) }}
     {% elif action.has_modal %}
         <button class="btn {{ button_class(action.style) }} d-inline-flex gap-2"
                 type="button"
@@ -324,8 +324,7 @@
             </button>
         </form>
     {% else %}
-        <form method="post"
-              action="{{ view.url('list_action', name=action.name) if obj is none else view.url('action', id_=obj.id, name=action.name) }}">
+        <form method="post" action="{{ action.post_url(view, obj) }}">
             <button class="{{ button_class(action.style) }} d-inline-flex gap-2"
                     type="submit"
                     {% if action.confirm %}data-confirm="{{ action.confirm }}"{% endif %}>

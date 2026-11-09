@@ -6,7 +6,7 @@
             <div class="modal-dialog modal-dialog-centered">
                 <form class="modal-content"
                       {% if action.is_api %} data-api-method="{{ action.method }}" data-api-url="{{ action.api_url(obj) }}" {% endif %}
-                      {% if not action.is_api %} method="post" action="{{ view.url('list_action', name=action.name) if obj is none else view.url('action', id_=obj.id, name=action.name) }}" {% endif %}>
+                      {% if not action.is_api %} method="post" action="{{ action.post_url(view, obj) }}" {% endif %}>
                     <div class="modal-header">
                         <h5 class="modal-title">{{ action.label|capfirst }}</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
