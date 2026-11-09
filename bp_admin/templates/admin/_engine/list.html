@@ -100,6 +100,15 @@
                                                id="filter-{{ flt.key }}"
                                                name="{{ flt.key }}"
                                                value="{{ filter_values.get(flt.key, '') }}">
+                                    {% elif flt.is_integer %}
+                                        <input class="form-control"
+                                               type="number"
+                                               step="1"
+                                               id="filter-{{ flt.key }}"
+                                               name="{{ flt.key }}"
+                                               value="{{ filter_values.get(flt.key, '') }}"
+                                               {% if flt.min_value is not none %}min="{{ flt.min_value }}"{% endif %}
+                                               {% if flt.max_value is not none %}max="{{ flt.max_value }}"{% endif %}>
                                     {% else %}
                                         <select class="form-select"
                                                 id="filter-{{ flt.key }}"

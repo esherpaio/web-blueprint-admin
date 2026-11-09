@@ -34,6 +34,7 @@ from .filter import (
     Filter,
     FilterDivider,
     FkFilter,
+    IntegerFilter,
     NullFilter,
     RelationFilter,
 )

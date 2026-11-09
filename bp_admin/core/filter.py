@@ -11,6 +11,7 @@ FilterOption = tuple[str, str]
 class Filter:
     is_divider: bool = False
     is_date: bool = False
+    is_integer: bool = False
 
     def __init__(self, label: str, *, key: str | None = None) -> None:
         self.label = label
@@ -38,6 +39,32 @@ class DateFilter(Filter):
 
     def apply(self, query: Any, value: str) -> Any:
         return query.filter(self.condition(date.fromisoformat(value)))
+
+
+class IntegerFilter(Filter):
+    is_integer = True
+
+    def __init__(
+        self,
+        label: str,
+        *,
+        condition: Callable[[int], Any],
+        key: str | None = None,
+        min_value: int | None = None,
+        max_value: int | None = None,
+    ) -> None:
+        super().__init__(label, key=key)
+        self.condition = condition
+        self.min_value = min_value
+        self.max_value = max_value
+
+    def apply(self, query: Any, value: str) -> Any:
+        parsed = int(value)
+        if self.min_value is not None and parsed < self.min_value:
+            raise ValueError("Value is below the minimum.")
+        if self.max_value is not None and parsed > self.max_value:
+            raise ValueError("Value is above the maximum.")
+        return query.filter(self.condition(parsed))
 
 
 class FilterDivider(Filter):
