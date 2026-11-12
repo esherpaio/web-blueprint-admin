@@ -181,6 +181,10 @@ class InlineTableTab(Tab):
         return f"Add {self.name}"
 
     @property
+    def delete_selected_confirm(self) -> str:
+        return f"Delete the selected {self.name_plural.lower()}?"
+
+    @property
     def has_editable(self) -> bool:
         return any(column.editable for column in self.columns)
 
@@ -223,7 +227,10 @@ class InlineTableTab(Tab):
             "columns": self.columns,
             "create_fields": self.create_fields,
             "choices": resolve_choices(s, fields),
-            "actions": actions,
+            "show_toolbar": self.show_toolbar or bool(actions),
+            "toolbar_actions": [a for a in actions if not a.selection],
+            "selection_actions": [a for a in actions if a.selection],
+            "has_selection": self.can_delete or any(a.selection for a in actions),
         }
 
     def handle_post(
@@ -275,6 +282,7 @@ class InlineTableTab(Tab):
 
 class MediaTab(Tab):
     template = "admin/_engine/_tab_media.html"
+    delete_selected_confirm = "Delete the selected media?"
 
     def __init__(
         self,

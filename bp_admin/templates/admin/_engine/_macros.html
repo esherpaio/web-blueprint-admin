@@ -157,32 +157,23 @@
     {% endif %}
 {% endmacro %}
 
-{% macro anchor(href, text, mode="button", style="primary", size="sm", icon=none, target=none, download=false) %}
+{% macro anchor(href, text, cls, icon=none, target=none, download=false) %}
     {% if href %}
-        {% if mode == "text" %}
-            <a class="d-inline-flex gap-2"
-               href="{{ href }}"
-               {% if target %}target="{{ target }}" rel="noopener"{% endif %}
-               {% if download %}download{% endif %}>
-                {% if icon %}<i class="bi {{ icon }}"></i>{% endif %}
-                {{ text }}
-            </a>
-        {% else %}
-            <a class="{{ button_class(style, size) }} d-inline-flex gap-2"
-               href="{{ href }}"
-               {% if target %}target="{{ target }}" rel="noopener"{% endif %}
-               {% if download %}download{% endif %}>
-                {% if icon %}<i class="bi {{ icon }}"></i>{% endif %}
-                {{ text }}
-            </a>
-        {% endif %}
+        <a class="{{ cls }}"
+           href="{{ href }}"
+           {% if target %}target="{{ target }}" rel="noopener"{% endif %}
+           {% if download %}download{% endif %}>
+            {{ action_icon(icon) }}
+            {{ text }}
+        </a>
     {% endif %}
 {% endmacro %}
 
 {% macro display_cell(column, obj) %}
     {% if column.is_link %}
         {% if column.is_visible(obj) %}
-            {{ anchor(column.href(obj) , column.text(obj), column.mode, column.style, column.size, column.icon, column.target, column.download) }}
+            {% set cls = "d-inline-flex gap-2" if column.mode == "text" else column.button_class ~ " d-inline-flex align-items-center gap-2" %}
+            {{ anchor(column.href(obj) , column.text(obj), cls, column.icon, column.target, column.download) }}
         {% endif %}
     {% else %}
         {{ column.render(obj) }}
@@ -206,7 +197,7 @@
         </div>
         {% if not is_readonly %}
             <button type="button"
-                    class="btn btn-sm btn-light mt-2 d-flex gap-2 align-items-center"
+                    class="btn btn-sm btn-outline-secondary mt-2 d-flex gap-2 align-items-center"
                     data-attributes-add>
                 <i class="bi bi-plus-square"></i>
                 Add attribute
@@ -244,7 +235,7 @@
                    value="{{ value }}"
                    {% if is_readonly %}disabled{% endif %}>
             {% if not is_readonly %}
-                <button type="button" class="btn btn-danger" data-attributes-remove>
+                <button type="button" class="btn btn-outline-danger" data-attributes-remove>
                     <i class="bi bi-trash"></i>
                 </button>
             {% endif %}
@@ -276,9 +267,9 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button class="btn btn-warning" type="submit">{{ submit_label }}</button>
+                    <button class="btn btn-primary" type="submit">{{ submit_label }}</button>
                     <button type="button"
-                            class="btn btn-secondary"
+                            class="btn btn-outline-secondary"
                             data-bs-dismiss="modal">Cancel</button>
                 </div>
             </form>
@@ -286,51 +277,161 @@
     </div>
 {% endmacro %}
 
-{% macro selection_button(label, icon=none, style="primary", form=none, op=none, formaction=none, confirm=none) %}
-    <button class="{{ button_class(style) }} d-flex gap-2 align-items-center"
-            type="submit"
-            {% if form %}form="{{ form }}"{% endif %}
-            {% if formaction %}formaction="{{ formaction }}"{% endif %}
-            {% if op %}name="_op" value="{{ op }}"{% endif %}
-            {% if confirm %}data-confirm="{{ confirm }}"{% endif %}
-            data-requires-selection
-            disabled>
-        {% if icon %}<i class="bi {{ icon }}"></i>{% endif %}
+{% macro action_icon(icon) %}
+    {% if icon %}<i class="bi {{ icon }}"></i>{% endif %}
+{% endmacro %}
+
+{% macro add_button(modal_id, label) %}
+    <button class="btn btn-sm btn-outline-primary d-flex gap-2 align-items-center"
+            type="button"
+            data-bs-toggle="modal"
+            data-bs-target="#{{ modal_id }}">
+        <i class="bi bi-plus-square"></i>
         {{ label }}
     </button>
 {% endmacro %}
 
-{% macro action_button(view, obj, action) %}
+{% macro save_button(form_id, op=none) %}
+    <button class="btn btn-sm btn-primary d-flex gap-2 align-items-center"
+            type="submit"
+            form="{{ form_id }}"
+            {% if op %}name="_op" value="{{ op }}"{% endif %}>
+        <i class="bi bi-floppy-fill"></i>
+        Save changes
+    </button>
+{% endmacro %}
+
+{% macro action_button(view, obj, action, cls=none, gated=true) %}
+    {% set cls = (cls or action.button_class) ~ " d-inline-flex align-items-center gap-2" %}
     {% if action.is_link %}
-        {{ anchor(action.href(obj) , action.label, action.mode, action.style, action.size, action.icon, action.target, action.download) }}
+        {{ anchor(action.href(obj) , action.label, cls, action.icon, action.target, action.download) }}
     {% elif action.selection %}
-        {{ selection_button(action.label, action.icon, action.style, form=action.selection_form_id(view), formaction=action.post_url(view, obj), confirm=action.confirm) }}
+        <button class="{{ cls }}"
+                type="submit"
+                form="{{ action.selection_form_id(view) }}"
+                formaction="{{ action.post_url(view, obj) }}"
+                {% if action.confirm %}data-confirm="{{ action.confirm }}"{% endif %}
+                {% if gated %}data-requires-selection disabled{% endif %}>
+            {{ action_icon(action.icon) }}
+            {{ action.label }}
+        </button>
     {% elif action.has_modal %}
-        <button class="btn {{ button_class(action.style) }} d-inline-flex gap-2"
+        <button class="{{ cls }}"
                 type="button"
                 data-bs-toggle="modal"
                 data-bs-target="#{{ action.modal_id }}">
-            {% if action.icon %}<i class="bi {{ action.icon }}"></i>{% endif %}
+            {{ action_icon(action.icon) }}
             {{ action.label }}
         </button>
     {% elif action.is_api %}
         <form data-api-method="{{ action.method }}"
-              data-api-url="{{ action.api_url(obj) }}">
-            <button class="{{ button_class(action.style) }} d-inline-flex gap-2"
+              data-api-url="{{ action.api_url(obj) }}"
+              {% if action.redirect %}data-api-redirect="{{ action.redirect }}"{% endif %}>
+            <button class="{{ cls }}"
                     type="submit"
                     {% if action.confirm %}data-confirm="{{ action.confirm }}"{% endif %}>
-                {% if action.icon %}<i class="bi {{ action.icon }}"></i>{% endif %}
+                {{ action_icon(action.icon) }}
                 {{ action.label }}
             </button>
         </form>
     {% else %}
         <form method="post" action="{{ action.post_url(view, obj) }}">
-            <button class="{{ button_class(action.style) }} d-inline-flex gap-2"
+            <button class="{{ cls }}"
                     type="submit"
                     {% if action.confirm %}data-confirm="{{ action.confirm }}"{% endif %}>
-                {% if action.icon %}<i class="bi {{ action.icon }}"></i>{% endif %}
+                {{ action_icon(action.icon) }}
                 {{ action.label }}
             </button>
         </form>
+    {% endif %}
+{% endmacro %}
+
+{% macro action_item(view, obj, action) %}
+    <li>{{ action_button(view, obj, action, action.item_class, gated=false) }}</li>
+{% endmacro %}
+
+{% macro selection_menu(view, obj, owner, form_id, actions) %}
+    {% if actions %}
+        <div class="dropdown">
+            <button class="btn btn-sm btn-outline-secondary dropdown-toggle d-inline-flex align-items-center gap-2"
+                    type="button"
+                    form="{{ form_id }}"
+                    data-bs-toggle="dropdown"
+                    data-bs-offset="0,8"
+                    aria-expanded="false"
+                    data-requires-selection
+                    disabled>
+                <i class="bi bi-check2-square"></i>
+                With selected
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                {% for action in actions %}{{ action_item(view, obj, action) }}{% endfor %}
+                {% if owner.can_delete %}
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
+                    <li>
+                        <button class="dropdown-item d-flex align-items-center gap-2 text-danger"
+                                type="submit"
+                                form="{{ form_id }}"
+                                name="_op"
+                                value="{{ Op.DELETE }}"
+                                data-confirm="{{ owner.delete_selected_confirm }}">
+                            <i class="bi bi-trash-fill"></i>
+                            Delete selected
+                        </button>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    {% elif owner.can_delete %}
+        <button class="btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-2"
+                type="submit"
+                form="{{ form_id }}"
+                name="_op"
+                value="{{ Op.DELETE }}"
+                data-confirm="{{ owner.delete_selected_confirm }}"
+                data-requires-selection
+                disabled>
+            <i class="bi bi-trash-fill"></i>
+            Delete selected
+        </button>
+    {% endif %}
+{% endmacro %}
+
+{% macro overflow_menu(view, obj) %}
+    {% set actions = view.detail_overflow_actions(obj) %}
+    {% if actions or view.can_delete %}
+        <div class="dropdown">
+            <button class="btn btn-sm btn-outline-secondary"
+                    type="button"
+                    data-bs-toggle="dropdown"
+                    data-bs-offset="0,8"
+                    aria-expanded="false"
+                    aria-label="More actions"
+                    title="More actions">
+                <i class="bi bi-three-dots"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                {% for action in actions %}{{ action_item(view, obj, action) }}{% endfor %}
+                {% if view.can_delete %}
+                    {% if actions %}
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                    {% endif %}
+                    <li>
+                        <form method="post" action="{{ view.url('delete', id_=obj.id) }}">
+                            <button class="dropdown-item d-flex align-items-center gap-2 text-danger"
+                                    type="submit"
+                                    data-confirm="{{ view.delete_confirm }}">
+                                <i class="bi bi-trash-fill"></i>
+                                {{ view.delete_title }}
+                            </button>
+                        </form>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
     {% endif %}
 {% endmacro %}

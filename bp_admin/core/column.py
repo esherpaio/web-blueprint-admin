@@ -4,10 +4,12 @@ from markupsafe import Markup, escape
 from web.setup import config
 from web.utils.generators import format_decimal
 
-from .enums import Align, CellFormat, LinkMode, Size, Style
+from .enums import Align, CellFormat, LinkMode, Style
 from .field import Field, StringField
 from .utils import (
+    button_class,
     default_label,
+    format_date,
     format_datetime,
     resolve_href,
     resolve_path,
@@ -89,11 +91,12 @@ class Column:
             if value is None:
                 return Markup("")
             return self._with_suffix(escape(format_decimal(value)), obj)
-        if kind == CellFormat.DATETIME:
+        if kind in (CellFormat.DATE, CellFormat.DATETIME):
             value = self.value(obj)
             if value is None:
                 return Markup("")
-            return escape(format_datetime(value))
+            formatter = format_date if kind == CellFormat.DATE else format_datetime
+            return escape(formatter(value))
         if kind == CellFormat.BOOL:
             icon = (
                 "bi-check-circle-fill text-success"
@@ -128,7 +131,6 @@ class LinkColumn(Column):
         target: str | None = None,
         download: bool = False,
         style: Style | str = Style.PRIMARY,
-        size: Size | str | None = Size.SM,
         icon: str | None = None,
         mode: LinkMode | str = LinkMode.BUTTON,
         visible: Callable[[Any], bool] | None = None,
@@ -142,10 +144,13 @@ class LinkColumn(Column):
         self.target = target
         self.download = download
         self.style = style
-        self.size = size
         self.icon = icon
         self.mode = mode
         self._visible = visible
+
+    @property
+    def button_class(self) -> str:
+        return button_class(self.style)
 
     def is_visible(self, obj: Any = None) -> bool:
         if self._visible:

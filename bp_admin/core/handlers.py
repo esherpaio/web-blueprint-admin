@@ -88,11 +88,13 @@ def render_list(
         choices = resolve_choices(
             s, [c.field for c in view.columns] + list(view.create_fields)
         )
+        toolbar_actions = view.list_toolbar_actions()
+        selection_actions = view.list_selection_actions()
         action_choices = {
             action.name: resolve_choices(s, action.fields)
-            for action in view.actions
-            if action.scope is ActionScope.LIST and action.is_visible(None)
+            for action in toolbar_actions + selection_actions
         }
+        has_selection = view.can_delete or bool(selection_actions)
         pagination = Pagination(page=page, per_page=limit, total=total)
         filter_options = {
             f.key: f.options(s)
@@ -108,6 +110,10 @@ def render_list(
             view=view,
             obj=None,
             action_choices=action_choices,
+            toolbar_actions=toolbar_actions,
+            selection_actions=selection_actions,
+            has_selection=has_selection,
+            has_actions_column=view.has_detail or has_selection,
             rows=rows,
             total=total,
             pagination=pagination,

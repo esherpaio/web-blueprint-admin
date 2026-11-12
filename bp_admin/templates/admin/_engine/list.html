@@ -1,6 +1,6 @@
 {% extends "admin/templates/base.html" %}
 
-{% from "admin/_engine/_macros.html" import action_button, cell_input, display_cell, form_modal, selection_button %}
+{% from "admin/_engine/_macros.html" import action_button, add_button, cell_input, display_cell, form_modal, save_button, selection_menu %}
 
 {% block admin_body %}
     <div class="row g-3">
@@ -11,10 +11,10 @@
         {% endif %}
         <div class="col-12">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 row-gap-3">
-                <h2 class="mb-0">{{ view.name_plural|capfirst }}</h2>
-                <div class="btn-toolbar flex-wrap gap-2">
+                <h2 class="admin-title mb-0">{{ view.name_plural|capfirst }}</h2>
+                <div class="d-flex flex-wrap gap-2 ms-auto">
                     {% if view.searchable %}
-                        <button class="btn btn-primary d-flex gap-2 align-items-center"
+                        <button class="btn btn-sm btn-outline-secondary d-flex gap-2 align-items-center"
                                 type="button"
                                 data-bs-toggle="collapse"
                                 data-bs-target="#search">
@@ -23,7 +23,7 @@
                         </button>
                     {% endif %}
                     {% if view.has_filters %}
-                        <button class="btn btn-primary d-flex gap-2 align-items-center"
+                        <button class="btn btn-sm btn-outline-secondary d-flex gap-2 align-items-center"
                                 type="button"
                                 data-bs-toggle="collapse"
                                 data-bs-target="#filters">
@@ -31,31 +31,10 @@
                             Filters
                         </button>
                     {% endif %}
-                    {% if view.can_create %}
-                        <button class="btn btn-warning d-flex gap-2 align-items-center"
-                                type="button"
-                                data-bs-toggle="modal"
-                                data-bs-target="#modal-create">
-                            <i class="bi bi-plus-square"></i>
-                            {{ view.create_title }}
-                        </button>
-                    {% endif %}
-                    {% if view.has_bulk_edit %}
-                        <button class="btn btn-warning d-flex gap-2 align-items-center"
-                                type="submit"
-                                form="bulk-form"
-                                name="_op"
-                                value="{{ Op.SAVE }}">
-                            <i class="bi bi-floppy-fill"></i>
-                            Save changes
-                        </button>
-                    {% endif %}
-                    {% if view.can_delete %}
-                        {{ selection_button("Delete selected", "bi-trash-fill", "danger", form="bulk-form", op=Op.DELETE, confirm="Delete the selected records?") }}
-                    {% endif %}
-                    {% for action in view.actions if action.scope == ActionScope.LIST and action.is_visible(none) %}
-                        {{ action_button(view, none, action) }}
-                    {% endfor %}
+                    {% if view.can_create %}{{ add_button("modal-create", view.create_title) }}{% endif %}
+                    {% if view.has_bulk_edit %}{{ save_button("bulk-form", Op.SAVE) }}{% endif %}
+                    {% for action in toolbar_actions %}{{ action_button(view, none, action) }}{% endfor %}
+                    {{ selection_menu(view, none, view, "bulk-form", selection_actions) }}
                 </div>
             </div>
         </div>
@@ -126,7 +105,7 @@
                         {% endfor %}
                         <div class="col-12 d-flex gap-2 align-items-center">
                             <button class="btn btn-primary" type="submit">Apply</button>
-                            <a class="btn btn-light"
+                            <a class="btn btn-outline-secondary"
                                href="{{ view.url(s=search) if search else view.url() }}">Clear</a>
                         </div>
                     </div>
@@ -143,26 +122,25 @@
                         <input type="hidden" name="row-id" value="{{ obj.id }}">
                     {% endfor %}
                 {% endif %}
-                <div class="table-responsive">
-                    <table class="table rounded-2 overflow-hidden align-middle mb-0">
+                <div class="table-responsive rounded-2">
+                    <table class="table align-middle mb-0">
                         <thead class="table-secondary">
                             <tr>
                                 {% if view.reorderable %}
                                     <th style="width:2rem"></th>
                                 {% endif %}
-                                {% if view.has_selection %}
-                                    <th style="width:2.5rem">
-                                        <input class="form-check-input"
-                                               type="checkbox"
-                                               data-select-all>
-                                    </th>
-                                {% endif %}
                                 {% for column in view.columns %}
                                     <th class="{{ column.align_class }}"
                                         {% if column.width %}style="width:{{ column.width }}"{% endif %}>{{ column.label|capfirst }}</th>
                                 {% endfor %}
-                                {% if view.has_detail %}
-                                    <th class="text-end">Actions</th>
+                                {% if has_actions_column %}
+                                    <th class="admin-sticky-end text-end">
+                                        {% if has_selection %}
+                                            <input class="form-check-input m-0"
+                                                   type="checkbox"
+                                                   data-select-all>
+                                        {% endif %}
+                                    </th>
                                 {% endif %}
                             </tr>
                         </thead>
@@ -178,15 +156,6 @@
                                                    value="{{ obj|attr(view.order_field) }}">
                                         </td>
                                     {% endif %}
-                                    {% if view.has_selection %}
-                                        <td>
-                                            <input class="form-check-input"
-                                                   type="checkbox"
-                                                   name="select"
-                                                   value="{{ obj.id }}"
-                                                   data-select-row>
-                                        </td>
-                                    {% endif %}
                                     {% for column in view.columns %}
                                         <td class="{{ column.align_class }}">
                                             {% if column.editable %}
@@ -196,10 +165,21 @@
                                             {% endif %}
                                         </td>
                                     {% endfor %}
-                                    {% if view.has_detail %}
-                                        <td class="text-end">
-                                            <a class="btn btn-sm btn-primary"
-                                               href="{{ view.url('detail', id_=obj.id) }}">View</a>
+                                    {% if has_actions_column %}
+                                        <td class="admin-sticky-end">
+                                            <div class="d-flex justify-content-end align-items-center gap-3">
+                                                {% if view.has_detail %}
+                                                    <a class="btn btn-sm btn-outline-secondary"
+                                                       href="{{ view.url('detail', id_=obj.id) }}">View</a>
+                                                {% endif %}
+                                                {% if has_selection %}
+                                                    <input class="form-check-input m-0"
+                                                           type="checkbox"
+                                                           name="select"
+                                                           value="{{ obj.id }}"
+                                                           data-select-row>
+                                                {% endif %}
+                                            </div>
                                         </td>
                                     {% endif %}
                                 </tr>

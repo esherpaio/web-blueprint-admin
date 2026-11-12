@@ -147,3 +147,38 @@ table td .cell-wrap {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
 }
+
+/* small toolbar buttons: matching title, tabs, menus and the pinned column */
+
+.admin-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.admin-tabs .nav-link {
+    padding: 0.25rem 0.75rem;
+    font-size: 0.875rem;
+}
+
+.dropdown-menu {
+    --bs-dropdown-font-size: 0.875rem;
+    --bs-dropdown-padding-y: 0.25rem;
+    --bs-dropdown-item-padding-y: 0.25rem;
+    --bs-dropdown-item-padding-x: 0.75rem;
+}
+
+.admin-sticky-end {
+    position: sticky;
+    right: 0;
+    z-index: 1;
+    border-left: 1px solid var(--bs-border-color);
+}
+
+.admin-sticky-end .form-check-input {
+    vertical-align: middle;
+}
+
+.dropdown-item.text-danger:active {
+    background-color: var(--bs-danger);
+    color: #fff !important;
+}

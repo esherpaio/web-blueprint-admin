@@ -1,6 +1,6 @@
 {% extends "admin/templates/base.html" %}
 
-{% from "admin/_engine/_macros.html" import field_input %}
+{% from "admin/_engine/_macros.html" import action_button, field_input, overflow_menu %}
 
 {% block admin_body %}
     <div class="row g-3">
@@ -15,26 +15,17 @@
                     {% if view.show_back %}
                         {% set back = view.back_url(obj) %}
                         <a href="{{ back or view.url() }}"
-                           class="btn btn-light d-inline-flex align-items-center"
+                           class="btn btn-sm btn-light d-inline-flex align-items-center"
                            {% if not back %}data-back{% endif %}
                            title="Back">
                             <i class="bi bi-arrow-left"></i>
                         </a>
                     {% endif %}
-                    <h2 class="mb-0">{{ view.title(obj) |capfirst }}</h2>
+                    <h2 class="admin-title mb-0">{{ view.title(obj) |capfirst }}</h2>
                 </div>
-                <div class="btn-toolbar flex-wrap gap-2">
-                    {% include "admin/_engine/_actions.html" %}
-                    {% if view.can_delete %}
-                        <form method="post" action="{{ view.url('delete', id_=obj.id) }}">
-                            <button class="btn btn-danger d-flex gap-2 align-items-center"
-                                    type="submit"
-                                    data-confirm="Delete this {{ view.name|lower }}?">
-                                <i class="bi bi-trash-fill"></i>
-                                {{ view.delete_title }}
-                            </button>
-                        </form>
-                    {% endif %}
+                <div class="d-flex flex-wrap gap-2">
+                    {% for action in view.detail_toolbar_actions(obj) %}{{ action_button(view, obj, action) }}{% endfor %}
+                    {{ overflow_menu(view, obj) }}
                 </div>
             </div>
         </div>
@@ -43,10 +34,10 @@
         {% endif %}
         <div class="col-12">
             {% if tabs_ctx|length > 1 %}
-                <ul class="nav nav-pills mb-3 flex-wrap gap-2" role="tablist">
+                <ul class="nav nav-pills admin-tabs mb-3 flex-wrap gap-2" role="tablist">
                     {% for item in tabs_ctx %}
                         <li class="nav-item" role="presentation">
-                            <a class="nav-link py-2 {{ 'active' if item.tab.key == active_tab }}"
+                            <a class="nav-link {{ 'active' if item.tab.key == active_tab }}"
                                href="{{ view.url('detail', id_=obj.id, tab=item.tab.key) }}">
                                 {{ item.tab.label|capfirst }}
                             </a>

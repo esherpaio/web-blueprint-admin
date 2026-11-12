@@ -13,7 +13,7 @@ from .action import Action, ApiAction
 from .enums import ActionScope, AttrType, InputType, Op
 from .menu import MenuLink, build_menu
 from .tab import ContentTab
-from .utils import button_class, capfirst
+from .utils import capfirst
 from .view import ActionView, ModelView, TemplateView, UrlView
 
 _ENGINE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -103,7 +103,6 @@ class AdminSite:
         bp.add_app_template_global(Op, "Op")
         bp.add_app_template_global(InputType, "InputType")
         bp.add_app_template_global(AttrType, "AttrType")
-        bp.add_app_template_global(button_class, "button_class")
         bp.add_app_template_filter(capfirst, "capfirst")
 
     def _authorize(self) -> Response | None:

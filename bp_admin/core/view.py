@@ -14,7 +14,7 @@ from werkzeug import Response
 from .action import Action
 from .column import Column, row_input_name
 from .db import apply_fields, next_order, supports_soft_delete
-from .enums import Notice
+from .enums import ActionScope, Notice
 from .field import Field
 from .filter import Filter
 from .menu import NavSource
@@ -25,7 +25,7 @@ class ModelView:
     # Identity
     model: Any = None
     name: str = ""
-    name_plural: str | None = None
+    name_plural: str = ""
     endpoint: str | None = None
 
     # Menu placement
@@ -67,7 +67,7 @@ class ModelView:
     def __init__(self) -> None:
         if not self.name:
             self.name = type(self).__name__.replace("View", "")
-        if self.name_plural is None:
+        if not self.name_plural:
             self.name_plural = self.name + "s"
         if self.endpoint is None:
             self.endpoint = self.name_plural.lower().replace(" ", "_")
@@ -98,7 +98,7 @@ class ModelView:
         if self.menu_hidden:
             return None
         return NavSource(
-            label=self.name_plural or self.name,
+            label=self.name_plural,
             endpoint=self.route,
             match=self.route,
             order=self.order,
@@ -128,6 +128,14 @@ class ModelView:
         return f"Delete {self.name}"
 
     @property
+    def delete_confirm(self) -> str:
+        return f"Delete this {self.name.lower()}?"
+
+    @property
+    def delete_selected_confirm(self) -> str:
+        return f"Delete the selected {self.name_plural.lower()}?"
+
+    @property
     def search_hint(self) -> str:
         return self.search_placeholder or "Search"
 
@@ -147,15 +155,51 @@ class ModelView:
 
     @property
     def has_selection(self) -> bool:
-        return self.can_delete or any(
-            action.selection and action.is_visible(None) for action in self.actions
-        )
+        return self.can_delete or bool(self.list_selection_actions())
+
+    @property
+    def has_actions_column(self) -> bool:
+        return self.has_detail or self.has_selection
 
     def tab_by_key(self, key: str) -> Tab | None:
         for tab in self.tabs:
             if tab.key == key:
                 return tab
         return None
+
+    def list_toolbar_actions(self) -> list[Action]:
+        return [a for a in self._list_actions() if not a.selection]
+
+    def list_selection_actions(self) -> list[Action]:
+        return [a for a in self._list_actions() if a.selection]
+
+    def detail_toolbar_actions(self, obj: Any) -> list[Action]:
+        return [a for a in self._detail_actions(obj) if not a.is_danger]
+
+    def detail_overflow_actions(self, obj: Any) -> list[Action]:
+        return [a for a in self._detail_actions(obj) if a.is_danger]
+
+    def modal_actions(self, obj: Any) -> list[Action]:
+        scope = ActionScope.LIST if obj is None else ActionScope.DETAIL
+        return [
+            a
+            for a in self.actions
+            if a.scope is scope and a.has_modal and a.is_visible(obj)
+        ]
+
+    def _list_actions(self) -> list[Action]:
+        return [
+            a
+            for a in self.actions
+            if a.scope is ActionScope.LIST and a.is_visible(None)
+        ]
+
+    def _detail_actions(self, obj: Any) -> list[Action]:
+        return [
+            a
+            for a in self.actions
+            if a.scope is ActionScope.DETAIL and a.tab is None and a.is_visible(obj)
+        ]
 
     def action_by_name(self, name: str) -> Action | None:
         for action in self.actions:
@@ -230,7 +274,9 @@ class ModelView:
             if self.reorderable and getattr(obj, self.order_field, None) is None:
                 order_column = getattr(self.model, self.order_field)
                 setattr(
-                    obj, self.order_field, next_order(s.query(self.model), order_column)
+                    obj,
+                    self.order_field,
+                    next_order(s.query(self.model), order_column),
                 )
         s.flush()
         self.after_write(s, obj)

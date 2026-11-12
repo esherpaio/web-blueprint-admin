@@ -34,6 +34,7 @@ class InputType(StrEnum):
 
 class CellFormat(StrEnum):
     PRICE = "price"
+    DATE = "date"
     DATETIME = "datetime"
     BOOL = "bool"
 
@@ -47,11 +48,6 @@ class Style(StrEnum):
     INFO = "info"
     LIGHT = "light"
     DARK = "dark"
-
-
-class Size(StrEnum):
-    SM = "sm"
-    LG = "lg"
 
 
 class Align(StrEnum):

@@ -1,32 +1,13 @@
-{% from "admin/_engine/_macros.html" import cell_input, display_cell, form_modal, action_button, selection_button %}
+{% from "admin/_engine/_macros.html" import action_button, add_button, cell_input, display_cell, form_modal, save_button, selection_menu %}
 
 {% set tab_action = view.url('tab', id_=obj.id, tab_key=tab.key) %}
 
-{% if tab.show_toolbar or tab_ctx.actions %}
+{% if tab_ctx.show_toolbar %}
     <div class="d-flex flex-wrap justify-content-end gap-2 mb-3">
-        {% if tab.show_add %}
-            <button class="btn btn-warning d-flex gap-2 align-items-center"
-                    type="button"
-                    data-bs-toggle="modal"
-                    data-bs-target="#{{ tab.add_modal_id }}">
-                <i class="bi bi-plus-square"></i>
-                {{ tab.add_title }}
-            </button>
-        {% endif %}
-        {% if tab.show_save %}
-            <button class="btn btn-warning d-flex gap-2 align-items-center"
-                    type="submit"
-                    form="{{ tab.form_id }}"
-                    name="_op"
-                    value="{{ Op.SAVE }}">
-                <i class="bi bi-floppy-fill"></i>
-                Save changes
-            </button>
-        {% endif %}
-        {% if tab.can_delete %}
-            {{ selection_button("Delete selected", "bi-trash-fill", "danger", form=tab.form_id, op=Op.DELETE, confirm="Delete the selected records?") }}
-        {% endif %}
-        {% for action in tab_ctx.actions %}{{ action_button(view, obj, action) }}{% endfor %}
+        {% if tab.show_add %}{{ add_button(tab.add_modal_id, tab.add_title) }}{% endif %}
+        {% if tab.show_save %}{{ save_button(tab.form_id, Op.SAVE) }}{% endif %}
+        {% for action in tab_ctx.toolbar_actions %}{{ action_button(view, obj, action) }}{% endfor %}
+        {{ selection_menu(view, obj, tab, tab.form_id, tab_ctx.selection_actions) }}
     </div>
 {% endif %}
 
@@ -43,15 +24,15 @@
                     {% if tab.reorderable %}
                         <th style="width:2rem"></th>
                     {% endif %}
-                    {% if tab.can_delete %}
-                        <th style="width:2.5rem">
-                            <input class="form-check-input" type="checkbox" data-select-all>
-                        </th>
-                    {% endif %}
                     {% for column in tab_ctx.columns %}
                         <th class="{{ column.align_class }}"
                             {% if column.width %}style="width:{{ column.width }}"{% endif %}>{{ column.label|capfirst }}</th>
                     {% endfor %}
+                    {% if tab_ctx.has_selection %}
+                        <th class="admin-sticky-end text-center" style="width:2.5rem">
+                            <input class="form-check-input m-0" type="checkbox" data-select-all>
+                        </th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody class="table-light"
@@ -66,15 +47,6 @@
                                        value="{{ row|attr(tab.order_field) }}">
                             </td>
                         {% endif %}
-                        {% if tab.can_delete %}
-                            <td>
-                                <input class="form-check-input"
-                                       type="checkbox"
-                                       name="select"
-                                       value="{{ row.id }}"
-                                       data-select-row>
-                            </td>
-                        {% endif %}
                         {% for column in tab_ctx.columns %}
                             <td class="{{ column.align_class }}">
                                 {% if column.editable %}
@@ -84,6 +56,15 @@
                                 {% endif %}
                             </td>
                         {% endfor %}
+                        {% if tab_ctx.has_selection %}
+                            <td class="admin-sticky-end text-center">
+                                <input class="form-check-input m-0"
+                                       type="checkbox"
+                                       name="select"
+                                       value="{{ row.id }}"
+                                       data-select-row>
+                            </td>
+                        {% endif %}
                     </tr>
                 {% endfor %}
             </tbody>

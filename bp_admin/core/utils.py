@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import Any, Callable
 from zoneinfo import ZoneInfo
 
@@ -58,14 +58,17 @@ def business_datetime(value: datetime) -> datetime:
     return value.astimezone(business_timezone())
 
 
+def format_date(value: date) -> str:
+    if isinstance(value, datetime):
+        value = business_datetime(value)
+    return current_locale.format_date(value)
+
+
 def format_datetime(value: datetime) -> str:
     return current_locale.format_datetime(business_datetime(value))
 
 
-def button_class(style: str | None = Style.PRIMARY, size: str | None = None) -> str:
-    parts = ["btn"]
-    if size:
-        parts.append(f"btn-{size}")
-    if style:
-        parts.append(f"btn-{style}")
-    return " ".join(parts)
+def button_class(style: str | None = None, *, danger: bool = False) -> str:
+    if danger or style == Style.DANGER:
+        return "btn btn-sm btn-outline-danger"
+    return "btn btn-sm btn-outline-secondary"

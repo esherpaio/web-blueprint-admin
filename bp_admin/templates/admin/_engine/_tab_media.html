@@ -1,26 +1,11 @@
-{% from "admin/_engine/_macros.html" import selection_button %}
+{% from "admin/_engine/_macros.html" import add_button, save_button, selection_menu %}
 
 {% set tab_action = view.url('tab', id_=obj.id, tab_key=tab.key) %}
 
 <div class="d-flex flex-wrap justify-content-end gap-2 mb-3">
-    <button class="btn btn-warning d-flex gap-2 align-items-center"
-            type="button"
-            data-bs-toggle="modal"
-            data-bs-target="#{{ tab.add_modal_id }}">
-        <i class="bi bi-plus-square"></i>
-        Add media
-    </button>
-    <button class="btn btn-warning d-flex gap-2 align-items-center"
-            type="submit"
-            form="{{ tab.form_id }}"
-            name="_op"
-            value="{{ Op.SAVE }}">
-        <i class="bi bi-floppy-fill"></i>
-        Save changes
-    </button>
-    {% if tab.can_delete %}
-        {{ selection_button("Delete selected", "bi-trash-fill", "danger", form=tab.form_id, op=Op.DELETE, confirm="Delete the selected media?") }}
-    {% endif %}
+    {{ add_button(tab.add_modal_id, "Add media") }}
+    {{ save_button(tab.form_id, Op.SAVE) }}
+    {{ selection_menu(view, obj, tab, tab.form_id, []) }}
 </div>
 
 <form id="{{ tab.form_id }}" method="post" action="{{ tab_action }}">
@@ -90,12 +75,12 @@
                 <input required multiple class="form-control" type="file" name="file">
             </div>
             <div class="modal-footer">
-                <button class="btn btn-warning"
+                <button class="btn btn-primary"
                         type="submit"
                         name="_op"
                         value="{{ Op.ADD }}">Add media</button>
                 <button type="button"
-                        class="btn btn-secondary"
+                        class="btn btn-outline-secondary"
                         data-bs-dismiss="modal">Cancel</button>
             </div>
         </form>

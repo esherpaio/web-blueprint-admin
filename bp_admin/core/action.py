@@ -4,9 +4,9 @@ from markupsafe import Markup
 from sqlalchemy.orm.session import Session
 from werkzeug import Response
 
-from .enums import ActionScope, LinkMode, Size, Style
+from .enums import ActionScope, LinkMode, Style
 from .field import Field
-from .utils import resolve_href
+from .utils import button_class, resolve_href
 
 ActionHandler = Callable[[Session, Any, dict[str, Any]], Response | None]
 
@@ -20,7 +20,6 @@ class Action:
         *,
         fields: list[Field] | None = None,
         style: Style | str = Style.PRIMARY,
-        size: Size | str | None = None,
         icon: str | None = None,
         confirm: bool | str | None = None,
         text: str | None = None,
@@ -36,7 +35,6 @@ class Action:
         self.handler = handler
         self.fields = fields or []
         self.style = style
-        self.size = size
         self.icon = icon
         if isinstance(confirm, bool):
             confirm = f"Please confirm: {label}."
@@ -56,6 +54,22 @@ class Action:
         if not self.irreversible:
             return None
         return Markup("<strong>This action is irreversible.</strong>")
+
+    @property
+    def is_danger(self) -> bool:
+        return self.style == Style.DANGER
+
+    @property
+    def button_class(self) -> str:
+        return button_class(danger=self.is_danger)
+
+    @property
+    def item_class(self) -> str:
+        return "dropdown-item text-danger" if self.is_danger else "dropdown-item"
+
+    @property
+    def submit_class(self) -> str:
+        return "btn btn-danger" if self.is_danger else "btn btn-primary"
 
     @property
     def has_modal(self) -> bool:
@@ -150,7 +164,6 @@ class LinkAction(Action):
         target: str | None = None,
         download: bool = False,
         style: Style | str = Style.PRIMARY,
-        size: Size | str | None = None,
         icon: str | None = None,
         mode: LinkMode | str = LinkMode.BUTTON,
         visible: Callable[[Any], bool] | None = None,
@@ -161,7 +174,6 @@ class LinkAction(Action):
             name,
             label,
             style=style,
-            size=size,
             icon=icon,
             visible=visible,
             tab=tab,
